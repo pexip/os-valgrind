@@ -1,0 +1,17 @@
+diff --git a/configure b/configure
+index 699137b..86f1077 100755
+--- a/configure
++++ b/configure
+@@ -552,9 +552,9 @@ MAKEFLAGS=
+ # Identity of this package.
+ PACKAGE_NAME='Valgrind'
+ PACKAGE_TARNAME='valgrind'
+-PACKAGE_VERSION='3.6.1'
+-PACKAGE_STRING='Valgrind 3.6.1'
+-PACKAGE_BUGREPORT='valgrind-users@lists.sourceforge.net'
++PACKAGE_VERSION='3.6.1-Debian'
++PACKAGE_STRING='Valgrind 3.6.1-Debian'
++PACKAGE_BUGREPORT='valgrind-users@lists.sourceforge.net; valgrind@packages.debian.org'
+ PACKAGE_URL=''
+ 
+ ac_unique_file="coregrind/m_main.c"

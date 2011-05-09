@@ -1,7 +1,5 @@
 #!/usr/bin/make -f
 
-include /usr/share/dpatch/dpatch.make
-
 config.sub config.guess: %: /usr/share/misc/%
 	rm -f $@
 	cp -a $< $@
@@ -10,22 +8,22 @@ config.status: config.sub config.guess
 	dh_testdir
 	cat xfree-4.supp debian/debian.supp > debian.supp
 	./configure --prefix=/usr \
-		--mandir=\$${prefix}/share/man
+		--mandir=\$${prefix}/share/man \
+		--enable-tls
 
-build: patch build-stamp
+build: build-stamp
 
 build-stamp:  config.status
 	dh_testdir
 	$(MAKE)
 	$(MAKE) -C docs man-pages
-	$(MAKE) -C docs html-docs 
+	$(MAKE) -C docs html-docs
 	touch build-stamp
 
-clean: clean1 unpatch
-clean1: unpatch
+clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp 
+	rm -f build-stamp debian.supp
 	-$(MAKE) distclean
 	dh_clean
 
@@ -34,7 +32,7 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	dh_installdirs 
+	dh_installdirs
 
 	$(MAKE) install prefix=$(CURDIR)/debian/valgrind/usr
 
@@ -72,4 +70,4 @@ binary-arch: build install
 	dh_builddeb
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install patch unpatch 
+.PHONY: build clean binary-indep binary-arch binary install
