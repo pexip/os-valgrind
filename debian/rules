@@ -33,6 +33,7 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
+	dh_lintian
 
 	$(MAKE) install prefix=$(CURDIR)/debian/valgrind/usr
 
@@ -45,8 +46,6 @@ install: build
 
 	install -p -m644 debian.supp $(target)/usr/lib/valgrind
 	install -p -d -m755 $(target)/usr/share/doc/valgrind/html
-	install -p -d -m755 $(target)/usr/share/lintian/overrides
-	install -p -m644 debian/overrides $(target)/usr/share/lintian/overrides/valgrind
 	install -p -m644 debian/valgrind.bash $(target)/etc/bash_completion.d/valgrind
 
 

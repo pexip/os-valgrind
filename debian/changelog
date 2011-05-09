@@ -14,6 +14,7 @@ valgrind (1:3.6.1-1) unstable; urgency=low
   * Lintian fixes:
       - Add missing ${misc:Depends} in debian/control.
       - fix debian-rules-ignores-make-clean-error.
+      - migrate to dh_lintian for overrides, and update them.
 
  -- Pierre Habouzit <madcoder@debian.org>  Mon, 09 May 2011 22:55:27 +0200
 
