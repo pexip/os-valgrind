@@ -2,6 +2,7 @@ Source: valgrind
 Section: devel
 Priority: optional
 Maintainer: Andrés Roldán <aroldan@debian.org>
+Uploaders: Pierre Habouzit <madcoder@debian.org>
 Build-Depends: debhelper (>> 3.0.0), libc6-dev (>> 2.3.0), autotools-dev,
   gdb, gcc-multilib [amd64], libc6-dev-i386 (>> 2.3.0) [amd64], docbook,
   docbook-xsl, docbook-xml, xsltproc
