@@ -1,4 +1,4 @@
-valgrind (1:3.6.1-1) UNRELEASED; urgency=low
+valgrind (1:3.6.1-1) unstable; urgency=low
 
   * Migrate to format 3.0 (quilt):
       - use upstream .tar.bz2 directly;
@@ -12,7 +12,7 @@ valgrind (1:3.6.1-1) UNRELEASED; urgency=low
       - Add VCS-* Headers.
       - Add Homepage Header.
 
- -- Pierre Habouzit <madcoder@debian.org>  Mon, 09 May 2011 22:34:18 +0200
+ -- Pierre Habouzit <madcoder@debian.org>  Mon, 09 May 2011 22:55:27 +0200
 
 valgrind (1:3.6.0~svn11254+nmu1) unstable; urgency=medium
 
