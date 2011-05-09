@@ -4,6 +4,7 @@ valgrind (1:3.6.1-1) UNRELEASED; urgency=low
     - use upstream .tar.bz2 directly;
     - migrate patches from dpatch to debian/patches/*.
   * Add myself to Uploaders.
+  * New upstream release (Closes: 622586, 625180).
 
  -- Pierre Habouzit <madcoder@debian.org>  Mon, 09 May 2011 22:34:18 +0200
 
