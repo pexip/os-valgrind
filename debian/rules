@@ -24,7 +24,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp debian.supp
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean
 
 target=$(CURDIR)/debian/valgrind

@@ -1,3 +1,5 @@
+Bump version and bug reporting address
+
 diff --git a/configure b/configure
 index 699137b..86f1077 100755
 --- a/configure
