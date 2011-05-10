@@ -1,3 +1,4 @@
 0001-more-vg-n-segments.patch
 0002-version.patch
 0003-prevent-gcc-4.6-warnings-with-valgrind.h.patch
+0004-allow-or-quoting-of-strings-in-.valgrindrc.patch
