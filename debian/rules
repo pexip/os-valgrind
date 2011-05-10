@@ -1,5 +1,27 @@
 #!/usr/bin/make -f
 
+CROSS :=
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+ifneq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+    CROSS :=  $(DEB_HOST_GNU_TYPE)
+endif
+
+# this outputs 0 or 1 depending on whether a piece of assembly can be compiled
+# with the *default* gcc flags; this is used to test the toolchain *default*
+# configuration
+check_asm = $(shell echo 'void foo(void) { __asm__ volatile("$(1)"); }' | $(CROSS)gcc -x c -c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
+
+ifeq ($(DEB_HOST_ARCH_CPU),arm)
+    # whether the toolchain *default* configuration enables ARMv7
+    v7_asm := dmb
+    has_v7 := $(call check_asm, $(v7_asm))
+
+ifneq ($(has_v7),1)
+    CFLAGS += -march=armv7-a
+endif
+endif
+
 config.sub config.guess: %: /usr/share/misc/%
 	rm -f $@
 	cp -a $< $@
@@ -7,7 +29,8 @@ config.sub config.guess: %: /usr/share/misc/%
 config.status: config.sub config.guess
 	dh_testdir
 	cat xfree-4.supp debian/debian.supp > debian.supp
-	./configure --prefix=/usr \
+	./configure CFLAGS="$(CFLAGS)" \
+		--prefix=/usr \
 		--mandir=\$${prefix}/share/man \
 		--enable-tls
 
