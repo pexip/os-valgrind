@@ -467,3 +467,10 @@
    obj:/lib/ld-2.10.1.so
 }
 
+{
+   Debian libc6 getpw* leaks glibc-bug-2314, debian-bug-598870
+   Memcheck:Leak
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+}
