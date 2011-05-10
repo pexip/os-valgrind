@@ -3,3 +3,4 @@
 0003-prevent-gcc-4.6-warnings-with-valgrind.h.patch
 0004-allow-or-quoting-of-strings-in-.valgrindrc.patch
 0005-catch-manpages-errors.patch
+0006-workaround-SIGSEGV-on-PPC.patch
