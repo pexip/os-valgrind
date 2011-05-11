@@ -17,3 +17,12 @@ index 699137b..86f1077 100755
  PACKAGE_URL=''
  
  ac_unique_file="coregrind/m_main.c"
+@@ -5262,7 +5262,7 @@ $as_echo "ok (${host_cpu})" >&6; }
+         esac
+         ;;
+ 
+-     armv7*)
++     arm*)
+ 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ok (${host_cpu})" >&5
+ $as_echo "ok (${host_cpu})" >&6; }
+ 	ARCH_MAX="arm"
