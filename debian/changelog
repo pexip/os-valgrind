@@ -1,3 +1,11 @@
+valgrind (1:3.6.1-4) unstable; urgency=low
+
+  * Fix patches/0004-allow-or-quoting-of-strings-in-.valgrindrc.patch: out was
+    copied too early leading to bad option parsing in case of leading spaces
+    (Closes: 626486, 626496).
+
+ -- Pierre Habouzit <madcoder@debian.org>  Thu, 12 May 2011 19:44:22 +0200
+
 valgrind (1:3.6.1-3) unstable; urgency=low
 
   * update 0002-version.patch to loosen the checks on the arm version

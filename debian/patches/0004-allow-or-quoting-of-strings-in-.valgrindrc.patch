@@ -19,14 +19,15 @@ index 161e571..3aff3cd 100644
 +   int quoted = '\0';
     vg_assert(cp);
     while (True) {
-+      HChar* out = cp;
++      HChar* out;
        // We have alternating sequences: blanks, non-blanks, blanks...
        // copy the non-blanks sequences, and add terminating '\0'
 +      // deal with " or '-quoted strings properly.
        while (VG_(isspace)(*cp)) cp++;
        if (*cp == 0) break;
-       tmp = cp;
+-      tmp = cp;
 -      while ( !VG_(isspace)(*cp) && *cp != 0 ) cp++;
++      tmp = out = cp;
 +      while ( (quoted || !VG_(isspace)(*cp)) && *cp) {
 +          if (*cp == quoted) {
 +              quoted = '\0';
