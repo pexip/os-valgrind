@@ -3,6 +3,7 @@ valgrind (1:3.6.1-5) UNRELEASED; urgency=low
   * debian/rules:
       - use autotools-dev dh_autotools-dev_updateconfig.
       - do now strip under /usr/lib/valgrind (Closes: 475562).
+  * Add armhf to the supported architectures.
 
  -- Pierre Habouzit <madcoder@debian.org>  Fri, 13 May 2011 14:29:50 +0200
 
