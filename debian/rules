@@ -22,11 +22,8 @@ ifneq ($(has_v7),1)
 endif
 endif
 
-config.sub config.guess: %: /usr/share/misc/%
-	rm -f $@
-	cp -a $< $@
-
-config.status: config.sub config.guess
+config.status:
+	dh_autotools-dev_updateconfig
 	dh_testdir
 	cat xfree-4.supp debian/debian.supp > debian.supp
 	./configure CFLAGS="$(CFLAGS)" \
@@ -48,6 +45,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp debian.supp
 	[ ! -f Makefile ] || $(MAKE) distclean
+	dh_autotools-dev_restoreconfig
 	dh_clean
 
 target=$(CURDIR)/debian/valgrind
