@@ -1,8 +1,8 @@
-/* -*- mode: C; c-basic-offset: 3; -*- */
+/* -*- mode: C; c-basic-offset: 3; indent-tabs-mode: nil; -*- */
 /*
   This file is part of drd, a thread error detector.
 
-  Copyright (C) 2006-2010 Bart Van Assche <bvanassche@acm.org>.
+  Copyright (C) 2006-2011 Bart Van Assche <bvanassche@acm.org>.
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License as
@@ -171,8 +171,7 @@ void DRD_(thread_new_segment_and_combine_vc)(DrdThreadId tid,
 void DRD_(thread_update_conflict_set)(const DrdThreadId tid,
                                       const VectorClock* const old_vc);
 
-void DRD_(thread_stop_using_mem)(const Addr a1, const Addr a2,
-                                 const Bool dont_clear_access);
+void DRD_(thread_stop_using_mem)(const Addr a1, const Addr a2);
 void DRD_(thread_set_record_loads)(const DrdThreadId tid, const Bool enabled);
 void DRD_(thread_set_record_stores)(const DrdThreadId tid, const Bool enabled);
 void DRD_(thread_print_all)(void);

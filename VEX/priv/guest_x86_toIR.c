@@ -998,7 +998,10 @@ static void setFlags_DEP1_DEP2_shift ( IROp    op32,
                                    widenUto32(mkexpr(resUS)))) );
    /* Set NDEP even though it isn't used.  This makes redundant-PUT
       elimination of previous stores to this field work better. */
-   stmt( IRStmt_Put( OFFB_CC_NDEP, mkU32(0) ));
+   stmt( IRStmt_Put( OFFB_CC_NDEP,
+                     IRExpr_Mux0X( mkexpr(guard),
+                                   IRExpr_Get(OFFB_CC_NDEP,Ity_I32),
+				   mkU32(0) )));
 }
 
 
@@ -8095,6 +8098,7 @@ DisResult disInstr_X86_WRK (
 
       addr = disAMode ( &alen, sorb, delta+2, dis_buf );
       delta += 2+alen;
+      gen_SEGV_if_not_16_aligned(addr);
 
       DIP("fxsave %s\n", dis_buf);
 
@@ -8165,11 +8169,15 @@ DisResult disInstr_X86_WRK (
 
       addr = disAMode ( &alen, sorb, delta+2, dis_buf );
       delta += 2+alen;
+      gen_SEGV_if_not_16_aligned(addr);
 
       DIP("fxrstor %s\n", dis_buf);
 
       /* Uses dirty helper: 
-            void x86g_do_FXRSTOR ( VexGuestX86State*, UInt ) */
+            VexEmWarn x86g_do_FXRSTOR ( VexGuestX86State*, UInt )
+         NOTE:
+            the VexEmWarn value is simply ignored (unlike for FRSTOR)
+      */
       d = unsafeIRDirty_0_N ( 
              0/*regparms*/, 
              "x86g_dirtyhelper_FXRSTOR", 

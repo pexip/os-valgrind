@@ -29,7 +29,7 @@
 #include "global.h"
 #include "costs.h"
 
-#include <pub_tool_threadstate.h>
+#include "pub_tool_threadstate.h"
 
 /*------------------------------------------------------------*/
 /*--- BBCC operations                                      ---*/
@@ -693,6 +693,7 @@ void CLG_(setup_bbcc)(BB* bb)
 		/* change source for delayed push */
 		CLG_(current_state).bbcc = top_ce->jcc->from;
 		sp = top_ce->sp;
+		passed = top_ce->jcc->jmp;
 		CLG_(pop_call_stack)();
 	    }
 	    else {
@@ -840,6 +841,8 @@ void CLG_(setup_bbcc)(BB* bb)
     if (!skip && CLG_(current_state).nonskipped) {
       /* a call from skipped to nonskipped */
       CLG_(current_state).bbcc = CLG_(current_state).nonskipped;
+      /* FIXME: take the real passed count from shadow stack */
+      passed = CLG_(current_state).bbcc->bb->cjmp_count;
     }
     CLG_(push_call_stack)(CLG_(current_state).bbcc, passed,
 			 bbcc, sp, skip);

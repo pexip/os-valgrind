@@ -1,8 +1,8 @@
-/* -*- mode: C; c-basic-offset: 3; -*- */
+/* -*- mode: C; c-basic-offset: 3; indent-tabs-mode: nil; -*- */
 /*
   This file is part of drd, a thread error detector.
 
-  Copyright (C) 2006-2010 Bart Van Assche <bvanassche@acm.org>.
+  Copyright (C) 2006-2011 Bart Van Assche <bvanassche@acm.org>.
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License as
@@ -28,6 +28,7 @@
 #include "drd_clientreq.h"
 #include "drd_cond.h"
 #include "drd_error.h"
+#include "drd_hb.h"
 #include "drd_load_store.h"
 #include "drd_malloc_wrappers.h"
 #include "drd_mutex.h"
@@ -56,11 +57,10 @@
 
 /* Local variables. */
 
-static Bool s_free_is_write    = False;
-static Bool s_print_stats      = False;
-static Bool s_var_info         = False;
-static Bool s_show_stack_usage = False;
-static Bool s_trace_alloc      = False;
+static Bool s_print_stats;
+static Bool s_var_info;
+static Bool s_show_stack_usage;
+static Bool s_trace_alloc;
 
 
 /**
@@ -81,6 +81,7 @@ static Bool DRD_(process_cmd_line_option)(Char* arg)
    int trace_cond             = -1;
    int trace_csw              = -1;
    int trace_fork_join        = -1;
+   int trace_hb               = -1;
    int trace_conflict_set     = -1;
    int trace_conflict_set_bm  = -1;
    int trace_mutex            = -1;
@@ -93,7 +94,7 @@ static Bool DRD_(process_cmd_line_option)(Char* arg)
    if      VG_BOOL_CLO(arg, "--check-stack-var",     check_stack_accesses) {}
    else if VG_BOOL_CLO(arg, "--drd-stats",           s_print_stats) {}
    else if VG_BOOL_CLO(arg, "--first-race-only",     first_race_only) {}
-   else if VG_BOOL_CLO(arg, "--free-is-write",       s_free_is_write) {}
+   else if VG_BOOL_CLO(arg, "--free-is-write",       DRD_(g_free_is_write)) {}
    else if VG_BOOL_CLO(arg,"--report-signal-unlocked",report_signal_unlocked)
    {}
    else if VG_BOOL_CLO(arg, "--segment-merging",     segment_merging) {}
@@ -109,6 +110,7 @@ static Bool DRD_(process_cmd_line_option)(Char* arg)
    else if VG_BOOL_CLO(arg, "--trace-conflict-set-bm", trace_conflict_set_bm){}
    else if VG_BOOL_CLO(arg, "--trace-csw",           trace_csw) {}
    else if VG_BOOL_CLO(arg, "--trace-fork-join",     trace_fork_join) {}
+   else if VG_BOOL_CLO(arg, "--trace-hb",            trace_hb) {}
    else if VG_BOOL_CLO(arg, "--trace-mutex",         trace_mutex) {}
    else if VG_BOOL_CLO(arg, "--trace-rwlock",        trace_rwlock) {}
    else if VG_BOOL_CLO(arg, "--trace-segment",       trace_segment) {}
@@ -161,6 +163,8 @@ static Bool DRD_(process_cmd_line_option)(Char* arg)
       DRD_(thread_trace_context_switches)(trace_csw);
    if (trace_fork_join != -1)
       DRD_(thread_set_trace_fork_join)(trace_fork_join);
+   if (trace_hb != -1)
+      DRD_(hb_set_trace)(trace_hb);
    if (trace_conflict_set != -1)
       DRD_(thread_trace_conflict_set)(trace_conflict_set);
    if (trace_conflict_set_bm != -1)
@@ -185,7 +189,8 @@ static void DRD_(print_usage)(void)
 "    --check-stack-var=yes|no  Whether or not to report data races on\n"
 "                              stack variables [no].\n"
 "    --exclusive-threshold=<n> Print an error message if any mutex or\n"
-"        writer lock is held longer than the specified time (in milliseconds).\n"
+"                              writer lock is held longer than the specified\n"
+"                              time (in milliseconds) [off].\n"
 "    --first-race-only=yes|no  Only report the first data race that occurs on\n"
 "                              a memory location instead of all races [no].\n"
 "    --free-is-write=yes|no    Whether to report races between freeing memory\n"
@@ -202,7 +207,8 @@ static void DRD_(print_usage)(void)
 "    --segment-merging-interval=<n> Perform segment merging every time n new\n"
 "        segments have been created. Default: %d.\n"
 "    --shared-threshold=<n>    Print an error message if a reader lock\n"
-"        is held longer than the specified time (in milliseconds).\n"
+"                              is held longer than the specified time (in\n"
+"                              milliseconds) [off]\n"
 "    --show-confl-seg=yes|no   Show conflicting segments in race reports [yes].\n"
 "    --show-stack-usage=yes|no Print stack usage at thread exit time [no].\n"
 "\n"
@@ -296,12 +302,17 @@ static __inline__
 void drd_start_using_mem(const Addr a1, const SizeT len,
                          const Bool is_stack_mem)
 {
-   tl_assert(a1 <= a1 + len);
+   const Addr a2 = a1 + len;
+
+   tl_assert(a1 <= a2);
 
    if (!is_stack_mem && s_trace_alloc)
       VG_(message)(Vg_UserMsg, "Started using memory range 0x%lx + %ld%s\n",
                    a1, len, DRD_(running_thread_inside_pthread_create)()
                    ? " (inside pthread_create())" : "");
+
+   if (!is_stack_mem && DRD_(g_free_is_write))
+      DRD_(thread_stop_using_mem)(a1, a2);
 
    if (UNLIKELY(DRD_(any_address_is_traced)()))
    {
@@ -310,7 +321,7 @@ void drd_start_using_mem(const Addr a1, const SizeT len,
 
    if (UNLIKELY(DRD_(running_thread_inside_pthread_create)()))
    {
-      DRD_(start_suppression)(a1, a1 + len, "pthread_create()");
+      DRD_(start_suppression)(a1, a2, "pthread_create()");
    }
 }
 
@@ -345,12 +356,13 @@ void drd_stop_using_mem(const Addr a1, const SizeT len,
 
    if (!is_stack_mem || DRD_(get_check_stack_accesses)())
    {
-      DRD_(thread_stop_using_mem)(a1, a2, !is_stack_mem && s_free_is_write);
+      if (is_stack_mem || !DRD_(g_free_is_write))
+	 DRD_(thread_stop_using_mem)(a1, a2);
+      else if (DRD_(g_free_is_write))
+	 DRD_(trace_store)(a1, len);
       DRD_(clientobj_stop_using_mem)(a1, a2);
       DRD_(suppression_stop_using_mem)(a1, a2);
    }
-   if (!is_stack_mem && s_free_is_write)
-      DRD_(trace_store)(a1, len);
 }
 
 static __inline__
@@ -739,7 +751,7 @@ void drd_pre_clo_init(void)
    VG_(details_name)            ("drd");
    VG_(details_version)         (NULL);
    VG_(details_description)     ("a thread error detector");
-   VG_(details_copyright_author)("Copyright (C) 2006-2010, and GNU GPL'd,"
+   VG_(details_copyright_author)("Copyright (C) 2006-2011, and GNU GPL'd,"
                                  " by Bart Van Assche.");
    VG_(details_bug_reports_to)  (VG_BUGS_TO);
 

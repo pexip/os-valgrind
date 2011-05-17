@@ -31,6 +31,7 @@
 
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
+#include "pub_core_libcsetjmp.h" // to keep _threadstate.h happy
 #include "pub_core_threadstate.h"
 #include "pub_core_debuginfo.h"  /* self */
 #include "pub_core_demangle.h"
@@ -703,6 +704,15 @@ ULong VG_(di_notify_mmap)( Addr a, Bool allow_SkFileV )
 
       2009 Aug 16: apply similar kludge to ppc32-linux.
       See http://bugs.kde.org/show_bug.cgi?id=190820
+
+      There are two modes on s390x: with and without the noexec kernel
+      parameter. Together with some older kernels, this leads to several
+      variants:
+      executable: r and x
+      data:       r and w and x
+      or
+      executable: r and x
+      data:       r and w
    */
    is_rx_map = False;
    is_rw_map = False;
@@ -712,6 +722,9 @@ ULong VG_(di_notify_mmap)( Addr a, Bool allow_SkFileV )
 #  elif defined(VGA_amd64) || defined(VGA_ppc64) || defined(VGA_arm)
    is_rx_map = seg->hasR && seg->hasX && !seg->hasW;
    is_rw_map = seg->hasR && seg->hasW && !seg->hasX;
+#  elif defined(VGP_s390x_linux)
+   is_rx_map = seg->hasR && seg->hasX && !seg->hasW;
+   is_rw_map = seg->hasR && seg->hasW;
 #  else
 #    error "Unknown platform"
 #  endif
@@ -914,8 +927,8 @@ void VG_(di_notify_pdb_debuginfo)( Int fd_obj, Addr avma_obj,
    if (VG_(clo_verbosity) > 0) {
       VG_(message)(Vg_UserMsg, "\n");
       VG_(message)(Vg_UserMsg,
-         "LOAD_PDB_DEBUGINFO(fd=%d, avma=%#lx, total_size=%lu, "
-         "uu_reloc=%#lx)\n", 
+         "LOAD_PDB_DEBUGINFO: clreq:   fd=%d, avma=%#lx, total_size=%lu, "
+         "uu_reloc=%#lx\n", 
          fd_obj, avma_obj, total_size, unknown_purpose__reloc
       );
    }
@@ -1056,12 +1069,35 @@ void VG_(di_notify_pdb_debuginfo)( Int fd_obj, Addr avma_obj,
       goto out;
    }
 
-   /* Looks promising; go on to try and read stuff from it. */
+   /* Looks promising; go on to try and read stuff from it.  But don't
+      mmap the file.  Instead mmap free space and read the file into
+      it.  This is because files on CIFS filesystems that are mounted
+      '-o directio' can't be mmap'd, and that mount option is needed
+      to make CIFS work reliably.  (See
+      http://www.nabble.com/Corrupted-data-on-write-to-
+                            Windows-2003-Server-t2782623.html)
+      This is slower, but at least it works reliably. */
    fd_pdbimage = sr_Res(sres);
    n_pdbimage  = stat_buf.size;
-   sres = VG_(am_mmap_file_float_valgrind)( n_pdbimage, VKI_PROT_READ,
-                                            fd_pdbimage, 0 );
+   if (n_pdbimage == 0 || n_pdbimage > 0x7FFFFFFF) {
+      // 0x7FFFFFFF: why?  Because the VG_(read) just below only
+      // can deal with a signed int as the size of data to read,
+      // so we can't reliably check for read failure for files
+      // greater than that size.  Hence just skip them; we're
+      // unlikely to encounter a PDB that large anyway.
+      VG_(close)(fd_pdbimage);
+      goto out;
+   }
+   sres = VG_(am_mmap_anon_float_valgrind)( n_pdbimage );
    if (sr_isError(sres)) {
+      VG_(close)(fd_pdbimage);
+      goto out;
+   }
+
+   void* pdbimage = (void*)sr_Res(sres);
+   r = VG_(read)( fd_pdbimage, pdbimage, (Int)n_pdbimage );
+   if (r < 0 || r != (Int)n_pdbimage) {
+      VG_(am_munmap_valgrind)( (Addr)pdbimage, n_pdbimage );
       VG_(close)(fd_pdbimage);
       goto out;
    }
@@ -1075,8 +1111,7 @@ void VG_(di_notify_pdb_debuginfo)( Int fd_obj, Addr avma_obj,
    /* dump old info for this range, if any */
    discard_syms_in_range( avma_obj, total_size );
 
-   { void* pdbimage = (void*)sr_Res(sres);
-     DebugInfo* di = find_or_create_DebugInfo_for(exename, NULL/*membername*/ );
+   { DebugInfo* di = find_or_create_DebugInfo_for(exename, NULL/*membername*/ );
 
      /* this di must be new, since we just nuked any old stuff in the range */
      vg_assert(di && !di->have_rx_map && !di->have_rw_map);
@@ -1091,6 +1126,12 @@ void VG_(di_notify_pdb_debuginfo)( Int fd_obj, Addr avma_obj,
      vg_assert(di->have_dinfo); // fails if PDB read failed
      VG_(am_munmap_valgrind)( (Addr)pdbimage, n_pdbimage );
      VG_(close)(fd_pdbimage);
+
+     if (VG_(clo_verbosity) > 0) {
+        VG_(message)(Vg_UserMsg, "LOAD_PDB_DEBUGINFO: done:    "
+                                 "%lu syms, %lu src locs, %lu fpo recs\n",
+                     di->symtab_used, di->loctab_used, di->fpo_size);
+     }
    }
 
   out:
@@ -1972,6 +2013,11 @@ UWord evalCfiExpr ( XArray* exprs, Int ix,
             case Creg_ARM_R14: return eec->uregs->r14;
             case Creg_ARM_R13: return eec->uregs->r13;
             case Creg_ARM_R12: return eec->uregs->r12;
+#           elif defined(VGA_s390x)
+            case Creg_IA_IP: return eec->uregs->ia;
+            case Creg_IA_SP: return eec->uregs->sp;
+            case Creg_IA_BP: return eec->uregs->fp;
+            case Creg_S390_R14: return eec->uregs->lr;
 #           elif defined(VGA_ppc32) || defined(VGA_ppc64)
 #           else
 #             error "Unsupported arch"
@@ -2182,6 +2228,24 @@ static Addr compute_cfa ( D3UnwindRegs* uregs,
       case CFIC_ARM_R7REL: 
          cfa = cfsi->cfa_off + uregs->r7;
          break;
+#     elif defined(VGA_s390x)
+      case CFIC_IA_SPREL:
+         cfa = cfsi->cfa_off + uregs->sp;
+         break;
+      case CFIR_MEMCFAREL:
+      {
+         Addr a = uregs->sp + cfsi->cfa_off;
+         if (a < min_accessible || a > max_accessible-sizeof(Addr))
+            break;
+         cfa = *(Addr*)a;
+         break;
+      }
+      case CFIR_SAME:
+         cfa = uregs->fp;
+         break;
+      case CFIC_IA_BPREL:
+         cfa = cfsi->cfa_off + uregs->fp;
+         break;
 #     elif defined(VGA_ppc32) || defined(VGA_ppc64)
 #     else
 #       error "Unsupported arch"
@@ -2214,7 +2278,7 @@ Addr ML_(get_CFA) ( Addr ip, Addr sp, Addr fp,
 {
    CFSICacheEnt* ce;
    DebugInfo*    di;
-   DiCfSI*       cfsi;
+   DiCfSI*       cfsi __attribute__((unused));
 
    ce = cfsi_cache__find(ip);
 
@@ -2234,6 +2298,15 @@ Addr ML_(get_CFA) ( Addr ip, Addr sp, Addr fp,
      return compute_cfa(&uregs,
                         min_accessible,  max_accessible, di, cfsi);
    }
+#elif defined(VGA_s390x)
+   { D3UnwindRegs uregs;
+     uregs.ia = ip;
+     uregs.sp = sp;
+     uregs.fp = fp;
+     return compute_cfa(&uregs,
+                        min_accessible,  max_accessible, di, cfsi);
+   }
+
 #  else
    return 0; /* indicates failure */
 #  endif
@@ -2254,18 +2327,19 @@ Bool VG_(use_CF_info) ( /*MOD*/D3UnwindRegs* uregsHere,
                         Addr min_accessible,
                         Addr max_accessible )
 {
-   Bool               ok;
    DebugInfo*         di;
    DiCfSI*            cfsi = NULL;
    Addr               cfa, ipHere = 0;
    CFSICacheEnt*      ce;
-   CfiExprEvalContext eec;
+   CfiExprEvalContext eec __attribute__((unused));
    D3UnwindRegs       uregsPrev;
 
 #  if defined(VGA_x86) || defined(VGA_amd64)
    ipHere = uregsHere->xip;
 #  elif defined(VGA_arm)
    ipHere = uregsHere->r15;
+#  elif defined(VGA_s390x)
+   ipHere = uregsHere->ia;
 #  elif defined(VGA_ppc32) || defined(VGA_ppc64)
 #  else
 #    error "Unknown arch"
@@ -2318,7 +2392,7 @@ Bool VG_(use_CF_info) ( /*MOD*/D3UnwindRegs* uregsHere,
                eec.uregs = uregsHere;                   \
                eec.min_accessible = min_accessible;     \
                eec.max_accessible = max_accessible;     \
-               ok = True;                               \
+               Bool ok = True;                          \
                _prev = evalCfiExpr(di->cfsi_exprs, _off, &eec, &ok ); \
                if (!ok) return False;                   \
                break;                                   \
@@ -2338,6 +2412,10 @@ Bool VG_(use_CF_info) ( /*MOD*/D3UnwindRegs* uregsHere,
    COMPUTE(uregsPrev.r12, uregsHere->r12, cfsi->r12_how, cfsi->r12_off);
    COMPUTE(uregsPrev.r11, uregsHere->r11, cfsi->r11_how, cfsi->r11_off);
    COMPUTE(uregsPrev.r7,  uregsHere->r7,  cfsi->r7_how,  cfsi->r7_off);
+#  elif defined(VGA_s390x)
+   COMPUTE(uregsPrev.ia, uregsHere->ia, cfsi->ra_how, cfsi->ra_off);
+   COMPUTE(uregsPrev.sp, uregsHere->sp, cfsi->sp_how, cfsi->sp_off);
+   COMPUTE(uregsPrev.fp, uregsHere->fp, cfsi->fp_how, cfsi->fp_off);
 #  elif defined(VGA_ppc32) || defined(VGA_ppc64)
 #  else
 #    error "Unknown arch"
@@ -2587,7 +2665,16 @@ static void format_message ( /*MOD*/XArray* /* of HChar */ dn1,
    UChar* basetag   = "auxwhat"; /* a constant */
    UChar tagL[32], tagR[32], xagL[32], xagR[32];
 
-   vg_assert(frameNo >= -1);
+   if (frameNo < -1) {
+      vg_assert(0); /* Not allowed */
+   }
+   else if (frameNo == -1) {
+      vg_assert(tid == VG_INVALID_THREADID);
+   }
+   else /* (frameNo >= 0) */ {
+      vg_assert(tid != VG_INVALID_THREADID);
+   }
+
    vg_assert(dn1 && dn2);
    vg_assert(described);
    vg_assert(var && var->name);
@@ -3074,7 +3161,8 @@ Bool VG_(get_data_description)(
                                                     var->typeR, offset );
             format_message( dname1, dname2,
                             data_addr, var, offset, residual_offset,
-                            described, -1/*frameNo*/, tid );
+                            described, -1/*frameNo*/,
+                            VG_INVALID_THREADID );
             VG_(deleteXA)( described );
             zterm_XA( dname1 );
             zterm_XA( dname2 );
@@ -3332,7 +3420,6 @@ void* /* really, XArray* of StackBlock */
    /* This is a derivation of consider_vars_in_frame() above. */
    Word       i;
    DebugInfo* di;
-   RegSummary regs;
    Bool debug = False;
 
    XArray* res = VG_(newXA)( ML_(dinfo_zalloc), "di.debuginfo.dgsbai.1",
@@ -3384,9 +3471,6 @@ void* /* really, XArray* of StackBlock */
       variables on each such address range found are in scope right
       now.  Don't descend to level zero as that is the global
       scope. */
-   regs.ip = ip;
-   regs.sp = 0;
-   regs.fp = 0;
 
    /* "for each scope, working outwards ..." */
    for (i = VG_(sizeXA)(di->varinfo) - 1; i >= 1; i--) {
