@@ -7,6 +7,8 @@ valgrind (1:3.6.99svn11761-1) experimental; urgency=low
       - this comes with better handling of registers (Closes: 576236).
       - 3.7.0 has a s390x port, so enable it as an architecture and see where
         it goes.
+  * remove 0003-prevent-gcc-4.6-warnings-with-valgrind.h.patch since upstream
+    now integrates those changes.
 
  -- Pierre Habouzit <madcoder@debian.org>  Tue, 17 May 2011 08:47:28 +0200
 
