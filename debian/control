@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Andrés Roldán <aroldan@debian.org>
 Uploaders: Pierre Habouzit <madcoder@debian.org>
-Build-Depends: debhelper (>> 7.0.0), libc6-dev (>> 2.3.0), autotools-dev (>= 20100122.1),
+Build-Depends: debhelper (>= 7.0.50~), libc6-dev (>> 2.3.0), autotools-dev (>= 20100122.1),
   gdb, gcc-multilib [amd64], libc6-dev-i386 (>> 2.3.0) [amd64], docbook,
   docbook-xsl, docbook-xml, xsltproc
 Standards-Version: 3.9.2

@@ -9,6 +9,9 @@ valgrind (1:3.6.99svn11761-1) experimental; urgency=low
         it goes.
   * remove 0003-prevent-gcc-4.6-warnings-with-valgrind.h.patch since upstream
     now integrates those changes.
+  * lintian fixes:
+      - add overrides for sgcheck binaries and DSO.
+      - update debhelper version depends to 7.0.50~ as suggested.
 
  -- Pierre Habouzit <madcoder@debian.org>  Tue, 17 May 2011 08:47:28 +0200
 
