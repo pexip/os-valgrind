@@ -33,8 +33,14 @@ override_dh_auto_test:
 	: # do nothing for now
 
 override_dh_clean:
-	dh_clean
+	dh_clean --parallel
 	$(RM) debian.supp
+
+override_dh_auto_build:
+	dh_auto_build --parallel
+	$(MAKE) -C docs html-docs
+	$(MAKE) -C docs man-pages
+
 
 target=$(CURDIR)/debian/valgrind
 override_dh_install:
