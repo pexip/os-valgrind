@@ -1088,14 +1088,13 @@ static HChar* nCC ( ARMCondcode cond ) {
 static IRExpr* mk_armg_calculate_condition_dyn ( IRExpr* cond )
 {
    vassert(typeOfIRExpr(irsb->tyenv, cond) == Ity_I32);
-   /* And 'cond' had better produce a value in which only bits 7:4
-      bits are nonzero.  However, obviously we can't assert for
-      that. */
+   /* And 'cond' had better produce a value in which only bits 7:4 are
+      nonzero.  However, obviously we can't assert for that. */
 
    /* So what we're constructing for the first argument is 
-      "(cond << 4) | stored-operation-operation".  However,
-      as per comments above, must be supplied pre-shifted to this
-      function.
+      "(cond << 4) | stored-operation".
+      However, as per comments above, 'cond' must be supplied
+      pre-shifted to this function.
 
       This pairing scheme requires that the ARM_CC_OP_ values all fit
       in 4 bits.  Hence we are passing a (COND, OP) pair in the lowest
@@ -1700,6 +1699,12 @@ IRExpr* signed_overflow_after_Add32 ( IRExpr* resE,
 
    The calling convention for res and newC is a bit funny.  They could
    be passed by value, but instead are passed by ref.
+
+   The C (shco) value computed must be zero in bits 31:1, as the IR
+   optimisations for flag handling (guest_arm_spechelper) rely on
+   that, and the slow-path handlers (armg_calculate_flags_nzcv) assert
+   for it.  Same applies to all these functions that compute shco
+   after a shift or rotate, not just this one.
 */
 
 static void compute_result_and_C_after_LSL_by_imm5 (
@@ -1751,7 +1756,7 @@ static void compute_result_and_C_after_LSL_by_reg (
       /* mux0X(amt == 0,
                mux0X(amt < 32, 
                      0,
-                     Rm[(32-amt) & 31])
+                     Rm[(32-amt) & 31]),
                oldC)
       */
       /* About the best you can do is pray that iropt is able
@@ -1767,16 +1772,19 @@ static void compute_result_and_C_after_LSL_by_reg (
                unop(Iop_1Uto8,
                     binop(Iop_CmpLE32U, mkexpr(amtT), mkU32(32))),
                mkU32(0),
-               binop(Iop_Shr32,
-                     mkexpr(rMt),
-                     unop(Iop_32to8,
-                          binop(Iop_And32,
-                                binop(Iop_Sub32,
-                                      mkU32(32),
-                                      mkexpr(amtT)),
-                                mkU32(31)
-                          )
-                     )
+               binop(Iop_And32,
+                     binop(Iop_Shr32,
+                           mkexpr(rMt),
+                           unop(Iop_32to8,
+                                binop(Iop_And32,
+                                      binop(Iop_Sub32,
+                                            mkU32(32),
+                                            mkexpr(amtT)),
+                                      mkU32(31)
+                                )
+                           )
+                     ),
+                     mkU32(1)
                )
             ),
             mkexpr(oldC)
@@ -1862,7 +1870,7 @@ static void compute_result_and_C_after_LSR_by_reg (
       /* mux0X(amt == 0,
                mux0X(amt < 32, 
                      0,
-                     Rm[(amt-1) & 31])
+                     Rm[(amt-1) & 31]),
                oldC)
       */
       IRTemp oldC = newTemp(Ity_I32);
@@ -1876,16 +1884,19 @@ static void compute_result_and_C_after_LSR_by_reg (
                unop(Iop_1Uto8,
                     binop(Iop_CmpLE32U, mkexpr(amtT), mkU32(32))),
                mkU32(0),
-               binop(Iop_Shr32,
-                     mkexpr(rMt),
-                     unop(Iop_32to8,
-                          binop(Iop_And32,
-                                binop(Iop_Sub32,
-                                      mkexpr(amtT),
-                                      mkU32(1)),
-                                mkU32(31)
-                          )
-                     )
+               binop(Iop_And32,
+                     binop(Iop_Shr32,
+                           mkexpr(rMt),
+                           unop(Iop_32to8,
+                                binop(Iop_And32,
+                                      binop(Iop_Sub32,
+                                            mkexpr(amtT),
+                                            mkU32(1)),
+                                      mkU32(31)
+                                )
+                           )
+                     ),
+                     mkU32(1)
                )
             ),
             mkexpr(oldC)
@@ -1984,20 +1995,26 @@ static void compute_result_and_C_after_ASR_by_reg (
             IRExpr_Mux0X(
                unop(Iop_1Uto8,
                     binop(Iop_CmpLE32U, mkexpr(amtT), mkU32(32))),
-               binop(Iop_Shr32,
-                     mkexpr(rMt),
-                     mkU8(31)
+               binop(Iop_And32,
+                     binop(Iop_Shr32,
+                           mkexpr(rMt),
+                           mkU8(31)
+                     ),
+                     mkU32(1)
                ),
-               binop(Iop_Shr32,
-                     mkexpr(rMt),
-                     unop(Iop_32to8,
-                          binop(Iop_And32,
-                                binop(Iop_Sub32,
-                                      mkexpr(amtT),
-                                      mkU32(1)),
-                                mkU32(31)
-                          )
-                     )
+               binop(Iop_And32,
+                     binop(Iop_Shr32,
+                           mkexpr(rMt),
+                           unop(Iop_32to8,
+                                binop(Iop_And32,
+                                      binop(Iop_Sub32,
+                                            mkexpr(amtT),
+                                            mkU32(1)),
+                                      mkU32(31)
+                                )
+                           )
+                     ),
+                     mkU32(1)
                )
             ),
             mkexpr(oldC)
@@ -3794,7 +3811,7 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
       case 5:
          if (B == 0) {
             /* VRSHL */
-            IROp op, op_shrn, op_shln, cmp_gt, op_sub, op_add;
+            IROp op, op_shrn, op_shln, cmp_gt, op_add;
             IRTemp shval, old_shval, imm_val, round;
             UInt i;
             ULong imm;
@@ -3814,28 +3831,24 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                switch (size) {
                   case 0:
                      op = Q ? Iop_Shl8x16 : Iop_Shl8x8;
-                     op_sub = Q ? Iop_Sub8x16 : Iop_Sub8x8;
                      op_add = Q ? Iop_Add8x16 : Iop_Add8x8;
                      op_shrn = Q ? Iop_ShrN8x16 : Iop_ShrN8x8;
                      op_shln = Q ? Iop_ShlN8x16 : Iop_ShlN8x8;
                      break;
                   case 1:
                      op = Q ? Iop_Shl16x8 : Iop_Shl16x4;
-                     op_sub = Q ? Iop_Sub16x8 : Iop_Sub16x4;
                      op_add = Q ? Iop_Add16x8 : Iop_Add16x4;
                      op_shrn = Q ? Iop_ShrN16x8 : Iop_ShrN16x4;
                      op_shln = Q ? Iop_ShlN16x8 : Iop_ShlN16x4;
                      break;
                   case 2:
                      op = Q ? Iop_Shl32x4 : Iop_Shl32x2;
-                     op_sub = Q ? Iop_Sub32x4 : Iop_Sub32x2;
                      op_add = Q ? Iop_Add32x4 : Iop_Add32x2;
                      op_shrn = Q ? Iop_ShrN32x4 : Iop_ShrN32x2;
                      op_shln = Q ? Iop_ShlN32x4 : Iop_ShlN32x2;
                      break;
                   case 3:
                      op = Q ? Iop_Shl64x2 : Iop_Shl64;
-                     op_sub = Q ? Iop_Sub64x2 : Iop_Sub64;
                      op_add = Q ? Iop_Add64x2 : Iop_Add64;
                      op_shrn = Q ? Iop_ShrN64x2 : Iop_Shr64;
                      op_shln = Q ? Iop_ShlN64x2 : Iop_Shl64;
@@ -3847,28 +3860,24 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                switch (size) {
                   case 0:
                      op = Q ? Iop_Sal8x16 : Iop_Sal8x8;
-                     op_sub = Q ? Iop_Sub8x16 : Iop_Sub8x8;
                      op_add = Q ? Iop_Add8x16 : Iop_Add8x8;
                      op_shrn = Q ? Iop_ShrN8x16 : Iop_ShrN8x8;
                      op_shln = Q ? Iop_ShlN8x16 : Iop_ShlN8x8;
                      break;
                   case 1:
                      op = Q ? Iop_Sal16x8 : Iop_Sal16x4;
-                     op_sub = Q ? Iop_Sub16x8 : Iop_Sub16x4;
                      op_add = Q ? Iop_Add16x8 : Iop_Add16x4;
                      op_shrn = Q ? Iop_ShrN16x8 : Iop_ShrN16x4;
                      op_shln = Q ? Iop_ShlN16x8 : Iop_ShlN16x4;
                      break;
                   case 2:
                      op = Q ? Iop_Sal32x4 : Iop_Sal32x2;
-                     op_sub = Q ? Iop_Sub32x4 : Iop_Sub32x2;
                      op_add = Q ? Iop_Add32x4 : Iop_Add32x2;
                      op_shrn = Q ? Iop_ShrN32x4 : Iop_ShrN32x2;
                      op_shln = Q ? Iop_ShlN32x4 : Iop_ShlN32x2;
                      break;
                   case 3:
                      op = Q ? Iop_Sal64x2 : Iop_Sal64x1;
-                     op_sub = Q ? Iop_Sub64x2 : Iop_Sub64;
                      op_add = Q ? Iop_Add64x2 : Iop_Add64;
                      op_shrn = Q ? Iop_ShrN64x2 : Iop_Shr64;
                      op_shln = Q ? Iop_ShlN64x2 : Iop_Shl64;
@@ -3939,7 +3948,7 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                 nreg);
          } else {
             /* VQRSHL */
-            IROp op, op_rev, op_shrn, op_shln, cmp_neq, cmp_gt, op_sub, op_add;
+            IROp op, op_rev, op_shrn, op_shln, cmp_neq, cmp_gt, op_add;
             IRTemp tmp, shval, mask, old_shval, imm_val, round;
             UInt i;
             ULong esize, imm;
@@ -3960,7 +3969,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                switch (size) {
                   case 0:
                      op = Q ? Iop_QShl8x16 : Iop_QShl8x8;
-                     op_sub = Q ? Iop_Sub8x16 : Iop_Sub8x8;
                      op_add = Q ? Iop_Add8x16 : Iop_Add8x8;
                      op_rev = Q ? Iop_Shr8x16 : Iop_Shr8x8;
                      op_shrn = Q ? Iop_ShrN8x16 : Iop_ShrN8x8;
@@ -3968,7 +3976,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                      break;
                   case 1:
                      op = Q ? Iop_QShl16x8 : Iop_QShl16x4;
-                     op_sub = Q ? Iop_Sub16x8 : Iop_Sub16x4;
                      op_add = Q ? Iop_Add16x8 : Iop_Add16x4;
                      op_rev = Q ? Iop_Shr16x8 : Iop_Shr16x4;
                      op_shrn = Q ? Iop_ShrN16x8 : Iop_ShrN16x4;
@@ -3976,7 +3983,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                      break;
                   case 2:
                      op = Q ? Iop_QShl32x4 : Iop_QShl32x2;
-                     op_sub = Q ? Iop_Sub32x4 : Iop_Sub32x2;
                      op_add = Q ? Iop_Add32x4 : Iop_Add32x2;
                      op_rev = Q ? Iop_Shr32x4 : Iop_Shr32x2;
                      op_shrn = Q ? Iop_ShrN32x4 : Iop_ShrN32x2;
@@ -3984,7 +3990,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                      break;
                   case 3:
                      op = Q ? Iop_QShl64x2 : Iop_QShl64x1;
-                     op_sub = Q ? Iop_Sub64x2 : Iop_Sub64;
                      op_add = Q ? Iop_Add64x2 : Iop_Add64;
                      op_rev = Q ? Iop_Shr64x2 : Iop_Shr64;
                      op_shrn = Q ? Iop_ShrN64x2 : Iop_Shr64;
@@ -3997,7 +4002,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                switch (size) {
                   case 0:
                      op = Q ? Iop_QSal8x16 : Iop_QSal8x8;
-                     op_sub = Q ? Iop_Sub8x16 : Iop_Sub8x8;
                      op_add = Q ? Iop_Add8x16 : Iop_Add8x8;
                      op_rev = Q ? Iop_Sar8x16 : Iop_Sar8x8;
                      op_shrn = Q ? Iop_ShrN8x16 : Iop_ShrN8x8;
@@ -4005,7 +4009,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                      break;
                   case 1:
                      op = Q ? Iop_QSal16x8 : Iop_QSal16x4;
-                     op_sub = Q ? Iop_Sub16x8 : Iop_Sub16x4;
                      op_add = Q ? Iop_Add16x8 : Iop_Add16x4;
                      op_rev = Q ? Iop_Sar16x8 : Iop_Sar16x4;
                      op_shrn = Q ? Iop_ShrN16x8 : Iop_ShrN16x4;
@@ -4013,7 +4016,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                      break;
                   case 2:
                      op = Q ? Iop_QSal32x4 : Iop_QSal32x2;
-                     op_sub = Q ? Iop_Sub32x4 : Iop_Sub32x2;
                      op_add = Q ? Iop_Add32x4 : Iop_Add32x2;
                      op_rev = Q ? Iop_Sar32x4 : Iop_Sar32x2;
                      op_shrn = Q ? Iop_ShrN32x4 : Iop_ShrN32x2;
@@ -4021,7 +4023,6 @@ Bool dis_neon_data_3same ( UInt theInstr, IRTemp condT )
                      break;
                   case 3:
                      op = Q ? Iop_QSal64x2 : Iop_QSal64x1;
-                     op_sub = Q ? Iop_Sub64x2 : Iop_Sub64;
                      op_add = Q ? Iop_Add64x2 : Iop_Add64;
                      op_rev = Q ? Iop_Sar64x2 : Iop_Sar64;
                      op_shrn = Q ? Iop_ShrN64x2 : Iop_Shr64;
@@ -5597,11 +5598,10 @@ Bool dis_neon_data_2reg_and_scalar ( UInt theInstr, IRTemp condT )
    if (INSN(11,8) == BITS4(1,0,1,1) && !U) {
       IROp op ,op2, dup, get;
       ULong imm;
-      IRTemp res, arg_m, arg_n;
+      IRTemp arg_m, arg_n;
       if (dreg & 1)
          return False;
       dreg >>= 1;
-      res = newTemp(Ity_V128);
       arg_m = newTemp(Ity_I64);
       arg_n = newTemp(Ity_I64);
       assign(arg_n, getDRegI64(nreg));
@@ -11942,11 +11942,25 @@ static Bool decode_NV_instruction ( /*MOD*/DisResult* dres,
          stmt( IRStmt_MBE(Imbe_Fence) );
          DIP("ISB\n");
          return True;
-      case 0xF57FF04F: /* DSB */
+      case 0xF57FF04F: /* DSB sy */
+      case 0xF57FF04E: /* DSB st */
+      case 0xF57FF04B: /* DSB ish */
+      case 0xF57FF04A: /* DSB ishst */
+      case 0xF57FF047: /* DSB nsh */
+      case 0xF57FF046: /* DSB nshst */
+      case 0xF57FF043: /* DSB osh */
+      case 0xF57FF042: /* DSB oshst */
          stmt( IRStmt_MBE(Imbe_Fence) );
          DIP("DSB\n");
          return True;
-      case 0xF57FF05F: /* DMB */
+      case 0xF57FF05F: /* DMB sy */
+      case 0xF57FF05E: /* DMB st */
+      case 0xF57FF05B: /* DMB ish */
+      case 0xF57FF05A: /* DMB ishst */
+      case 0xF57FF057: /* DMB nsh */
+      case 0xF57FF056: /* DMB nshst */
+      case 0xF57FF053: /* DMB osh */
+      case 0xF57FF052: /* DMB oshst */
          stmt( IRStmt_MBE(Imbe_Fence) );
          DIP("DMB\n");
          return True;
@@ -14027,7 +14041,7 @@ DisResult disInstr_ARM_WRK (
          assert here. */
       vassert(dres.whatNext == Dis_Continue);
       vassert(irsb->next == NULL);
-      vassert(irsb->jumpkind = Ijk_Boring);
+      vassert(irsb->jumpkind == Ijk_Boring);
       /* If r15 is unconditionally written, terminate the block by
          jumping to it.  If it's conditionally written, still
          terminate the block (a shame, but we can't do side exits to
@@ -14849,7 +14863,7 @@ DisResult disInstr_THUMB_WRK (
             putIRegT( 14, mkU32( (guest_R15_curr_instr_notENC + 2) | 1 ),
                           IRTemp_INVALID );
             irsb->next     = mkexpr(dst);
-            irsb->jumpkind = Ijk_Boring;
+            irsb->jumpkind = Ijk_Call;
             dres.whatNext  = Dis_StopHere;
             DIP("blx r%u (possibly switch to ARM mode)\n", rM);
             goto decode_success;
@@ -16010,8 +16024,9 @@ DisResult disInstr_THUMB_WRK (
       UInt rN    = INSN0(3,0);
       UInt rD    = INSN1(11,8);
       Bool valid = !isBadRegT(rN) && !isBadRegT(rD);
-      /* but allow "sub.w sp, sp, #constT" */
-      if (!valid && !isRSB && rN == 13 && rD == 13)
+      /* but allow "sub{s}.w reg, sp, #constT 
+         this is (T2) of "SUB (SP minus immediate)" */
+      if (!valid && !isRSB && rN == 13 && rD != 15)
          valid = True;
       if (valid) {
          IRTemp argL  = newTemp(Ity_I32);
@@ -16158,14 +16173,16 @@ DisResult disInstr_THUMB_WRK (
       UInt how  = INSN1(5,4);
 
       Bool valid = !isBadRegT(rD) && !isBadRegT(rN) && !isBadRegT(rM);
-      /* but allow "add.w reg, sp, reg   w/ no shift */
+      /* but allow "add.w reg, sp, reg   w/ no shift
+         (T3) "ADD (SP plus register) */
       if (!valid && INSN0(8,5) == BITS4(1,0,0,0) // add
-          && rN == 13 && imm5 == 0 && how == 0) {
+          && rD != 15 && rN == 13 && imm5 == 0 && how == 0) {
          valid = True;
       }
-      /* also allow "sub.w sp, sp, reg   w/ no shift */
-      if (!valid && INSN0(8,5) == BITS4(1,1,0,1) // add
-          && rD == 13 && rN == 13 && imm5 == 0 && how == 0) {
+      /* also allow "sub.w reg, sp, reg   w/ no shift
+         (T1) "SUB (SP minus register) */
+      if (!valid && INSN0(8,5) == BITS4(1,1,0,1) // sub
+          && rD != 15 && rN == 13 && imm5 == 0 && how == 0) {
          valid = True;
       }
       if (valid) {
@@ -17723,21 +17740,35 @@ DisResult disInstr_THUMB_WRK (
    }
 
    /* -------------- v7 barrier insns -------------- */
-   if (INSN0(15,0) == 0xF3BF && (INSN1(15,0) & 0xFF0F) == 0x8F0F) {
+   if (INSN0(15,0) == 0xF3BF && (INSN1(15,0) & 0xFF00) == 0x8F00) {
       /* XXX this isn't really right, is it?  The generated IR does
          them unconditionally.  I guess it doesn't matter since it
          doesn't do any harm to do them even when the guarding
          condition is false -- it's just a performance loss. */
-      switch (INSN1(7,4)) {
-         case 0x4: /* DSB */
+      switch (INSN1(7,0)) {
+         case 0x4F: /* DSB sy */
+         case 0x4E: /* DSB st */
+         case 0x4B: /* DSB ish */
+         case 0x4A: /* DSB ishst */
+         case 0x47: /* DSB nsh */
+         case 0x46: /* DSB nshst */
+         case 0x43: /* DSB osh */
+         case 0x42: /* DSB oshst */
             stmt( IRStmt_MBE(Imbe_Fence) );
             DIP("DSB\n");
             goto decode_success;
-         case 0x5: /* DMB */
+         case 0x5F: /* DMB sy */
+         case 0x5E: /* DMB st */
+         case 0x5B: /* DMB ish */
+         case 0x5A: /* DMB ishst */
+         case 0x57: /* DMB nsh */
+         case 0x56: /* DMB nshst */
+         case 0x53: /* DMB osh */
+         case 0x52: /* DMB oshst */
             stmt( IRStmt_MBE(Imbe_Fence) );
             DIP("DMB\n");
             goto decode_success;
-         case 0x6: /* ISB */
+         case 0x6F: /* ISB */
             stmt( IRStmt_MBE(Imbe_Fence) );
             DIP("ISB\n");
             goto decode_success;
@@ -17861,7 +17892,7 @@ DisResult disInstr_THUMB_WRK (
          assert here. */
       vassert(dres.whatNext == Dis_Continue);
       vassert(irsb->next == NULL);
-      vassert(irsb->jumpkind = Ijk_Boring);
+      vassert(irsb->jumpkind == Ijk_Boring);
       /* If r15 is unconditionally written, terminate the block by
          jumping to it.  If it's conditionally written, still
          terminate the block (a shame, but we can't do side exits to

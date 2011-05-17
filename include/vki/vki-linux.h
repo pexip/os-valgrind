@@ -89,6 +89,8 @@
 #  include "vki-posixtypes-ppc64-linux.h"
 #elif defined(VGA_arm)
 #  include "vki-posixtypes-arm-linux.h"
+#elif defined(VGA_s390x)
+#  include "vki-posixtypes-s390x-linux.h"
 #else
 #  error Unknown platform
 #endif
@@ -201,6 +203,8 @@ typedef unsigned int	        vki_uint;
 #  include "vki-ppc64-linux.h"
 #elif defined(VGA_arm)
 #  include "vki-arm-linux.h"
+#elif defined(VGA_s390x)
+#  include "vki-s390x-linux.h"
 #else
 #  error Unknown platform
 #endif
@@ -2390,6 +2394,7 @@ struct vki_usbdevfs_ioctl {
 #define VKI_USBDEVFS_REAPURBNDELAY     _VKI_IOW('U', 13, void *)
 #define VKI_USBDEVFS_CONNECTINFO       _VKI_IOW('U', 17, struct vki_usbdevfs_connectinfo)
 #define VKI_USBDEVFS_IOCTL             _VKI_IOWR('U', 18, struct vki_usbdevfs_ioctl)
+#define VKI_USBDEVFS_RESET             _VKI_IO('U', 20)
 
 #define VKI_USBDEVFS_URB_TYPE_ISO              0
 #define VKI_USBDEVFS_URB_TYPE_INTERRUPT        1

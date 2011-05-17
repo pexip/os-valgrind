@@ -33,6 +33,7 @@
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
 #include "pub_core_vkiscnums.h"
+#include "pub_core_libcsetjmp.h"    // to keep _threadstate.h happy
 #include "pub_core_threadstate.h"
 #include "pub_core_aspacemgr.h"
 #include "pub_core_debuglog.h"
@@ -1061,7 +1062,7 @@ PRE(sys_sigreturn)
    /* See comments on PRE(sys_rt_sigreturn) in syswrap-amd64-linux.c for
       an explanation of what follows. */
 
-   ThreadState* tst;
+   //ThreadState* tst;
    PRINT("sys_sigreturn ( )");
 
    vg_assert(VG_(is_valid_tid)(tid));
@@ -1070,7 +1071,7 @@ PRE(sys_sigreturn)
 
    ///* Adjust esp to point to start of frame; skip back up over
    //   sigreturn sequence's "popl %eax" and handler ret addr */
-   tst = VG_(get_ThreadState)(tid);
+   //tst = VG_(get_ThreadState)(tid);
    //tst->arch.vex.guest_ESP -= sizeof(Addr)+sizeof(Word);
    // Should we do something equivalent on ppc32?  Who knows.
 
@@ -1096,7 +1097,7 @@ PRE(sys_rt_sigreturn)
    /* See comments on PRE(sys_rt_sigreturn) in syswrap-amd64-linux.c for
       an explanation of what follows. */
 
-   ThreadState* tst;
+   //ThreadState* tst;
    PRINT("rt_sigreturn ( )");
 
    vg_assert(VG_(is_valid_tid)(tid));
@@ -1105,7 +1106,7 @@ PRE(sys_rt_sigreturn)
 
    ///* Adjust esp to point to start of frame; skip back up over handler
    //   ret addr */
-   tst = VG_(get_ThreadState)(tid);
+   //tst = VG_(get_ThreadState)(tid);
    //tst->arch.vex.guest_ESP -= sizeof(Addr);
    // Should we do something equivalent on ppc32?  Who knows.
 
@@ -1853,6 +1854,8 @@ static SyscallTableEntry syscall_table[] = {
    LINX_(__NR_inotify_rm_watch,   sys_inotify_rm_watch),      // 277
    PLAXY(__NR_spu_run,            sys_spu_run),               // 278
    PLAX_(__NR_spu_create,         sys_spu_create),            // 279
+
+   LINXY(__NR_ppoll,             sys_ppoll),             // 281
 
    LINXY(__NR_openat,            sys_openat),            // 286
    LINX_(__NR_mkdirat,           sys_mkdirat),           // 287

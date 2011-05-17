@@ -863,7 +863,10 @@ static HReg iselIntExpr_R_wrk ( ISelEnv* env, IRExpr* e )
    DECLARE_PATTERN(p_LDle16_then_16Uto64);
 
    IRType ty = typeOfIRExpr(env->type_env,e);
-   vassert(ty == Ity_I32 || Ity_I16 || Ity_I8);
+   switch (ty) {
+      case Ity_I64: case Ity_I32: case Ity_I16: case Ity_I8: break;
+      default: vassert(0);
+   }
 
    switch (e->tag) {
 
@@ -2263,6 +2266,26 @@ static AMD64CondCode iselCondCode_wrk ( ISelEnv* env, IRExpr* e )
          case Iop_CmpNE32: case Iop_CasCmpNE32: return Acc_NZ;
          default: vpanic("iselCondCode(amd64): CmpXX32");
       }
+   }
+
+   /* CmpNE64(ccall, 64-bit constant) (--smc-check=all optimisation).
+      Saves a "movq %rax, %tmp" compared to the default route. */
+   if (e->tag == Iex_Binop 
+       && e->Iex.Binop.op == Iop_CmpNE64
+       && e->Iex.Binop.arg1->tag == Iex_CCall
+       && e->Iex.Binop.arg2->tag == Iex_Const) {
+      IRExpr* cal = e->Iex.Binop.arg1;
+      IRExpr* con = e->Iex.Binop.arg2;
+      HReg    tmp = newVRegI(env);
+      /* clone & partial-eval of generic Iex_CCall and Iex_Const cases */
+      vassert(cal->Iex.CCall.retty == Ity_I64); /* else ill-typed IR */
+      vassert(con->Iex.Const.con->tag == Ico_U64);
+      /* Marshal args, do the call. */
+      doHelperCall( env, False, NULL, cal->Iex.CCall.cee, cal->Iex.CCall.args );
+      addInstr(env, AMD64Instr_Imm64(con->Iex.Const.con->Ico.U64, tmp));
+      addInstr(env, AMD64Instr_Alu64R(Aalu_CMP,
+                                      AMD64RMI_Reg(hregAMD64_RAX()), tmp));
+      return Acc_NZ;
    }
 
    /* Cmp*64*(x,y) */

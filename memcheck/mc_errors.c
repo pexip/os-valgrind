@@ -30,6 +30,7 @@
 */
 
 #include "pub_tool_basics.h"
+#include "pub_tool_gdbserver.h"
 #include "pub_tool_hashtable.h"     // For mc_include.h
 #include "pub_tool_libcbase.h"
 #include "pub_tool_libcassert.h"
@@ -582,12 +583,13 @@ void MC_(pp_Error) ( Error* err )
       case Err_Free:
          if (xml) {
             emit( "  <kind>InvalidFree</kind>\n" );
-            emit( "  <what>Invalid free() / delete / delete[]</what>\n" );
+            emit( "  <what>Invalid free() / delete / delete[]"
+                  " / realloc()</what>\n" );
             VG_(pp_ExeContext)( VG_(get_error_where)(err) );
             mc_pp_AddrInfo( VG_(get_error_address)(err),
                             &extra->Err.Free.ai, False );
          } else {
-            emit( "Invalid free() / delete / delete[]\n" );
+            emit( "Invalid free() / delete / delete[] / realloc()\n" );
             VG_(pp_ExeContext)( VG_(get_error_where)(err) );
             mc_pp_AddrInfo( VG_(get_error_address)(err),
                             &extra->Err.Free.ai, False );
@@ -784,6 +786,9 @@ void MC_(record_address_error) ( ThreadId tid, Addr a, Int szB,
    Bool     just_below_esp;
 
    if (MC_(in_ignored_range)(a)) 
+      return;
+
+   if (VG_(is_watched)( (isWrite ? write_watchpoint : read_watchpoint), a, szB))
       return;
 
 #  if defined(VGP_ppc32_aix5) || defined(VGP_ppc64_aix5)
@@ -1179,6 +1184,15 @@ static void describe_addr ( Addr a, /*OUT*/AddrInfo* ai )
    /* -- Clueless ... -- */
    ai->tag = Addr_Unknown;
    return;
+}
+
+void MC_(pp_describe_addr) ( Addr a )
+{
+   AddrInfo ai;
+
+   ai.tag = Addr_Undescribed;
+   describe_addr (a, &ai);
+   mc_pp_AddrInfo (a, &ai, /* maybe_gcc */ False);
 }
 
 /* Fill in *origin_ec as specified by otag, or NULL it out if otag

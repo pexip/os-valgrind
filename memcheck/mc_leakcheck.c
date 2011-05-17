@@ -43,11 +43,10 @@
 #include "pub_tool_options.h"
 #include "pub_tool_oset.h"
 #include "pub_tool_signals.h"
+#include "pub_tool_libcsetjmp.h"    // setjmp facilities
 #include "pub_tool_tooliface.h"     // Needed for mc_include.h
 
 #include "mc_include.h"
-
-#include <setjmp.h>                 // For jmp_buf
 
 /*------------------------------------------------------------*/
 /*--- An overview of leak checking.                        ---*/
@@ -636,7 +635,7 @@ lc_push_if_a_chunk_ptr(Addr ptr, Int clique, Bool is_prior_definite)
 }
 
 
-static jmp_buf memscan_jmpbuf;
+static VG_MINIMAL_JMP_BUF(memscan_jmpbuf);
 
 static
 void scan_all_valid_memory_catcher ( Int sigNo, Addr addr )
@@ -644,7 +643,7 @@ void scan_all_valid_memory_catcher ( Int sigNo, Addr addr )
    if (0)
       VG_(printf)("OUCH! sig=%d addr=%#lx\n", sigNo, addr);
    if (sigNo == VKI_SIGSEGV || sigNo == VKI_SIGBUS)
-      __builtin_longjmp(memscan_jmpbuf, 1);
+      VG_MINIMAL_LONGJMP(memscan_jmpbuf);
 }
 
 // Scan a block of memory between [start, start+len).  This range may
@@ -686,7 +685,7 @@ lc_scan_memory(Addr start, SizeT len, Bool is_prior_definite, Int clique)
          }
       }
 
-      if (__builtin_setjmp(memscan_jmpbuf) == 0) {
+      if (VG_MINIMAL_SETJMP(memscan_jmpbuf) == 0) {
          if ( MC_(is_valid_aligned_word)(ptr) ) {
             lc_scanned_szB += sizeof(Addr);
             addr = *(Addr *)ptr;
@@ -1006,7 +1005,7 @@ void MC_(detect_memory_leaks) ( ThreadId tid, LeakCheckMode mode )
 
       } else {
          VG_(umsg)("Block 0x%lx..0x%lx overlaps with block 0x%lx..0x%lx",
-                   start1, end1, start1, end2);
+                   start1, end1, start2, end2);
          VG_(umsg)("This is usually caused by using VALGRIND_MALLOCLIKE_BLOCK");
          VG_(umsg)("in an inappropriate way.");
          tl_assert (0);

@@ -1,4 +1,11 @@
 
+Release 3.7.0 (???)
+~~~~~~~~~~~~~~~~~~~
+- Added the --mod-funcname option to cg_diff.
+- Further reduction in overheads caused by --smc-check=all, especially
+  on 64-bit targets.
+
+
 Release 3.6.1 (16 February 2011)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 3.6.1 is a bug fix release.  It adds support for some SSE4

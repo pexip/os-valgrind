@@ -31,6 +31,7 @@
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
 #include "pub_core_vkiscnums.h"
+#include "pub_core_libcsetjmp.h"    // to keep _threadstate.h happy
 #include "pub_core_threadstate.h"
 #include "pub_core_xarray.h"
 #include "pub_core_clientstate.h"
@@ -40,6 +41,7 @@
 #include "pub_core_debuglog.h"
 #include "pub_core_errormgr.h"
 #include "pub_core_execontext.h"
+#include "pub_core_gdbserver.h"
 #include "pub_core_initimg.h"
 #include "pub_core_libcbase.h"
 #include "pub_core_libcassert.h"
@@ -124,7 +126,13 @@ static void usage_NORETURN ( Bool debug_help )
 "    --trace-children=no|yes   Valgrind-ise child processes (follow execve)? [no]\n"
 "    --trace-children-skip=patt1,patt2,...    specifies a list of executables\n"
 "                              that --trace-children=yes should not trace into\n"
+"    --trace-children-skip-by-arg=patt1,patt2,...   same as --trace-children-skip=\n"
+"                              but check the argv[] entries for children, rather\n"
+"                              than the exe name, to make a follow/no-follow decision\n"
 "    --child-silent-after-fork=no|yes omit child output between fork & exec? [no]\n"
+"    --vgdb=no|yes|full        activate gdbserver? [yes]\n"
+"                              full is slower but provides precise watchpoint/step\n"
+"    --vgdb-error=<number>     invoke gdbserver after <number> errors [%d] \n"
 "    --track-fds=no|yes        track open file descriptors? [no]\n"
 "    --time-stamp=no|yes       add timestamps to log messages? [no]\n"
 "    --log-fd=<number>         log messages to file descriptor [2=stderr]\n"
@@ -169,6 +177,9 @@ static void usage_NORETURN ( Bool debug_help )
 "                              and use it to print better error messages in\n"
 "                              tools that make use of it (Memcheck, Helgrind,\n"
 "                              DRD) [no]\n"
+"    --vgdb-poll=<number>      gdbserver poll max every <number> basic blocks [%d] \n"
+"    --vgdb-shadow-registers=no|yes   let gdb see the shadow registers [no]\n"
+"    --vgdb-prefix=<prefix>    prefix for vgdb FIFOs [%s]\n"
 "    --run-libc-freeres=no|yes free up glibc memory at exit on Linux? [yes]\n"
 "    --sim-hints=hint1,hint2,...  known hints:\n"
 "                                 lax-ioctls, enable-outer [none]\n"
@@ -248,8 +259,10 @@ static void usage_NORETURN ( Bool debug_help )
    VG_(log_output_sink).fd = 1;
    VG_(log_output_sink).is_socket = False;
 
-   /* 'usage1' expects one char* argument and one SizeT argument. */
-   VG_(printf)(usage1, gdb_path, VG_MIN_MALLOC_SZB);
+   /* 'usage1' expects two int, two char* argument, and one SizeT argument. */
+   VG_(printf)(usage1, 
+               VG_(clo_vgdb_error), gdb_path, VG_MIN_MALLOC_SZB,
+               VG_(clo_vgdb_poll), VG_(clo_vgdb_prefix)); 
    if (VG_(details).name) {
       VG_(printf)("  user options for %s:\n", VG_(details).name);
       if (VG_(needs).command_line_options)
@@ -453,6 +466,14 @@ void main_process_cmd_line_options ( /*OUT*/Bool* logging_to_fd,
 
       else if VG_BOOL_CLO(arg, "--stats",          VG_(clo_stats)) {}
       else if VG_BOOL_CLO(arg, "--xml",            VG_(clo_xml)) {}
+      else if VG_XACT_CLO(arg, "--vgdb=no",        VG_(clo_vgdb), Vg_VgdbNo) {}
+      else if VG_XACT_CLO(arg, "--vgdb=yes",       VG_(clo_vgdb), Vg_VgdbYes) {}
+      else if VG_XACT_CLO(arg, "--vgdb=full",      VG_(clo_vgdb), Vg_VgdbFull) {}
+      else if VG_INT_CLO (arg, "--vgdb-poll",      VG_(clo_vgdb_poll)) {}
+      else if VG_INT_CLO (arg, "--vgdb-error",     VG_(clo_vgdb_error)) {}
+      else if VG_STR_CLO (arg, "--vgdb-prefix",    VG_(clo_vgdb_prefix)) {}
+      else if VG_BOOL_CLO(arg, "--vgdb-shadow-registers",
+                            VG_(clo_vgdb_shadow_registers)) {}
       else if VG_BOOL_CLO(arg, "--db-attach",      VG_(clo_db_attach)) {}
       else if VG_BOOL_CLO(arg, "--demangle",       VG_(clo_demangle)) {}
       else if VG_BOOL_CLO(arg, "--error-limit",    VG_(clo_error_limit)) {}
@@ -503,7 +524,10 @@ void main_process_cmd_line_options ( /*OUT*/Bool* logging_to_fd,
 
       else if VG_BOOL_CLO(arg, "--dsymutil",        VG_(clo_dsymutil)) {}
 
-      else if VG_STR_CLO (arg, "--trace-children-skip",   VG_(clo_trace_children_skip)) {}
+      else if VG_STR_CLO (arg, "--trace-children-skip",
+                               VG_(clo_trace_children_skip)) {}
+      else if VG_STR_CLO (arg, "--trace-children-skip-by-arg",
+                               VG_(clo_trace_children_skip_by_arg)) {}
 
       else if VG_BINT_CLO(arg, "--vex-iropt-verbosity",
                        VG_(clo_vex_control).iropt_verbosity, 0, 10) {}
@@ -663,6 +687,8 @@ void main_process_cmd_line_options ( /*OUT*/Bool* logging_to_fd,
 
    if (VG_(clo_verbosity) < 0)
       VG_(clo_verbosity) = 0;
+
+   VG_(dyn_vgdb_error) = VG_(clo_vgdb_error);
 
    if (VG_(clo_gen_suppressions) > 0 && 
        !VG_(needs).core_errors && !VG_(needs).tool_errors) {
@@ -1620,6 +1646,7 @@ Int valgrind_main ( Int argc, HChar **argv, HChar **envp )
                     "AMD Athlon or above)\n");
         VG_(printf)("   * AMD Athlon64/Opteron\n");
         VG_(printf)("   * PowerPC (most; ppc405 and above)\n");
+        VG_(printf)("   * System z (64bit only - s390x; z900 and above)\n");
         VG_(printf)("\n");
         VG_(exit)(1);
      }
@@ -1804,8 +1831,7 @@ Int valgrind_main ( Int argc, HChar **argv, HChar **envp )
       nul[0] = 0;
       exename = VG_(args_the_exename) ? VG_(args_the_exename)
                                       : "unknown_exename";
-      VG_(write)(fd, VG_(args_the_exename), 
-                     VG_(strlen)( VG_(args_the_exename) ));
+      VG_(write)(fd, exename, VG_(strlen)( exename ));
       VG_(write)(fd, nul, 1);
 
       for (i = 0; i < VG_(sizeXA)( VG_(args_for_client) ); i++) {
@@ -1931,6 +1957,8 @@ Int valgrind_main ( Int argc, HChar **argv, HChar **envp )
       iters = 5;
 #     elif defined(VGP_arm_linux)
       iters = 1;
+#     elif defined(VGP_s390x_linux)
+      iters = 10;
 #     elif defined(VGP_ppc32_aix5) || defined(VGP_ppc64_aix5)
       iters = 4;
 #     elif defined(VGO_darwin)
@@ -2417,7 +2445,7 @@ void shutdown_actions_NORETURN( ThreadId tid,
 
    /* In XML mode, this merely prints the used suppressions. */
    if (VG_(needs).core_errors || VG_(needs).tool_errors)
-      VG_(show_all_errors)();
+      VG_(show_all_errors)(VG_(clo_verbosity), VG_(clo_xml));
 
    if (VG_(clo_xml)) {
       VG_(printf_xml)("\n");
@@ -2451,6 +2479,10 @@ void shutdown_actions_NORETURN( ThreadId tid,
 
    /* Flush any output cached by previous calls to VG_(message). */
    VG_(message_flush)();
+
+   /* terminate gdbserver if ever it was started. We terminate it here so that it get
+      the output above if output was redirected to gdb */
+   VG_(gdbserver) (0);
 
    /* Ok, finally exit in the os-specific way, according to the scheduler's
       return code.  In short, if the (last) thread exited by calling
@@ -2771,9 +2803,52 @@ asm("\n"
     "\tnop\n"
     "\ttrap\n"
 );
+#elif defined(VGP_s390x_linux)
+/*
+    This is the canonical entry point, usually the first thing in the text
+    segment. Most registers' values are unspecified, except for:
+
+    %r14         Contains a function pointer to be registered with `atexit'.
+                 This is how the dynamic linker arranges to have DT_FINI
+                 functions called for shared libraries that have been loaded
+                 before this code runs.
+
+    %r15         The stack contains the arguments and environment:
+                 0(%r15)              argc
+                 8(%r15)              argv[0]
+                 ...
+                 (8*argc)(%r15)       NULL
+                 (8*(argc+1))(%r15)   envp[0]
+                 ...
+                                      NULL
+*/
+asm("\n\t"
+    ".text\n\t"
+    ".globl _start\n\t"
+    ".type  _start,@function\n\t"
+    "_start:\n\t"
+    /* set up the new stack in %r1 */
+    "larl   %r1,  vgPlain_interim_stack\n\t"
+    "larl   %r5,  1f\n\t"
+    "ag     %r1,  0(%r5)\n\t"
+    "ag     %r1,  2f-1f(%r5)\n\t"
+    "nill   %r1,  0xFFF0\n\t"
+    /* install it, and collect the original one */
+    "lgr    %r2,  %r15\n\t"
+    "lgr    %r15, %r1\n\t"
+    /* call _start_in_C_linux, passing it the startup %r15 */
+    "brasl  %r14, _start_in_C_linux\n\t"
+    /* trigger execution of an invalid opcode -> halt machine */
+    "j      .+2\n\t"
+    "1:   .quad "VG_STRINGIFY(VG_STACK_GUARD_SZB)"\n\t"
+    "2:   .quad "VG_STRINGIFY(VG_STACK_ACTIVE_SZB)"\n\t"
+    ".previous\n"
+);
 #elif defined(VGP_arm_linux)
 asm("\n"
-    "\t.align 2\n"
+    "\t.text\n"
+    "\t.align 4\n"
+    "\t.type _start,#function\n"
     "\t.global _start\n"
     "_start:\n"
     "\tldr  r0, [pc, #36]\n"
