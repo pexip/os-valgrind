@@ -5,3 +5,4 @@
 0005-catch-manpages-errors.patch
 0006-workaround-SIGSEGV-on-PPC.patch
 0007-implement-extra-dwarf-ops-gcc-461.patch
+0008-configure-support-linux-3.patch
