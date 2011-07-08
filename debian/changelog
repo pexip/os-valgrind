@@ -1,3 +1,13 @@
+valgrind (1:3.6.1-6) unstable; urgency=low
+
+  * Upload with maintainer's consent.
+
+  * debian/patches/0007-implement-extra-dwarf-ops-gcc-461.patch:
+    + Added; from upstream r11856, makes valgrind work again with binaries
+      built with recent gcc versions (Closes: #632969).
+
+ -- Julien BLACHE <jblache@debian.org>  Fri, 08 Jul 2011 22:28:11 +0200
+
 valgrind (1:3.6.1-5) unstable; urgency=low
 
   * debian/rules:
