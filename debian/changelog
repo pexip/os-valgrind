@@ -1,3 +1,11 @@
+valgrind (1:3.6.99svn12003-1) experimental; urgency=low
+
+  * Package a pre 3.7.0 snapshot (up to r12003 on 20110828).
+  * Includes GCC-4.6 DWARF2 fixes hence Closes: 632666 on experimental as
+    well.
+
+ -- Pierre Habouzit <madcoder@debian.org>  Sun, 28 Aug 2011 23:14:32 +0200
+
 valgrind (1:3.6.99svn11761-1) experimental; urgency=low
 
   * Package a pre 3.7.0 snapshot (up to r11761 on 20110517).

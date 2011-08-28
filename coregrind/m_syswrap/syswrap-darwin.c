@@ -41,6 +41,7 @@
 #include "pub_core_debuglog.h"
 #include "pub_core_debuginfo.h"    // VG_(di_notify_*)
 #include "pub_core_transtab.h"     // VG_(discard_translations)
+#include "pub_tool_gdbserver.h"    // VG_(gdbserver)
 #include "pub_core_libcbase.h"
 #include "pub_core_libcassert.h"
 #include "pub_core_libcfile.h"
@@ -102,6 +103,9 @@ static VgSchedReturnCode thread_wrapper(Word /*ThreadId*/ tidW)
    if (0)
       VG_(printf)("thread tid %d started: stack = %p\n",
                   tid, &tid);
+
+   /* Make sure error reporting is enabled in the new thread. */
+   tst->err_disablement_level = 0;
 
    VG_TRACK(pre_thread_first_insn, tid);
 
@@ -201,11 +205,15 @@ static void run_a_thread_NORETURN ( Word tidW )
 {
    Int               c;
    VgSchedReturnCode src;
-   ThreadId tid = (ThreadId)tidW;
+   ThreadId          tid = (ThreadId)tidW;
+   ThreadState*      tst;
 
    VG_(debugLog)(1, "syswrap-darwin", 
                     "run_a_thread_NORETURN(tid=%lld): pre-thread_wrapper\n",
                     (ULong)tidW);
+
+   tst = VG_(get_ThreadState)(tid);
+   vg_assert(tst);
 
    /* Run the thread all the way through. */
    src = thread_wrapper(tid);  
@@ -219,6 +227,27 @@ static void run_a_thread_NORETURN ( Word tidW )
 
    // Tell the tool this thread is exiting
    VG_TRACK( pre_thread_ll_exit, tid );
+
+   /* If the thread is exiting with errors disabled, complain loudly;
+      doing so is bad (does the user know this has happened?)  Also,
+      in all cases, be paranoid and clear the flag anyway so that the
+      thread slot is safe in this respect if later reallocated.  This
+      should be unnecessary since the flag should be cleared when the
+      slot is reallocated, in thread_wrapper(). */
+   if (tst->err_disablement_level > 0) {
+      VG_(umsg)(
+         "WARNING: exiting thread has error reporting disabled.\n"
+         "WARNING: possibly as a result of some mistake in the use\n"
+         "WARNING: of the VALGRIND_DISABLE_ERROR_REPORTING macros.\n"
+      );
+      VG_(debugLog)(
+         1, "syswrap-linux", 
+            "run_a_thread_NORETURN(tid=%lld): "
+            "WARNING: exiting thread has err_disablement_level = %u\n",
+            (ULong)tidW, tst->err_disablement_level
+      );
+   }
+   tst->err_disablement_level = 0;
 
    if (c == 1) {
 
@@ -234,7 +263,6 @@ static void run_a_thread_NORETURN ( Word tidW )
 
    } else {
 
-      ThreadState *tst;
       mach_msg_header_t msg;
 
       VG_(debugLog)(1, "syswrap-darwin", 
@@ -243,7 +271,6 @@ static void run_a_thread_NORETURN ( Word tidW )
                           (ULong)tidW);
 
       /* OK, thread is dead, but others still exist.  Just exit. */
-      tst = VG_(get_ThreadState)(tid);
 
       /* This releases the run lock */
       VG_(exit_thread)(tid);
@@ -2786,6 +2813,15 @@ PRE(posix_spawn)
 
    /* Ok.  So let's give it a try. */
    VG_(debugLog)(1, "syswrap", "Posix_spawn of %s\n", (Char*)ARG2);
+
+   // Terminate gdbserver if it is active.
+   if (VG_(clo_vgdb)  != Vg_VgdbNo) {
+      // If the child will not be traced, we need to terminate gdbserver
+      // to cleanup the gdbserver resources (e.g. the FIFO files).
+      // If child will be traced, we also terminate gdbserver: the new 
+      // Valgrind will start a fresh gdbserver after exec.
+      VG_(gdbserver) (tid);
+   }
 
    // Set up the child's exe path.
    //

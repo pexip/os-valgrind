@@ -45,19 +45,37 @@
 
 /* --------------------- SYMBOLS --------------------- */
 
-/* A structure to hold an ELF/XCOFF symbol (very crudely). */
+/* A structure to hold an ELF/MachO symbol (very crudely).  Usually
+   the symbol only has one name, which is stored in ::pri_name, and
+   ::sec_names is NULL.  If there are other names, these are stored in
+   ::sec_names, which is a NULL terminated vector holding the names.
+   The vector is allocated in VG_AR_DINFO, the names themselves live
+   in DebugInfo::strchunks.
+
+   From the point of view of ELF, the primary vs secondary distinction
+   is artificial: they are all just names associated with the address,
+   none of which has higher precedence than any other.  However, from
+   the point of view of mapping an address to a name to display to the
+   user, we need to choose one "preferred" name, and so that might as
+   well be installed as the pri_name, whilst all others can live in
+   sec_names[].  This has the convenient side effect that, in the
+   common case where there is only one name for the address,
+   sec_names[] does not need to be allocated.
+*/
 typedef 
    struct { 
-      Addr  addr;    /* lowest address of entity */
-      Addr  tocptr;  /* ppc64-linux only: value that R2 should have */
-      UChar *name;   /* name */
-      // XXX: this could be shrunk (on 32-bit platforms) by using 31 bits for
-      // the size and 1 bit for the isText.  If you do this, make sure that
-      // all assignments to isText use 0 or 1 (or True or False), and that a
-      // positive number larger than 1 is never used to represent True.
-      UInt  size;    /* size in bytes */
-      Bool  isText;
-      Bool  isIFunc; /* symbol is an indirect function? */
+      Addr    addr;    /* lowest address of entity */
+      Addr    tocptr;  /* ppc64-linux only: value that R2 should have */
+      UChar*  pri_name;  /* primary name, never NULL */
+      UChar** sec_names; /* NULL, or a NULL term'd array of other names */
+      // XXX: this could be shrunk (on 32-bit platforms) by using 30
+      // bits for the size and 1 bit each for isText and isIFunc.  If you
+      // do this, make sure that all assignments to the latter two use
+      // 0 or 1 (or True or False), and that a positive number larger
+      // than 1 is never used to represent True.
+      UInt    size;    /* size in bytes */
+      Bool    isText;
+      Bool    isIFunc; /* symbol is an indirect function? */
    }
    DiSym;
 
@@ -249,7 +267,15 @@ typedef
       Cop_Add=0x321,
       Cop_Sub,
       Cop_And,
-      Cop_Mul
+      Cop_Mul,
+      Cop_Shl,
+      Cop_Shr,
+      Cop_Eq,
+      Cop_Ge,
+      Cop_Gt,
+      Cop_Le,
+      Cop_Lt,
+      Cop_Ne
    }
    CfiOp;
 
@@ -369,6 +395,12 @@ ML_(cmp_for_DiAddrRange_range) ( const void* keyV, const void* elemV );
    exported only abstractly - in pub_tool_debuginfo.h. */
 
 #define SEGINFO_STRCHUNKSIZE (64*1024)
+
+/* We may encounter more than one .eh_frame section in an object --
+   unusual but apparently allowed by ELF.  See
+   http://sourceware.org/bugzilla/show_bug.cgi?id=12675
+*/
+#define N_EHFRAME_SECTS 2
 
 struct _DebugInfo {
 
@@ -626,10 +658,11 @@ struct _DebugInfo {
    Bool   opd_present;
    Addr   opd_avma;
    SizeT  opd_size;
-   /* .ehframe -- needed on amd64-linux for stack unwinding */
-   Bool   ehframe_present;
-   Addr   ehframe_avma;
-   SizeT  ehframe_size;
+   /* .ehframe -- needed on amd64-linux for stack unwinding.  We might
+      see more than one, hence the arrays. */
+   UInt   n_ehframe;  /* 0 .. N_EHFRAME_SECTS */
+   Addr   ehframe_avma[N_EHFRAME_SECTS];
+   SizeT  ehframe_size[N_EHFRAME_SECTS];
 
    /* Sorted tables of stuff we snarfed from the file.  This is the
       eventual product of reading the debug info.  All this stuff
@@ -711,7 +744,11 @@ struct _DebugInfo {
 
 /* ------ Adding ------ */
 
-/* Add a symbol to si's symbol table. */
+/* Add a symbol to si's symbol table.  The contents of 'sym' are
+   copied.  It is assumed (and checked) that 'sym' only contains one
+   name, so there is no auxiliary ::sec_names vector to duplicate.
+   IOW, the copy is a shallow copy, and there are assertions in place
+   to ensure that's OK. */
 extern void ML_(addSym) ( struct _DebugInfo* di, DiSym* sym );
 
 /* Add a line-number record to a DebugInfo. */

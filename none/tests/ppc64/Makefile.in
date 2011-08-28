@@ -49,7 +49,7 @@ DIST_COMMON = $(dist_noinst_SCRIPTS) $(srcdir)/Makefile.am \
 check_PROGRAMS = jm-insns$(EXEEXT) lsw$(EXEEXT) round$(EXEEXT) \
 	std_reg_imm$(EXEEXT) twi_tdi$(EXEEXT) tw_td$(EXEEXT) \
 	power6_bcmp$(EXEEXT) power6_mf_gpr$(EXEEXT) \
-	test_isa_2_06_part1$(EXEEXT)
+	test_isa_2_06_part1$(EXEEXT) test_isa_2_06_part2$(EXEEXT)
 subdir = none/tests/ppc64
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -85,6 +85,12 @@ test_isa_2_06_part1_OBJECTS =  \
 test_isa_2_06_part1_LDADD = $(LDADD)
 test_isa_2_06_part1_LINK = $(CCLD) $(test_isa_2_06_part1_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+test_isa_2_06_part2_SOURCES = test_isa_2_06_part2.c
+test_isa_2_06_part2_OBJECTS =  \
+	test_isa_2_06_part2-test_isa_2_06_part2.$(OBJEXT)
+test_isa_2_06_part2_LDADD = $(LDADD)
+test_isa_2_06_part2_LINK = $(CCLD) $(test_isa_2_06_part2_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 tw_td_SOURCES = tw_td.c
 tw_td_OBJECTS = tw_td.$(OBJEXT)
 tw_td_LDADD = $(LDADD)
@@ -101,9 +107,11 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = jm-insns.c lsw.c power6_bcmp.c power6_mf_gpr.c round.c \
-	std_reg_imm.c test_isa_2_06_part1.c tw_td.c twi_tdi.c
+	std_reg_imm.c test_isa_2_06_part1.c test_isa_2_06_part2.c \
+	tw_td.c twi_tdi.c
 DIST_SOURCES = jm-insns.c lsw.c power6_bcmp.c power6_mf_gpr.c round.c \
-	std_reg_imm.c test_isa_2_06_part1.c tw_td.c twi_tdi.c
+	std_reg_imm.c test_isa_2_06_part1.c test_isa_2_06_part2.c \
+	tw_td.c twi_tdi.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -140,8 +148,6 @@ EXEEXT = @EXEEXT@
 FLAG_FNO_STACK_PROTECTOR = @FLAG_FNO_STACK_PROTECTOR@
 FLAG_M32 = @FLAG_M32@
 FLAG_M64 = @FLAG_M64@
-FLAG_MAIX32 = @FLAG_MAIX32@
-FLAG_MAIX64 = @FLAG_MAIX64@
 FLAG_MMMX = @FLAG_MMMX@
 FLAG_MSSE = @FLAG_MSSE@
 FLAG_NO_BUILD_ID = @FLAG_NO_BUILD_ID@
@@ -193,6 +199,7 @@ VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
+VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -291,7 +298,8 @@ AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ = \
 	-I$(top_srcdir)/VEX/pub \
 	-DVGA_@VGCONF_ARCH_PRI@=1 \
 	-DVGO_@VGCONF_OS@=1 \
-	-DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1
+	-DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1 \
+	-DVGPV_@VGCONF_ARCH_PRI@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
 
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@AM_CPPFLAGS_@VGCONF_PLATFORM_SEC_CAPS@ = \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	-I$(top_srcdir) \
@@ -299,7 +307,8 @@ AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ = \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	-I$(top_srcdir)/VEX/pub \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGA_@VGCONF_ARCH_SEC@=1 \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGO_@VGCONF_OS@=1 \
-@VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGP_@VGCONF_ARCH_SEC@_@VGCONF_OS@=1
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGP_@VGCONF_ARCH_SEC@_@VGCONF_OS@=1 \
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGPV_@VGCONF_ARCH_SEC@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
 
 AM_FLAG_M3264_X86_LINUX = @FLAG_M32@
 AM_CFLAGS_X86_LINUX = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY@ \
@@ -319,18 +328,10 @@ AM_CFLAGS_PPC64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CCASFLAGS_PPC64_LINUX = $(AM_CPPFLAGS_PPC64_LINUX) @FLAG_M64@ -g
 AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
 AM_CFLAGS_ARM_LINUX = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY@ \
-			 	$(AM_CFLAGS_BASE) -marm
+			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
 
-AM_CCASFLAGS_ARM_LINUX = $(AM_CPPFLAGS_ARM_LINUX) @FLAG_M32@ -marm -g
-AM_FLAG_M3264_PPC32_AIX5 = @FLAG_MAIX32@
-AM_CFLAGS_PPC32_AIX5 = @FLAG_MAIX32@ -mcpu=powerpc $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_PPC32_AIX5 = $(AM_CPPFLAGS_PPC32_AIX5) \
-			    @FLAG_MAIX32@ -mcpu=powerpc -g
-
-AM_FLAG_M3264_PPC64_AIX5 = @FLAG_MAIX64@
-AM_CFLAGS_PPC64_AIX5 = @FLAG_MAIX64@ -mcpu=powerpc64 $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_PPC64_AIX5 = $(AM_CPPFLAGS_PPC64_AIX5) \
-			    @FLAG_MAIX64@ -mcpu=powerpc64 -g
+AM_CCASFLAGS_ARM_LINUX = $(AM_CPPFLAGS_ARM_LINUX) @FLAG_M32@ \
+				-marm -mcpu=cortex-a8 -g
 
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
@@ -363,24 +364,22 @@ AM_CCASFLAGS_PRI = $(AM_CCASFLAGS_@VGCONF_PLATFORM_PRI_CAPS@)
 # Baseline link flags for making vgpreload shared objects.
 #
 PRELOAD_LDFLAGS_COMMON_LINUX = -nodefaultlibs -shared -Wl,-z,interpose,-z,initfirst
-PRELOAD_LDFLAGS_COMMON_AIX5 = -nodefaultlibs -shared -Wl,-G -Wl,-bnogc
 PRELOAD_LDFLAGS_COMMON_DARWIN = -dynamic -dynamiclib -all_load
 PRELOAD_LDFLAGS_X86_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_PPC32_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_PPC64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
-PRELOAD_LDFLAGS_PPC32_AIX5 = $(PRELOAD_LDFLAGS_COMMON_AIX5)  @FLAG_MAIX32@
-PRELOAD_LDFLAGS_PPC64_AIX5 = $(PRELOAD_LDFLAGS_COMMON_AIX5)  @FLAG_MAIX64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include \
 		-I$(top_srcdir)/coregrind -I$(top_builddir)/include \
 		-I$(top_srcdir)/VEX/pub \
-		-DVGA_$(VGCONF_ARCH_PRI)=1 \
-		-DVGO_$(VGCONF_OS)=1 \
-		-DVGP_$(VGCONF_ARCH_PRI)_$(VGCONF_OS)=1
+		-DVGA_@VGCONF_ARCH_PRI@=1 \
+		-DVGO_@VGCONF_OS@=1 \
+		-DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1 \
+		-DVGPV_@VGCONF_ARCH_PRI@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
 
 # Nb: Tools need to augment these flags with an arch-selection option, such
 # as $(AM_FLAG_M3264_PRI).
@@ -403,7 +402,8 @@ EXTRA_DIST = \
 	tw_td.stderr.exp tw_td.stdout.exp tw_td.vgtest \
 	power6_bcmp.stderr.exp power6_bcmp.stdout.exp power6_bcmp.vgtest \
 	power6_mf_gpr.stderr.exp power6_mf_gpr.stdout.exp power6_mf_gpr.vgtest \
-	test_isa_2_06_part1.stderr.exp  test_isa_2_06_part1.stdout.exp  test_isa_2_06_part1.vgtest
+	test_isa_2_06_part1.stderr.exp  test_isa_2_06_part1.stdout.exp  test_isa_2_06_part1.vgtest \
+	test_isa_2_06_part2.stderr.exp  test_isa_2_06_part2.stdout.exp  test_isa_2_06_part2.vgtest
 
 @HAS_ALTIVEC_FALSE@ALTIVEC_FLAG = 
 @HAS_ALTIVEC_TRUE@ALTIVEC_FLAG = -DHAS_ALTIVEC
@@ -412,6 +412,9 @@ EXTRA_DIST = \
 @HAS_VSX_FALSE@VSX_FLAG = 
 @HAS_VSX_TRUE@VSX_FLAG = -DHAS_VSX
 test_isa_2_06_part1_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames $(VSX_FLAG) \
+			@FLAG_M64@ $(ALTIVEC_FLAG) $(BUILD_FLAG_VSX)
+
+test_isa_2_06_part2_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames $(VSX_FLAG) \
 			@FLAG_M64@ $(ALTIVEC_FLAG) $(BUILD_FLAG_VSX)
 
 jm_insns_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames -maltivec \
@@ -475,6 +478,9 @@ std_reg_imm$(EXEEXT): $(std_reg_imm_OBJECTS) $(std_reg_imm_DEPENDENCIES)
 test_isa_2_06_part1$(EXEEXT): $(test_isa_2_06_part1_OBJECTS) $(test_isa_2_06_part1_DEPENDENCIES) 
 	@rm -f test_isa_2_06_part1$(EXEEXT)
 	$(test_isa_2_06_part1_LINK) $(test_isa_2_06_part1_OBJECTS) $(test_isa_2_06_part1_LDADD) $(LIBS)
+test_isa_2_06_part2$(EXEEXT): $(test_isa_2_06_part2_OBJECTS) $(test_isa_2_06_part2_DEPENDENCIES) 
+	@rm -f test_isa_2_06_part2$(EXEEXT)
+	$(test_isa_2_06_part2_LINK) $(test_isa_2_06_part2_OBJECTS) $(test_isa_2_06_part2_LDADD) $(LIBS)
 tw_td$(EXEEXT): $(tw_td_OBJECTS) $(tw_td_DEPENDENCIES) 
 	@rm -f tw_td$(EXEEXT)
 	$(LINK) $(tw_td_OBJECTS) $(tw_td_LDADD) $(LIBS)
@@ -495,6 +501,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/round.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/std_reg_imm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_2_06_part1-test_isa_2_06_part1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tw_td.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/twi_tdi.Po@am__quote@
 
@@ -539,6 +546,20 @@ test_isa_2_06_part1-test_isa_2_06_part1.obj: test_isa_2_06_part1.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_isa_2_06_part1.c' object='test_isa_2_06_part1-test_isa_2_06_part1.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part1_CFLAGS) $(CFLAGS) -c -o test_isa_2_06_part1-test_isa_2_06_part1.obj `if test -f 'test_isa_2_06_part1.c'; then $(CYGPATH_W) 'test_isa_2_06_part1.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_2_06_part1.c'; fi`
+
+test_isa_2_06_part2-test_isa_2_06_part2.o: test_isa_2_06_part2.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part2_CFLAGS) $(CFLAGS) -MT test_isa_2_06_part2-test_isa_2_06_part2.o -MD -MP -MF $(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Tpo -c -o test_isa_2_06_part2-test_isa_2_06_part2.o `test -f 'test_isa_2_06_part2.c' || echo '$(srcdir)/'`test_isa_2_06_part2.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Tpo $(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_isa_2_06_part2.c' object='test_isa_2_06_part2-test_isa_2_06_part2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part2_CFLAGS) $(CFLAGS) -c -o test_isa_2_06_part2-test_isa_2_06_part2.o `test -f 'test_isa_2_06_part2.c' || echo '$(srcdir)/'`test_isa_2_06_part2.c
+
+test_isa_2_06_part2-test_isa_2_06_part2.obj: test_isa_2_06_part2.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part2_CFLAGS) $(CFLAGS) -MT test_isa_2_06_part2-test_isa_2_06_part2.obj -MD -MP -MF $(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Tpo -c -o test_isa_2_06_part2-test_isa_2_06_part2.obj `if test -f 'test_isa_2_06_part2.c'; then $(CYGPATH_W) 'test_isa_2_06_part2.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_2_06_part2.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Tpo $(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_isa_2_06_part2.c' object='test_isa_2_06_part2-test_isa_2_06_part2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part2_CFLAGS) $(CFLAGS) -c -o test_isa_2_06_part2-test_isa_2_06_part2.obj `if test -f 'test_isa_2_06_part2.c'; then $(CYGPATH_W) 'test_isa_2_06_part2.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_2_06_part2.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

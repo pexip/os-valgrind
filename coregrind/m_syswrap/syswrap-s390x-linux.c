@@ -1364,7 +1364,7 @@ static SyscallTableEntry syscall_table[] = {
    LINX_(__NR_setfsuid, sys_setfsuid),                                // 215
    LINX_(__NR_setfsgid, sys_setfsgid),                                // 216
 // ?????(__NR_pivot_root, ),
-   GENX_(__NR_mincore, sys_mincore),                                  // 218
+   GENXY(__NR_mincore, sys_mincore),                                  // 218
    GENX_(__NR_madvise,  sys_madvise),                                 // 219
 
    GENXY(__NR_getdents64,  sys_getdents64),                           // 220
@@ -1500,7 +1500,7 @@ static SyscallTableEntry syscall_table[] = {
    LINX_(__NR_pwritev, sys_pwritev),                                  // 329
 
 // ?????(__NR_rt_tgsigqueueinfo, ),
-   LINXY(__NR_perf_event_open, sys_perf_counter_open),                // 331
+   LINXY(__NR_perf_event_open, sys_perf_event_open),                  // 331
 };
 
 SyscallTableEntry* ML_(get_linux_syscall_entry) ( UInt sysno )
