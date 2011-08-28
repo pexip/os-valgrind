@@ -49,12 +49,20 @@
 #endif
 
 #include <assert.h>         /* assert() */
+#include <errno.h>
 #include <pthread.h>        /* pthread_mutex_t */
 #include <semaphore.h>      /* sem_t */
 #include <stdint.h>         /* uintptr_t */
 #include <stdio.h>          /* fprintf() */
 #include <stdlib.h>         /* malloc(), free() */
 #include <unistd.h>         /* confstr() */
+#ifdef __linux__
+#include <asm/unistd.h>     /* __NR_futex */
+#include <linux/futex.h>    /* FUTEX_WAIT */
+#ifndef FUTEX_PRIVATE_FLAG
+#define FUTEX_PRIVATE_FLAG 0
+#endif
+#endif
 #include "config.h"         /* HAVE_PTHREAD_MUTEX_ADAPTIVE_NP etc. */
 #include "drd_basics.h"     /* DRD_() */
 #include "drd_clientreq.h"
@@ -129,12 +137,16 @@ static int never_true;
 
 /* Local data structures. */
 
+typedef struct {
+   volatile int counter;
+} DrdSema;
+
 typedef struct
 {
    void* (*start)(void*);
    void* arg;
    int   detachstate;
-   int   wrapper_started;
+   DrdSema wrapper_started;
 } DrdPosixThreadArgs;
 
 
@@ -143,6 +155,10 @@ typedef struct
 static void DRD_(init)(void) __attribute__((constructor));
 static void DRD_(check_threading_library)(void);
 static void DRD_(set_main_thread_state)(void);
+static void DRD_(sema_init)(DrdSema* sema);
+static void DRD_(sema_destroy)(DrdSema* sema);
+static void DRD_(sema_down)(DrdSema* sema);
+static void DRD_(sema_up)(DrdSema* sema);
 
 
 /* Function definitions. */
@@ -161,6 +177,49 @@ static void DRD_(init)(void)
 {
    DRD_(check_threading_library)();
    DRD_(set_main_thread_state)();
+}
+
+static void DRD_(sema_init)(DrdSema* sema)
+{
+   DRD_IGNORE_VAR(sema->counter);
+   sema->counter = 0;
+}
+
+static void DRD_(sema_destroy)(DrdSema* sema)
+{
+}
+
+static void DRD_(sema_down)(DrdSema* sema)
+{
+   int res = ENOSYS;
+
+   while (sema->counter == 0) {
+#if defined(__linux__) && defined(__NR_futex)
+      if (syscall(__NR_futex, (UWord)&sema->counter,
+                  FUTEX_WAIT | FUTEX_PRIVATE_FLAG, 0) == 0)
+         res = 0;
+      else
+         res = errno;
+#endif
+      /*
+       * Invoke sched_yield() on non-Linux systems, if the futex syscall has
+       * not been invoked or if this code has been built on a Linux system
+       * where __NR_futex is defined and is run on a Linux system that does
+       * not support the futex syscall.
+       */
+      if (res != 0 && res != EWOULDBLOCK)
+         sched_yield();
+   }
+   sema->counter--;
+}
+
+static void DRD_(sema_up)(DrdSema* sema)
+{
+   sema->counter++;
+#if defined(__linux__) && defined(__NR_futex)
+   syscall(__NR_futex, (UWord)&sema->counter,
+           FUTEX_WAKE | FUTEX_PRIVATE_FLAG, 1);
+#endif
 }
 
 /**
@@ -277,7 +336,7 @@ static void* DRD_(thread_wrapper)(void* arg)
     * DRD_(set_joinable)() have been invoked to avoid a race with
     * a pthread_detach() invocation for this thread from another thread.
     */
-   arg_ptr->wrapper_started = 1;
+   DRD_(sema_up)(&arg_ptr->wrapper_started);
 
    return (arg_copy.start)(arg_copy.arg);
 }
@@ -379,8 +438,7 @@ int pthread_create_intercept(pthread_t* thread, const pthread_attr_t* attr,
 
    thread_args.start           = start;
    thread_args.arg             = arg;
-   DRD_IGNORE_VAR(thread_args.wrapper_started);
-   thread_args.wrapper_started = 0;
+   DRD_(sema_init)(&thread_args.wrapper_started);
    /*
     * Find out whether the thread will be started as a joinable thread
     * or as a detached thread. If no thread attributes have been specified,
@@ -402,9 +460,10 @@ int pthread_create_intercept(pthread_t* thread, const pthread_attr_t* attr,
    if (ret == 0)
    {
       /* Wait until the thread wrapper started. */
-      while (!thread_args.wrapper_started)
-         sched_yield();
+      DRD_(sema_down)(&thread_args.wrapper_started);
    }
+
+   DRD_(sema_destroy)(&thread_args.wrapper_started);
 
    VALGRIND_DO_CLIENT_REQUEST_EXPR(-1, VG_USERREQ__DRD_START_NEW_SEGMENT,
                                    pthread_self(), 0, 0, 0, 0);
@@ -424,12 +483,18 @@ int pthread_join_intercept(pthread_t pt_joinee, void **thread_return)
    OrigFn   fn;
 
    VALGRIND_GET_ORIG_FN(fn);
+   /*
+    * Avoid that the sys_futex(td->tid) call invoked by the NPTL pthread_join()
+    * implementation triggers a (false positive) race report.
+    */
+   ANNOTATE_IGNORE_READS_AND_WRITES_BEGIN();
    CALL_FN_W_WW(ret, fn, pt_joinee, thread_return);
    if (ret == 0)
    {
       VALGRIND_DO_CLIENT_REQUEST_EXPR(-1, VG_USERREQ__POST_THREAD_JOIN,
                                       pt_joinee, 0, 0, 0, 0);
    }
+   ANNOTATE_IGNORE_READS_AND_WRITES_END();
    return ret;
 }
 
@@ -486,7 +551,9 @@ int pthread_once_intercept(pthread_once_t *once_control,
     * any known adverse effects.
     */
    DRD_IGNORE_VAR(*once_control);
+   ANNOTATE_IGNORE_READS_AND_WRITES_BEGIN();
    CALL_FN_W_WW(ret, fn, once_control, init_routine);
+   ANNOTATE_IGNORE_READS_AND_WRITES_END();
    DRD_STOP_IGNORING_VAR(*once_control);
    return ret;
 }
@@ -999,6 +1066,10 @@ static __always_inline int sem_post_intercept(sem_t *sem)
 
 PTH_FUNCS(int, semZupost, sem_post_intercept, (sem_t *sem), (sem));
 
+/* Android's pthread.h doesn't say anything about rwlocks, hence these
+   functions have to be conditionally compiled. */
+#if defined(HAVE_PTHREAD_RWLOCK_T)
+
 static __always_inline
 int pthread_rwlock_init_intercept(pthread_rwlock_t* rwlock,
                                   const pthread_rwlockattr_t* attr)
@@ -1158,3 +1229,5 @@ int pthread_rwlock_unlock_intercept(pthread_rwlock_t* rwlock)
 PTH_FUNCS(int,
           pthreadZurwlockZuunlock, pthread_rwlock_unlock_intercept,
           (pthread_rwlock_t* rwlock), (rwlock));
+
+#endif /* defined(HAVE_PTHREAD_RWLOCK_T) */

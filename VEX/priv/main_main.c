@@ -185,7 +185,7 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
    void         (*ppReg)        ( HReg );
    HInstrArray* (*iselSB)       ( IRSB*, VexArch, VexArchInfo*, 
                                                   VexAbiInfo* );
-   Int          (*emit)         ( UChar*, Int, HInstr*, Bool, void* );
+   Int          (*emit)         ( UChar*, Int, HInstr*, Bool, void*, void* );
    IRExpr*      (*specHelper)   ( HChar*, IRExpr**, IRStmt**, Int );
    Bool         (*preciseMemExnsFn) ( Int, Int );
 
@@ -252,11 +252,14 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          ppInstr      = (void(*)(HInstr*, Bool)) ppX86Instr;
          ppReg        = (void(*)(HReg)) ppHRegX86;
          iselSB       = iselSB_X86;
-         emit         = (Int(*)(UChar*,Int,HInstr*,Bool,void*)) emit_X86Instr;
+         emit         = (Int(*)(UChar*,Int,HInstr*,Bool,void*,void*))
+                        emit_X86Instr;
          host_is_bigendian = False;
          host_word_type    = Ity_I32;
          vassert(are_valid_hwcaps(VexArchX86, vta->archinfo_host.hwcaps));
-         vassert(vta->dispatch != NULL); /* jump-to-dispatcher scheme */
+         /* jump-to-dispatcher scheme */
+         vassert(vta->dispatch_unassisted != NULL);
+         vassert(vta->dispatch_assisted != NULL);
          break;
 
       case VexArchAMD64:
@@ -274,11 +277,14 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          ppInstr     = (void(*)(HInstr*, Bool)) ppAMD64Instr;
          ppReg       = (void(*)(HReg)) ppHRegAMD64;
          iselSB      = iselSB_AMD64;
-         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*)) emit_AMD64Instr;
+         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*,void*))
+                       emit_AMD64Instr;
          host_is_bigendian = False;
          host_word_type    = Ity_I64;
          vassert(are_valid_hwcaps(VexArchAMD64, vta->archinfo_host.hwcaps));
-         vassert(vta->dispatch != NULL); /* jump-to-dispatcher scheme */
+         /* jump-to-dispatcher scheme */
+         vassert(vta->dispatch_unassisted != NULL);
+         vassert(vta->dispatch_assisted != NULL);
          break;
 
       case VexArchPPC32:
@@ -293,11 +299,14 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          ppInstr     = (void(*)(HInstr*,Bool)) ppPPCInstr;
          ppReg       = (void(*)(HReg)) ppHRegPPC;
          iselSB      = iselSB_PPC;
-         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*)) emit_PPCInstr;
+         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*,void*))
+                       emit_PPCInstr;
          host_is_bigendian = True;
          host_word_type    = Ity_I32;
          vassert(are_valid_hwcaps(VexArchPPC32, vta->archinfo_host.hwcaps));
-         vassert(vta->dispatch == NULL); /* return-to-dispatcher scheme */
+         /* return-to-dispatcher scheme */
+         vassert(vta->dispatch_unassisted == NULL);
+         vassert(vta->dispatch_assisted == NULL);
          break;
 
       case VexArchPPC64:
@@ -312,11 +321,14 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          ppInstr     = (void(*)(HInstr*, Bool)) ppPPCInstr;
          ppReg       = (void(*)(HReg)) ppHRegPPC;
          iselSB      = iselSB_PPC;
-         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*)) emit_PPCInstr;
+         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*,void*))
+                       emit_PPCInstr;
          host_is_bigendian = True;
          host_word_type    = Ity_I64;
          vassert(are_valid_hwcaps(VexArchPPC64, vta->archinfo_host.hwcaps));
-         vassert(vta->dispatch == NULL); /* return-to-dispatcher scheme */
+         /* return-to-dispatcher scheme */
+         vassert(vta->dispatch_unassisted == NULL);
+         vassert(vta->dispatch_assisted == NULL);
          break;
 
       case VexArchS390X:
@@ -331,11 +343,14 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          ppInstr     = (void(*)(HInstr*, Bool)) ppS390Instr;
          ppReg       = (void(*)(HReg)) ppHRegS390;
          iselSB      = iselSB_S390;
-         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*)) emit_S390Instr;
+         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*,void*))
+                       emit_S390Instr;
          host_is_bigendian = True;
          host_word_type    = Ity_I64;
          vassert(are_valid_hwcaps(VexArchS390X, vta->archinfo_host.hwcaps));
-         vassert(vta->dispatch == NULL); /* return-to-dispatcher scheme */
+         /* return-to-dispatcher scheme */
+         vassert(vta->dispatch_unassisted == NULL);
+         vassert(vta->dispatch_assisted == NULL);
          break;
 
       case VexArchARM:
@@ -350,11 +365,14 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          ppInstr     = (void(*)(HInstr*, Bool)) ppARMInstr;
          ppReg       = (void(*)(HReg)) ppHRegARM;
          iselSB      = iselSB_ARM;
-         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*)) emit_ARMInstr;
+         emit        = (Int(*)(UChar*,Int,HInstr*,Bool,void*,void*))
+                       emit_ARMInstr;
          host_is_bigendian = False;
          host_word_type    = Ity_I32;
          vassert(are_valid_hwcaps(VexArchARM, vta->archinfo_host.hwcaps));
-         vassert(vta->dispatch == NULL); /* return-to-dispatcher scheme */
+         vassert(vta->dispatch_unassisted == NULL);
+         vassert(vta->dispatch_assisted == NULL);
+         /* return-to-dispatcher scheme */
          break;
 
       default:
@@ -465,6 +483,11 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          vpanic("LibVEX_Translate: unsupported guest insn set");
    }
 
+   /* Set up result struct. */
+   VexTranslateResult res;
+   res.status       = VexTransOK;
+   res.n_sc_extents = 0;
+
    /* yet more sanity checks ... */
    if (vta->arch_guest == vta->arch_host) {
       /* doesn't necessarily have to be true, but if it isn't it means
@@ -481,6 +504,7 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
                    "------------------------\n\n");
 
    irsb = bb_to_IR ( vta->guest_extents,
+                     &res.n_sc_extents,
                      vta->callback_opaque,
                      disInstrFn,
                      vta->guest_bytes, 
@@ -491,7 +515,7 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
                      &vta->archinfo_guest,
                      &vta->abiinfo_both,
                      guest_word_type,
-                     vta->do_self_check,
+                     vta->needs_self_check,
                      vta->preamble_function,
                      offB_TISTART,
                      offB_TILEN );
@@ -502,7 +526,7 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
       /* Access failure. */
       vexSetAllocModeTEMP_and_clear();
       vex_traceflags = 0;
-      return VexTransAccessFail;
+      res.status = VexTransAccessFail; return res;
    }
 
    vassert(vta->guest_extents->n_used >= 1 && vta->guest_extents->n_used <= 3);
@@ -618,7 +642,10 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
    }
 
    /* HACK */
-   if (0) { *(vta->host_bytes_used) = 0; return VexTransOK; }
+   if (0) {
+      *(vta->host_bytes_used) = 0;
+      res.status = VexTransOK; return res;
+   }
    /* end HACK */
 
    if (vex_traceflags & VEX_TRACE_VCODE)
@@ -666,7 +693,10 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
    }
 
    /* HACK */
-   if (0) { *(vta->host_bytes_used) = 0; return VexTransOK; }
+   if (0) { 
+      *(vta->host_bytes_used) = 0;
+      res.status = VexTransOK; return res;
+   }
    /* end HACK */
 
    /* Assemble */
@@ -683,7 +713,7 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
          vex_printf("\n");
       }
       j = (*emit)( insn_bytes, sizeof insn_bytes, rcode->arr[i], mode64,
-                   vta->dispatch );
+                   vta->dispatch_unassisted, vta->dispatch_assisted );
       if (vex_traceflags & VEX_TRACE_ASM) {
          for (k = 0; k < j; k++)
             if (insn_bytes[k] < 16)
@@ -695,7 +725,8 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
       if (out_used + j > vta->host_bytes_size) {
          vexSetAllocModeTEMP_and_clear();
          vex_traceflags = 0;
-         return VexTransOutputFull;
+         res.status = VexTransOutputFull;
+         return res;
       }
       for (k = 0; k < j; k++) {
          vta->host_bytes[out_used] = insn_bytes[k];
@@ -710,7 +741,8 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
    vexSetAllocModeTEMP_and_clear();
 
    vex_traceflags = 0;
-   return VexTransOK;
+   res.status = VexTransOK;
+   return res;
 }
 
 

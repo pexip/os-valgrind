@@ -346,14 +346,6 @@ static void gen_suppression(Error* err)
 
    vg_assert(err);
 
-   /* In XML mode, we also need to print the plain text version of the
-      suppresion in a CDATA section.  What that really means is, we
-      need to generate the plaintext version both in XML and text
-      mode.  So generate it into TEXT. */
-   text = VG_(newXA)( VG_(malloc), "errormgr.gen_suppression.1",
-                      VG_(free), sizeof(HChar) );
-   vg_assert(text);
-
    ec = VG_(get_error_where)(err);
    vg_assert(ec);
 
@@ -363,6 +355,14 @@ static void gen_suppression(Error* err)
                 VG_(details).name);
       return;
    }
+
+   /* In XML mode, we also need to print the plain text version of the
+      suppresion in a CDATA section.  What that really means is, we
+      need to generate the plaintext version both in XML and text
+      mode.  So generate it into TEXT. */
+   text = VG_(newXA)( VG_(malloc), "errormgr.gen_suppression.1",
+                      VG_(free), sizeof(HChar) );
+   vg_assert(text);
 
    /* Ok.  Generate the plain text version into TEXT. */
    VG_(xaprintf)(text, "{\n");
@@ -693,6 +693,12 @@ void VG_(maybe_record_error) ( ThreadId tid,
       return;
    }
 
+   /* Ignore it if error acquisition is disabled for this thread. */
+   { ThreadState* tst = VG_(get_ThreadState)(tid);
+     if (tst->err_disablement_level > 0)
+        return;
+   }
+
    /* After M_COLLECT_ERRORS_SLOWLY_AFTER different errors have
       been found, be much more conservative about collecting new
       ones. */
@@ -817,6 +823,11 @@ Bool VG_(unique_error) ( ThreadId tid, ErrorKind ekind, Addr a, Char* s,
    Error err;
    Supp *su;
 
+   /* Ignore it if error acquisition is disabled for this thread. */
+   ThreadState* tst = VG_(get_ThreadState)(tid);
+   if (tst->err_disablement_level > 0)
+      return False; /* ignored, not suppressed */
+   
    /* Build ourselves the error */
    construct_error ( &err, tid, ekind, a, s, extra, where );
 

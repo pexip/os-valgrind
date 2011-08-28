@@ -1078,17 +1078,17 @@ Also see <xref linkend="cl-manual.cycles"/>.</para>
 <sect1 id="cl-manual.monitor-commands" xreflabel="Callgrind Monitor Commands">
 <title>Callgrind Monitor Commands</title>
 <para>The Callgrind tool provides monitor commands handled by the Valgrind
-gdbserver (see <xref linkend="manual-core.gdbserver-commandhandling"/>).
+gdbserver (see <xref linkend="manual-core-adv.gdbserver-commandhandling"/>).
 </para>
 
 <itemizedlist>
   <listitem>
-    <para><varname>ct.dump [&lt;dump_hint&gt;]</varname> requests to dump the
+    <para><varname>dump [&lt;dump_hint&gt;]</varname> requests to dump the
     profile data. </para>
   </listitem>
 
   <listitem>
-    <para><varname>ct.zero</varname> requests to zero the profile data
+    <para><varname>zero</varname> requests to zero the profile data
     counters. </para>
   </listitem>
 

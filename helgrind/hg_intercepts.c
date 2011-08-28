@@ -1274,6 +1274,10 @@ PTH_FUNC(int, pthreadZuspinZutrylock, // pthread_spin_trylock
 /*--- pthread_rwlock_t functions                               ---*/
 /*----------------------------------------------------------------*/
 
+/* Android's pthread.h doesn't say anything about rwlocks, hence these
+   functions have to be conditionally compiled. */
+#if defined(HAVE_PTHREAD_RWLOCK_T)
+
 /* Handled:   pthread_rwlock_init pthread_rwlock_destroy
               pthread_rwlock_rdlock 
               pthread_rwlock_wrlock
@@ -1617,6 +1621,8 @@ static int pthread_rwlock_unlock_WRK(pthread_rwlock_t* rwlock)
 #else
 #  error "Unsupported OS"
 #endif
+
+#endif /* defined(HAVE_PTHREAD_RWLOCK_T) */
 
 
 /*----------------------------------------------------------------*/
@@ -2153,6 +2159,10 @@ QT4_FUNC(void*, _ZN6QMutexC2ENS_13RecursionModeE,
          long  recmode)
 {
    assert(0);
+   /*NOTREACHED*/
+   /* Android's gcc behaves like it doesn't know that assert(0)
+      never returns.  Hence: */
+   return NULL;
 }
 
 
@@ -2161,6 +2171,9 @@ QT4_FUNC(void*, _ZN6QMutexC2ENS_13RecursionModeE,
 QT4_FUNC(void*, _ZN6QMutexD2Ev, void* mutex)
 {
    assert(0);
+   /* Android's gcc behaves like it doesn't know that assert(0)
+      never returns.  Hence: */
+   return NULL;
 }
 
 

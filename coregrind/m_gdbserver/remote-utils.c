@@ -121,7 +121,9 @@ void set_ptracer(void)
 
    o = VG_(open) (ptrace_scope_setting_file, VKI_O_RDONLY, 0);
    if (sr_isError(o)) {
-      sr_perror(o, "error VG_(open) %s\n", ptrace_scope_setting_file);
+      if (VG_(debugLog_getLevel)() >= 1) {
+         sr_perror(o, "error VG_(open) %s\n", ptrace_scope_setting_file);
+      }
       /* can't read setting. Assuming ptrace can be called by vgdb. */
       return;
    }
@@ -248,17 +250,43 @@ void remote_open (char *name)
       VG_(umsg)("embedded gdbserver: reading from %s\n", from_gdb);
       VG_(umsg)("embedded gdbserver: writing to   %s\n", to_gdb);
       VG_(umsg)("embedded gdbserver: shared mem   %s\n", shared_mem);
-      VG_(umsg)("CONTROL ME using: vgdb --pid=%d%s%s ...command...\n",
-                pid, (name_default ? "" : " --vgdb="),
+      VG_(umsg)("\n");
+      VG_(umsg)("TO CONTROL THIS PROCESS USING vgdb (which you probably\n"
+                "don't want to do, unless you know exactly what you're doing,\n"
+                "or are doing some strange experiment):\n"
+                "  %s/../../bin/vgdb --pid=%d%s%s ...command...\n",
+                VG_LIBDIR,
+                pid, (name_default ? "" : " --vgdb-prefix="),
                 (name_default ? "" : name));
-      VG_(umsg)("DEBUG ME using: (gdb) target remote | vgdb --pid=%d%s%s\n",
-                pid, (name_default ? "" : " --vgdb="), 
-                (name_default ? "" : name));
-      VG_(umsg)("   --pid optional if only one valgrind process is running\n");
+   }
+   if (VG_(clo_verbosity) > 1 
+       || VG_(clo_vgdb_error) < 999999999) {
+      VG_(umsg)("\n");
+      VG_(umsg)(
+         "TO DEBUG THIS PROCESS USING GDB: start GDB like this\n"
+         "  /path/to/gdb %s\n"
+         "and then give GDB the following command\n"
+         "  target remote | %s/../../bin/vgdb --pid=%d%s%s\n",
+         VG_(args_the_exename),
+         VG_LIBDIR,
+         pid, (name_default ? "" : " --vgdb-prefix="), 
+         (name_default ? "" : name)
+      );
+      VG_(umsg)("--pid is optional if only one valgrind process is running\n");
+      VG_(umsg)("\n");
    }
 
    if (!mknod_done) {
       mknod_done++;
+
+      /*
+       * Unlink just in case a previous process with the same PID had been
+       * killed and hence Valgrind hasn't had the chance yet to remove these.
+       */
+      VG_(unlink)(from_gdb);
+      VG_(unlink)(to_gdb);
+      VG_(unlink)(shared_mem);
+
       safe_mknod(from_gdb);
       safe_mknod(to_gdb);
 
@@ -277,10 +305,6 @@ void remote_open (char *name)
          fatal("error writing %d bytes to shared mem %s\n",
                (int) sizeof(VgdbShared), shared_mem);
       }
-      shared_mem_fd = VG_(safe_fd)(shared_mem_fd);
-      if (shared_mem_fd == -1) {
-         fatal("safe_fd for vgdb shared_mem %s failed\n", shared_mem);
-      }
       {
          SysRes res = VG_(am_shared_mmap_file_float_valgrind)
             (sizeof(VgdbShared), VKI_PROT_READ|VKI_PROT_WRITE, 
@@ -293,6 +317,7 @@ void remote_open (char *name)
          addr_shared = sr_Res (res);
       }
       shared = (VgdbShared*) addr_shared;
+      VG_(close) (shared_mem_fd);
    }
    
    /* we open the read side FIFO in non blocking mode
