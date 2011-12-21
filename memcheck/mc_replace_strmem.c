@@ -53,6 +53,49 @@
    THEY RUN ON THE SIMD CPU!
    ------------------------------------------------------------------ */
 
+/* Assignment of behavioural equivalence class tags: 2NNNP is intended
+   to be reserved for Memcheck.  Current usage:
+
+   20010 STRRCHR
+   20020 STRCHR
+   20030 STRCAT
+   20040 STRNCAT
+   20050 STRLCAT
+   20060 STRNLEN
+   20070 STRLEN
+   20080 STRCPY
+   20090 STRNCPY
+   20100 STRLCPY
+   20110 STRNCMP
+   20120 STRCASECMP
+   20130 STRNCASECMP
+   20140 STRCASECMP_L
+   20150 STRNCASECMP_L
+   20160 STRCMP
+   20170 MEMCHR
+
+   20180 MEMCPY    if there's a conflict between memcpy and
+   20181 MEMMOVE   memmove, prefer memmove
+
+   20190 MEMCMP
+   20200 STPCPY
+   20210 MEMSET
+   2022P unused (was previously MEMMOVE)
+   20230 BCOPY
+   20240 GLIBC25___MEMMOVE_CHK
+   20250 GLIBC232_STRCHRNUL
+   20260 GLIBC232_RAWMEMCHR
+   20270 GLIBC25___STRCPY_CHK
+   20280 GLIBC25___STPCPY_CHK
+   20290 GLIBC25_MEMPCPY
+   20300 GLIBC26___MEMCPY_CHK
+   20310 STRSTR
+   20320 STRPBRK
+   20330 STRCSPN
+   20340 STRSPN
+*/
+
+
 /* Figure out if [dst .. dst+dstlen-1] overlaps with 
                  [src .. src+srclen-1].
    We assume that the address ranges do not wrap around
@@ -60,7 +103,7 @@
    are not accessible and the program will segfault in this
    circumstance, presumably).
 */
-static __inline__
+static inline
 Bool is_overlap ( void* dst, const void* src, SizeT dstlen, SizeT srclen )
 {
    Addr loS, hiS, loD, hiD;
@@ -87,20 +130,33 @@ Bool is_overlap ( void* dst, const void* src, SizeT dstlen, SizeT srclen )
    }
 }
 
-// This is a macro rather than a function because we don't want to have an
-// extra function in the stack trace.
-#define RECORD_OVERLAP_ERROR(s, src, dst, len) \
-{ \
-   Word unused_res; \
-   VALGRIND_DO_CLIENT_REQUEST(unused_res, 0, \
-			      _VG_USERREQ__MEMCHECK_RECORD_OVERLAP_ERROR, \
-			      s, src, dst, len, 0); \
+
+/* Call here to exit if we can't continue.  On Android we can't call
+   _exit for some reason, so we have to blunt-instrument it. */
+__attribute__ ((__noreturn__))
+static inline void my_exit ( int x )
+{
+#  if defined(VGPV_arm_linux_android)
+   __asm__ __volatile__(".word 0xFFFFFFFF");
+   while (1) {}
+#  else
+   extern void _exit(int status);
+   _exit(x);
+#  endif
 }
 
 
+// This is a macro rather than a function because we don't want to have an
+// extra function in the stack trace.
+#define RECORD_OVERLAP_ERROR(s, src, dst, len)                  \
+  VALGRIND_DO_CLIENT_REQUEST_EXPR(0,                            \
+                  _VG_USERREQ__MEMCHECK_RECORD_OVERLAP_ERROR,   \
+                  s, src, dst, len, 0)
+
+
 #define STRRCHR(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname)( const char* s, int c ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname)( const char* s, int c ) \
+   char* VG_REPLACE_FUNCTION_EZU(20010,soname,fnname)( const char* s, int c ); \
+   char* VG_REPLACE_FUNCTION_EZU(20010,soname,fnname)( const char* s, int c ) \
    { \
       UChar  ch   = (UChar)((UInt)c); \
       UChar* p    = (UChar*)s; \
@@ -125,8 +181,8 @@ STRRCHR(VG_Z_DYLD,          rindex)
    
 
 #define STRCHR(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) ( const char* s, int c ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) ( const char* s, int c ) \
+   char* VG_REPLACE_FUNCTION_EZU(20020,soname,fnname) ( const char* s, int c ); \
+   char* VG_REPLACE_FUNCTION_EZU(20020,soname,fnname) ( const char* s, int c ) \
    { \
       UChar  ch = (UChar)((UInt)c); \
       UChar* p  = (UChar*)s; \
@@ -142,10 +198,12 @@ STRCHR(VG_Z_LIBC_SONAME,          strchr)
 STRCHR(VG_Z_LIBC_SONAME,          index)
 #if defined(VGO_linux)
 STRCHR(VG_Z_LIBC_SONAME,          __GI_strchr)
-STRCHR(VG_Z_LD_LINUX_SO_2,        strchr)
-STRCHR(VG_Z_LD_LINUX_SO_2,        index)
-STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, strchr)
-STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, index)
+#if !defined(VGP_x86_linux)
+ STRCHR(VG_Z_LD_LINUX_SO_2,        strchr)
+ STRCHR(VG_Z_LD_LINUX_SO_2,        index)
+ STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, strchr)
+ STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, index)
+#endif
 #elif defined(VGO_darwin)
 STRCHR(VG_Z_DYLD,                 strchr)
 STRCHR(VG_Z_DYLD,                 index)
@@ -153,8 +211,10 @@ STRCHR(VG_Z_DYLD,                 index)
 
 
 #define STRCAT(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) ( char* dst, const char* src ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) ( char* dst, const char* src ) \
+   char* VG_REPLACE_FUNCTION_EZU(20030,soname,fnname) \
+            ( char* dst, const char* src ); \
+   char* VG_REPLACE_FUNCTION_EZU(20030,soname,fnname) \
+            ( char* dst, const char* src ) \
    { \
       const Char* src_orig = src; \
             Char* dst_orig = dst; \
@@ -179,9 +239,9 @@ STRCAT(VG_Z_LIBC_SONAME, __GI_strcat)
 #endif
 
 #define STRNCAT(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   char* VG_REPLACE_FUNCTION_EZU(20040,soname,fnname) \
             ( char* dst, const char* src, SizeT n ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   char* VG_REPLACE_FUNCTION_EZU(20040,soname,fnname) \
             ( char* dst, const char* src, SizeT n ) \
    { \
       const Char* src_orig = src; \
@@ -196,7 +256,7 @@ STRCAT(VG_Z_LIBC_SONAME, __GI_strcat)
       /* pre-counting lengths... should be ok */ \
       if (is_overlap(dst_orig,  \
                      src_orig,  \
-                     (Addr)dst-(Addr)dst_orig+1,  \
+                     (Addr)dst-(Addr)dst_orig+1, \
                      (Addr)src-(Addr)src_orig+1)) \
          RECORD_OVERLAP_ERROR("strncat", dst_orig, src_orig, n); \
       \
@@ -215,15 +275,15 @@ STRNCAT(VG_Z_DYLD,        strncat)
    Truncation occurred if retval >= n. 
 */
 #define STRLCAT(soname, fnname) \
-    SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20050,soname,fnname) \
         ( char* dst, const char* src, SizeT n ); \
-    SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20050,soname,fnname) \
         ( char* dst, const char* src, SizeT n ) \
    { \
       const Char* src_orig = src; \
       Char* dst_orig = dst; \
       SizeT m = 0; \
-\
+      \
       while (m < n && *dst) { m++; dst++; } \
       if (m < n) { \
          /* Fill as far as dst_orig[n-2], then nul-terminate. */ \
@@ -241,7 +301,7 @@ STRNCAT(VG_Z_DYLD,        strncat)
                      (Addr)dst-(Addr)dst_orig+1,  \
                      (Addr)src-(Addr)src_orig+1)) \
          RECORD_OVERLAP_ERROR("strlcat", dst_orig, src_orig, n); \
-\
+      \
       return m; \
    }
 
@@ -252,8 +312,10 @@ STRLCAT(VG_Z_DYLD,        strlcat)
 
 
 #define STRNLEN(soname, fnname) \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname) ( const char* str, SizeT n ); \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname) ( const char* str, SizeT n ) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20060,soname,fnname) \
+            ( const char* str, SizeT n ); \
+   SizeT VG_REPLACE_FUNCTION_EZU(20060,soname,fnname) \
+            ( const char* str, SizeT n ) \
    { \
       SizeT i = 0; \
       while (i < n && str[i] != 0) i++; \
@@ -271,8 +333,10 @@ STRNLEN(VG_Z_LIBC_SONAME, __GI_strnlen)
 // confusing if you aren't expecting it.  Other small functions in this file
 // may also be inline by gcc.
 #define STRLEN(soname, fnname) \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname)( const char* str ); \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname)( const char* str ) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20070,soname,fnname) \
+      ( const char* str ); \
+   SizeT VG_REPLACE_FUNCTION_EZU(20070,soname,fnname) \
+      ( const char* str )  \
    { \
       SizeT i = 0; \
       while (str[i] != 0) i++; \
@@ -282,14 +346,14 @@ STRNLEN(VG_Z_LIBC_SONAME, __GI_strnlen)
 STRLEN(VG_Z_LIBC_SONAME,          strlen)
 #if defined(VGO_linux)
 STRLEN(VG_Z_LIBC_SONAME,          __GI_strlen)
-STRLEN(VG_Z_LD_LINUX_SO_2,        strlen)
-STRLEN(VG_Z_LD_LINUX_X86_64_SO_2, strlen)
 #endif
 
 
 #define STRCPY(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname, fnname) ( char* dst, const char* src ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname, fnname) ( char* dst, const char* src ) \
+   char* VG_REPLACE_FUNCTION_EZU(20080,soname,fnname) \
+      ( char* dst, const char* src ); \
+   char* VG_REPLACE_FUNCTION_EZU(20080,soname,fnname) \
+      ( char* dst, const char* src ) \
    { \
       const Char* src_orig = src; \
             Char* dst_orig = dst; \
@@ -301,7 +365,7 @@ STRLEN(VG_Z_LD_LINUX_X86_64_SO_2, strlen)
       /* pre-counting length... should be ok */ \
       if (is_overlap(dst_orig,  \
                      src_orig,  \
-                     (Addr)dst-(Addr)dst_orig+1,  \
+                     (Addr)dst-(Addr)dst_orig+1, \
                      (Addr)src-(Addr)src_orig+1)) \
          RECORD_OVERLAP_ERROR("strcpy", dst_orig, src_orig, 0); \
       \
@@ -317,9 +381,9 @@ STRCPY(VG_Z_DYLD,        strcpy)
 
 
 #define STRNCPY(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname, fnname) \
+   char* VG_REPLACE_FUNCTION_EZU(20090,soname,fnname) \
             ( char* dst, const char* src, SizeT n ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname, fnname) \
+   char* VG_REPLACE_FUNCTION_EZU(20090,soname,fnname) \
             ( char* dst, const char* src, SizeT n ) \
    { \
       const Char* src_orig = src; \
@@ -347,15 +411,15 @@ STRNCPY(VG_Z_DYLD,        strncpy)
 /* Copy up to n-1 bytes from src to dst. Then nul-terminate dst if n > 0. 
    Returns strlen(src). Does not zero-fill the remainder of dst. */
 #define STRLCPY(soname, fnname) \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname, fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20100,soname,fnname) \
        ( char* dst, const char* src, SizeT n ); \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname, fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20100,soname,fnname) \
        ( char* dst, const char* src, SizeT n ) \
    { \
       const char* src_orig = src; \
       char* dst_orig = dst; \
       SizeT m = 0; \
-\
+      \
       while (m < n-1 && *src) { m++; *dst++ = *src++; } \
       /* m non-nul bytes have now been copied, and m <= n-1. */ \
       /* Check for overlap after copying; all n bytes of dst are relevant, */ \
@@ -376,9 +440,9 @@ STRLCPY(VG_Z_DYLD,        strlcpy)
 
 
 #define STRNCMP(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20110,soname,fnname) \
           ( const char* s1, const char* s2, SizeT nmax ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20110,soname,fnname) \
           ( const char* s1, const char* s2, SizeT nmax ) \
    { \
       SizeT n = 0; \
@@ -404,9 +468,9 @@ STRNCMP(VG_Z_DYLD,        strncmp)
 
 
 #define STRCASECMP(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20120,soname,fnname) \
           ( const char* s1, const char* s2 ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20120,soname,fnname) \
           ( const char* s1, const char* s2 ) \
    { \
       extern int tolower(int); \
@@ -424,16 +488,18 @@ STRNCMP(VG_Z_DYLD,        strncmp)
       return 0; \
    }
 
+#if !defined(VGPV_arm_linux_android)
 STRCASECMP(VG_Z_LIBC_SONAME, strcasecmp)
-#if defined(VGO_linux)
+#endif
+#if defined(VGO_linux) && !defined(VGPV_arm_linux_android)
 STRCASECMP(VG_Z_LIBC_SONAME, __GI_strcasecmp)
 #endif
 
 
 #define STRNCASECMP(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20130,soname,fnname) \
           ( const char* s1, const char* s2, SizeT nmax ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20130,soname,fnname) \
           ( const char* s1, const char* s2, SizeT nmax ) \
    { \
       extern int tolower(int); \
@@ -444,15 +510,19 @@ STRCASECMP(VG_Z_LIBC_SONAME, __GI_strcasecmp)
          if (*s1 == 0) return -1; \
          if (*s2 == 0) return 1; \
          \
-         if (tolower(*(unsigned char*)s1) < tolower(*(unsigned char*)s2)) return -1; \
-         if (tolower(*(unsigned char*)s1) > tolower(*(unsigned char*)s2)) return 1; \
+         if (tolower(*(unsigned char*)s1) \
+             < tolower(*(unsigned char*)s2)) return -1; \
+         if (tolower(*(unsigned char*)s1) \
+             > tolower(*(unsigned char*)s2)) return 1; \
          \
          s1++; s2++; n++; \
       } \
    }
 
+#if !defined(VGPV_arm_linux_android)
 STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
-#if defined(VGO_linux)
+#endif
+#if defined(VGO_linux) && !defined(VGPV_arm_linux_android)
 STRNCASECMP(VG_Z_LIBC_SONAME, __GI_strncasecmp)
 #elif defined(VGO_darwin)
 STRNCASECMP(VG_Z_DYLD,        strncasecmp)
@@ -460,9 +530,9 @@ STRNCASECMP(VG_Z_DYLD,        strncasecmp)
 
 
 #define STRCASECMP_L(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20140,soname,fnname) \
           ( const char* s1, const char* s2, void* locale ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20140,soname,fnname) \
           ( const char* s1, const char* s2, void* locale ) \
    { \
       extern int tolower_l(int, void*) __attribute__((weak));    \
@@ -483,13 +553,14 @@ STRNCASECMP(VG_Z_DYLD,        strncasecmp)
 STRCASECMP_L(VG_Z_LIBC_SONAME, strcasecmp_l)
 #if defined(VGO_linux)
 STRCASECMP_L(VG_Z_LIBC_SONAME, __GI_strcasecmp_l)
+STRCASECMP_L(VG_Z_LIBC_SONAME, __GI___strcasecmp_l)
 #endif
 
 
 #define STRNCASECMP_L(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20150,soname,fnname) \
           ( const char* s1, const char* s2, SizeT nmax, void* locale ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20150,soname,fnname) \
           ( const char* s1, const char* s2, SizeT nmax, void* locale ) \
    { \
       extern int tolower_l(int, void*) __attribute__((weak));    \
@@ -500,8 +571,10 @@ STRCASECMP_L(VG_Z_LIBC_SONAME, __GI_strcasecmp_l)
          if (*s1 == 0) return -1; \
          if (*s2 == 0) return 1; \
          \
-         if (tolower_l(*(unsigned char*)s1, locale) < tolower_l(*(unsigned char*)s2, locale)) return -1; \
-         if (tolower_l(*(unsigned char*)s1, locale) > tolower_l(*(unsigned char*)s2, locale)) return 1; \
+         if (tolower_l(*(unsigned char*)s1, locale) \
+             < tolower_l(*(unsigned char*)s2, locale)) return -1; \
+         if (tolower_l(*(unsigned char*)s1, locale) \
+             > tolower_l(*(unsigned char*)s2, locale)) return 1; \
          \
          s1++; s2++; n++; \
       } \
@@ -516,9 +589,9 @@ STRNCASECMP_L(VG_Z_DYLD,        strncasecmp_l)
 
 
 #define STRCMP(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20160,soname,fnname) \
           ( const char* s1, const char* s2 ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20160,soname,fnname) \
           ( const char* s1, const char* s2 ) \
    { \
       register unsigned char c1; \
@@ -544,8 +617,10 @@ STRCMP(VG_Z_LD64_SO_1,            strcmp)
 
 
 #define MEMCHR(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) (const void *s, int c, SizeT n); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) (const void *s, int c, SizeT n) \
+   void* VG_REPLACE_FUNCTION_EZU(20170,soname,fnname) \
+            (const void *s, int c, SizeT n); \
+   void* VG_REPLACE_FUNCTION_EZU(20170,soname,fnname) \
+            (const void *s, int c, SizeT n) \
    { \
       SizeT i; \
       UChar c0 = (UChar)c; \
@@ -561,83 +636,96 @@ MEMCHR(VG_Z_DYLD,        memchr)
 #endif
 
 
-#define MEMCPY(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+#define MEMMOVE_OR_MEMCPY(becTag, soname, fnname, do_ol_check)  \
+   void* VG_REPLACE_FUNCTION_EZZ(becTag,soname,fnname) \
             ( void *dst, const void *src, SizeT len ); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZZ(becTag,soname,fnname) \
             ( void *dst, const void *src, SizeT len ) \
    { \
-      if (is_overlap(dst, src, len, len)) \
+      if (do_ol_check && is_overlap(dst, src, len, len)) \
          RECORD_OVERLAP_ERROR("memcpy", dst, src, len); \
       \
       const Addr WS = sizeof(UWord); /* 8 or 4 */ \
       const Addr WM = WS - 1;        /* 7 or 3 */ \
       \
-      if (dst < src) { \
-      \
-         /* Copying backwards. */ \
-         SizeT n = len; \
-         Addr  d = (Addr)dst; \
-         Addr  s = (Addr)src; \
+      if (len > 0) { \
+         if (dst < src) { \
          \
-         if (((s^d) & WM) == 0) { \
-            /* s and d have same UWord alignment. */ \
-            /* Pull up to a UWord boundary. */ \
-            while ((s & WM) != 0 && n >= 1) \
+            /* Copying backwards. */ \
+            SizeT n = len; \
+            Addr  d = (Addr)dst; \
+            Addr  s = (Addr)src; \
+            \
+            if (((s^d) & WM) == 0) { \
+               /* s and d have same UWord alignment. */ \
+               /* Pull up to a UWord boundary. */ \
+               while ((s & WM) != 0 && n >= 1) \
+                  { *(UChar*)d = *(UChar*)s; s += 1; d += 1; n -= 1; } \
+               /* Copy UWords. */ \
+               while (n >= WS) \
+                  { *(UWord*)d = *(UWord*)s; s += WS; d += WS; n -= WS; } \
+               if (n == 0) \
+                  return dst; \
+            } \
+            if (((s|d) & 1) == 0) { \
+               /* Both are 16-aligned; copy what we can thusly. */ \
+               while (n >= 2) \
+                  { *(UShort*)d = *(UShort*)s; s += 2; d += 2; n -= 2; } \
+            } \
+            /* Copy leftovers, or everything if misaligned. */ \
+            while (n >= 1) \
                { *(UChar*)d = *(UChar*)s; s += 1; d += 1; n -= 1; } \
-            /* Copy UWords. */ \
-            while (n >= WS) \
-               { *(UWord*)d = *(UWord*)s; s += WS; d += WS; n -= WS; } \
-            if (n == 0) \
-               return dst; \
-         } \
-         if (((s|d) & 1) == 0) { \
-            /* Both are 16-aligned; copy what we can thusly. */ \
-            while (n >= 2) \
-               { *(UShort*)d = *(UShort*)s; s += 2; d += 2; n -= 2; } \
-         } \
-         /* Copy leftovers, or everything if misaligned. */ \
-         while (n >= 1) \
-            { *(UChar*)d = *(UChar*)s; s += 1; d += 1; n -= 1; } \
-      \
-      } else if (dst > src) { \
-      \
-         SizeT n = len; \
-         Addr  d = ((Addr)dst) + n; \
-         Addr  s = ((Addr)src) + n; \
          \
-         /* Copying forwards. */ \
-         if (((s^d) & WM) == 0) { \
-            /* s and d have same UWord alignment. */ \
-            /* Back down to a UWord boundary. */ \
-            while ((s & WM) != 0 && n >= 1) \
+         } else if (dst > src) { \
+         \
+            SizeT n = len; \
+            Addr  d = ((Addr)dst) + n; \
+            Addr  s = ((Addr)src) + n; \
+            \
+            /* Copying forwards. */ \
+            if (((s^d) & WM) == 0) { \
+               /* s and d have same UWord alignment. */ \
+               /* Back down to a UWord boundary. */ \
+               while ((s & WM) != 0 && n >= 1) \
+                  { s -= 1; d -= 1; *(UChar*)d = *(UChar*)s; n -= 1; } \
+               /* Copy UWords. */ \
+               while (n >= WS) \
+                  { s -= WS; d -= WS; *(UWord*)d = *(UWord*)s; n -= WS; } \
+               if (n == 0) \
+                  return dst; \
+            } \
+            if (((s|d) & 1) == 0) { \
+               /* Both are 16-aligned; copy what we can thusly. */ \
+               while (n >= 2) \
+                  { s -= 2; d -= 2; *(UShort*)d = *(UShort*)s; n -= 2; } \
+            } \
+            /* Copy leftovers, or everything if misaligned. */ \
+            while (n >= 1) \
                { s -= 1; d -= 1; *(UChar*)d = *(UChar*)s; n -= 1; } \
-            /* Copy UWords. */ \
-            while (n >= WS) \
-               { s -= WS; d -= WS; *(UWord*)d = *(UWord*)s; n -= WS; } \
-            if (n == 0) \
-               return dst; \
+            \
          } \
-         if (((s|d) & 1) == 0) { \
-            /* Both are 16-aligned; copy what we can thusly. */ \
-            while (n >= 2) \
-               { s -= 2; d -= 2; *(UShort*)d = *(UShort*)s; n -= 2; } \
-         } \
-         /* Copy leftovers, or everything if misaligned. */ \
-         while (n >= 1) \
-            { s -= 1; d -= 1; *(UChar*)d = *(UChar*)s; n -= 1; } \
-         \
       } \
       \
       return dst; \
    }
 
-MEMCPY(VG_Z_LIBC_SONAME, memcpy)
+#define MEMMOVE(soname, fnname)  \
+   MEMMOVE_OR_MEMCPY(20181, soname, fnname, 0)
+
+#define MEMCPY(soname, fnname) \
+   MEMMOVE_OR_MEMCPY(20180, soname, fnname, 1)
+
 #if defined(VGO_linux)
-MEMCPY(VG_Z_LD_SO_1,     memcpy) /* ld.so.1 */
-MEMCPY(VG_Z_LD64_SO_1,   memcpy) /* ld64.so.1 */
+/* For older memcpy we have to use memmove-like semantics and skip the
+   overlap check; sigh; see #275284. */
+MEMMOVE(VG_Z_LIBC_SONAME, memcpyZAGLIBCZu2Zd2Zd5) /* memcpy@GLIBC_2.2.5 */
+MEMCPY(VG_Z_LIBC_SONAME,  memcpyZAZAGLIBCZu2Zd14) /* memcpy@@GLIBC_2.14 */
+MEMCPY(VG_Z_LIBC_SONAME,  memcpy) /* fallback case */
+MEMCPY(VG_Z_LD_SO_1,      memcpy) /* ld.so.1 */
+MEMCPY(VG_Z_LD64_SO_1,    memcpy) /* ld64.so.1 */
 #elif defined(VGO_darwin)
-MEMCPY(VG_Z_DYLD,        memcpy)
+MEMCPY(VG_Z_LIBC_SONAME,  memcpy)
+MEMCPY(VG_Z_DYLD,         memcpy)
 #endif
 /* icc9 blats these around all over the place.  Not only in the main
    executable but various .so's.  They are highly tuned and read
@@ -647,14 +735,14 @@ MEMCPY(VG_Z_DYLD,        memcpy)
    only until we understand more about the problem.  See
    http://bugs.kde.org/show_bug.cgi?id=139776
  */
-MEMCPY(NONE, _intel_fast_memcpy)
+MEMCPY(NONE, ZuintelZufastZumemcpy)
 
 
 #define MEMCMP(soname, fnname) \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20190,soname,fnname)       \
           ( const void *s1V, const void *s2V, SizeT n ); \
-   int VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-          ( const void *s1V, const void *s2V, SizeT n ) \
+   int VG_REPLACE_FUNCTION_EZU(20190,soname,fnname)       \
+          ( const void *s1V, const void *s2V, SizeT n )  \
    { \
       int res; \
       unsigned char a0; \
@@ -688,8 +776,10 @@ MEMCMP(VG_Z_DYLD,        bcmp)
 /* Copy SRC to DEST, returning the address of the terminating '\0' in
    DEST. (minor variant of strcpy) */
 #define STPCPY(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) ( char* dst, const char* src ); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) ( char* dst, const char* src ) \
+   char* VG_REPLACE_FUNCTION_EZU(20200,soname,fnname) \
+            ( char* dst, const char* src ); \
+   char* VG_REPLACE_FUNCTION_EZU(20200,soname,fnname) \
+            ( char* dst, const char* src ) \
    { \
       const Char* src_orig = src; \
             Char* dst_orig = dst; \
@@ -719,8 +809,10 @@ STPCPY(VG_Z_DYLD,                 stpcpy)
 
 
 #define MEMSET(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname)(void *s, Int c, SizeT n); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname)(void *s, Int c, SizeT n) \
+   void* VG_REPLACE_FUNCTION_EZU(20210,soname,fnname) \
+            (void *s, Int c, SizeT n); \
+   void* VG_REPLACE_FUNCTION_EZU(20210,soname,fnname) \
+            (void *s, Int c, SizeT n) \
    { \
       Addr a  = (Addr)s;   \
       UInt c4 = (c & 0xFF); \
@@ -741,27 +833,7 @@ MEMSET(VG_Z_DYLD,        memset)
 #endif
 
 
-#define MEMMOVE(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-            (void *dstV, const void *srcV, SizeT n); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-            (void *dstV, const void *srcV, SizeT n) \
-   { \
-      SizeT i; \
-      Char* dst = (Char*)dstV; \
-      Char* src = (Char*)srcV; \
-      if (dst < src) { \
-         for (i = 0; i < n; i++) \
-            dst[i] = src[i]; \
-      } \
-      else  \
-      if (dst > src) { \
-         for (i = 0; i < n; i++) \
-            dst[n-i-1] = src[n-i-1]; \
-      } \
-      return dst; \
-   }
-
+/* memmove -- use the MEMMOVE defn above. */
 MEMMOVE(VG_Z_LIBC_SONAME, memmove)
 #if defined(VGO_darwin)
 MEMMOVE(VG_Z_DYLD,        memmove)
@@ -769,9 +841,9 @@ MEMMOVE(VG_Z_DYLD,        memmove)
 
 
 #define BCOPY(soname, fnname) \
-   void VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void VG_REPLACE_FUNCTION_EZU(20230,soname,fnname) \
             (const void *srcV, void *dstV, SizeT n); \
-   void VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void VG_REPLACE_FUNCTION_EZU(20230,soname,fnname) \
             (const void *srcV, void *dstV, SizeT n) \
    { \
       SizeT i; \
@@ -797,12 +869,11 @@ BCOPY(VG_Z_DYLD,        bcopy)
 /* glibc 2.5 variant of memmove which checks the dest is big enough.
    There is no specific part of glibc that this is copied from. */
 #define GLIBC25___MEMMOVE_CHK(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20240,soname,fnname) \
             (void *dstV, const void *srcV, SizeT n, SizeT destlen); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20240,soname,fnname) \
             (void *dstV, const void *srcV, SizeT n, SizeT destlen) \
    { \
-      extern void _exit(int status); \
       SizeT i; \
       Char* dst = (Char*)dstV; \
       Char* src = (Char*)srcV; \
@@ -822,7 +893,7 @@ BCOPY(VG_Z_DYLD,        bcopy)
       VALGRIND_PRINTF_BACKTRACE( \
          "*** memmove_chk: buffer overflow detected ***: " \
          "program terminated\n"); \
-     _exit(127); \
+     my_exit(127); \
      /*NOTREACHED*/ \
      return NULL; \
    }
@@ -832,8 +903,10 @@ GLIBC25___MEMMOVE_CHK(VG_Z_LIBC_SONAME, __memmove_chk)
 
 /* Find the first occurrence of C in S or the final NUL byte.  */
 #define GLIBC232_STRCHRNUL(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) (const char* s, int c_in); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) (const char* s, int c_in) \
+   char* VG_REPLACE_FUNCTION_EZU(20250,soname,fnname) \
+            (const char* s, int c_in); \
+   char* VG_REPLACE_FUNCTION_EZU(20250,soname,fnname) \
+            (const char* s, int c_in) \
    { \
       unsigned char  c        = (unsigned char) c_in; \
       unsigned char* char_ptr = (unsigned char *)s; \
@@ -849,8 +922,10 @@ GLIBC232_STRCHRNUL(VG_Z_LIBC_SONAME, strchrnul)
 
 /* Find the first occurrence of C in S.  */
 #define GLIBC232_RAWMEMCHR(soname, fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) (const char* s, int c_in); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) (const char* s, int c_in) \
+   char* VG_REPLACE_FUNCTION_EZU(20260,soname,fnname) \
+            (const char* s, int c_in); \
+   char* VG_REPLACE_FUNCTION_EZU(20260,soname,fnname) \
+            (const char* s, int c_in) \
    { \
       unsigned char  c        = (unsigned char) c_in; \
       unsigned char* char_ptr = (unsigned char *)s; \
@@ -868,12 +943,11 @@ GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, __GI___rawmemchr)
 /* glibc variant of strcpy that checks the dest is big enough.
    Copied from glibc-2.5/debug/test-strcpy_chk.c. */
 #define GLIBC25___STRCPY_CHK(soname,fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-                               (char* dst, const char* src, SizeT len); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-                               (char* dst, const char* src, SizeT len) \
+   char* VG_REPLACE_FUNCTION_EZU(20270,soname,fnname) \
+            (char* dst, const char* src, SizeT len); \
+   char* VG_REPLACE_FUNCTION_EZU(20270,soname,fnname) \
+            (char* dst, const char* src, SizeT len) \
    { \
-      extern void _exit(int status); \
       char* ret = dst; \
       if (! len) \
          goto badness; \
@@ -885,7 +959,7 @@ GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, __GI___rawmemchr)
       VALGRIND_PRINTF_BACKTRACE( \
          "*** strcpy_chk: buffer overflow detected ***: " \
          "program terminated\n"); \
-     _exit(127); \
+     my_exit(127); \
      /*NOTREACHED*/ \
      return NULL; \
    }
@@ -896,12 +970,11 @@ GLIBC25___STRCPY_CHK(VG_Z_LIBC_SONAME, __strcpy_chk)
 /* glibc variant of stpcpy that checks the dest is big enough.
    Copied from glibc-2.5/debug/test-stpcpy_chk.c. */
 #define GLIBC25___STPCPY_CHK(soname,fnname) \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-                               (char* dst, const char* src, SizeT len); \
-   char* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
-                               (char* dst, const char* src, SizeT len) \
+   char* VG_REPLACE_FUNCTION_EZU(20280,soname,fnname) \
+            (char* dst, const char* src, SizeT len); \
+   char* VG_REPLACE_FUNCTION_EZU(20280,soname,fnname) \
+            (char* dst, const char* src, SizeT len) \
    { \
-      extern void _exit(int status); \
       if (! len) \
          goto badness; \
       while ((*dst++ = *src++) != '\0') \
@@ -912,7 +985,7 @@ GLIBC25___STRCPY_CHK(VG_Z_LIBC_SONAME, __strcpy_chk)
       VALGRIND_PRINTF_BACKTRACE( \
          "*** stpcpy_chk: buffer overflow detected ***: " \
          "program terminated\n"); \
-     _exit(127); \
+     my_exit(127); \
      /*NOTREACHED*/ \
      return NULL; \
    }
@@ -922,9 +995,9 @@ GLIBC25___STPCPY_CHK(VG_Z_LIBC_SONAME, __stpcpy_chk)
 
 /* mempcpy */
 #define GLIBC25_MEMPCPY(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20290,soname,fnname) \
             ( void *dst, const void *src, SizeT len ); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20290,soname,fnname) \
             ( void *dst, const void *src, SizeT len ) \
    { \
       register char *d; \
@@ -960,12 +1033,11 @@ GLIBC25_MEMPCPY(VG_Z_LD_SO_1,     mempcpy) /* ld.so.1 */
 
 
 #define GLIBC26___MEMCPY_CHK(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20300,soname,fnname) \
             (void* dst, const void* src, SizeT len, SizeT dstlen ); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20300,soname,fnname) \
             (void* dst, const void* src, SizeT len, SizeT dstlen ) \
    { \
-      extern void _exit(int status); \
       register char *d; \
       register char *s; \
       \
@@ -995,7 +1067,7 @@ GLIBC25_MEMPCPY(VG_Z_LD_SO_1,     mempcpy) /* ld.so.1 */
       VALGRIND_PRINTF_BACKTRACE( \
          "*** memcpy_chk: buffer overflow detected ***: " \
          "program terminated\n"); \
-     _exit(127); \
+     my_exit(127); \
      /*NOTREACHED*/ \
      return NULL; \
    }
@@ -1004,9 +1076,9 @@ GLIBC26___MEMCPY_CHK(VG_Z_LIBC_SONAME, __memcpy_chk)
 
 
 #define STRSTR(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20310,soname,fnname) \
          (void* haystack, void* needle); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20310,soname,fnname) \
          (void* haystack, void* needle) \
    { \
       UChar* h = (UChar*)haystack; \
@@ -1046,9 +1118,9 @@ STRSTR(VG_Z_LIBC_SONAME,          strstr)
 
 
 #define STRPBRK(soname, fnname) \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20320,soname,fnname) \
          (void* sV, void* acceptV); \
-   void* VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20320,soname,fnname) \
          (void* sV, void* acceptV) \
    { \
       UChar* s = (UChar*)sV; \
@@ -1083,9 +1155,9 @@ STRPBRK(VG_Z_LIBC_SONAME,          strpbrk)
 
 
 #define STRCSPN(soname, fnname) \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20330,soname,fnname) \
          (void* sV, void* rejectV); \
-   SizeT VG_REPLACE_FUNCTION_ZU(soname,fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20330,soname,fnname) \
          (void* sV, void* rejectV) \
    { \
       UChar* s = (UChar*)sV; \
@@ -1120,34 +1192,43 @@ STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
 #endif
 
 
-// And here's a validated strspn replacement, should it
-// become necessary.
-//UWord mystrspn( UChar* s, UChar* accept )
-//{
-//   /* find the length of 'accept', not including terminating zero */
-//   UWord nacc = 0;
-//   while (accept[nacc]) nacc++;
-//   if (nacc == 0) return 0;
-//
-//   UWord len = 0;
-//   while (1) {
-//      UWord i;
-//      UChar sc = *s;
-//      if (sc == 0)
-//         break;
-//      for (i = 0; i < nacc; i++) {
-//         if (sc == accept[i])
-//            break;
-//      }
-//      assert(i >= 0 && i <= nacc);
-//      if (i == nacc)
-//         break;
-//      s++;
-//      len++;
-//   }
-//
-//   return len;
-//}
+#define STRSPN(soname, fnname) \
+   SizeT VG_REPLACE_FUNCTION_EZU(20340,soname,fnname) \
+         (void* sV, void* acceptV); \
+   SizeT VG_REPLACE_FUNCTION_EZU(20340,soname,fnname) \
+         (void* sV, void* acceptV) \
+   { \
+      UChar* s = (UChar*)sV; \
+      UChar* accept = (UChar*)acceptV; \
+      \
+      /* find the length of 'accept', not including terminating zero */ \
+      UWord nacc = 0; \
+      while (accept[nacc]) nacc++; \
+      if (nacc == 0) return 0; \
+      \
+      UWord len = 0; \
+      while (1) { \
+         UWord i; \
+         UChar sc = *s; \
+         if (sc == 0) \
+            break; \
+         for (i = 0; i < nacc; i++) { \
+            if (sc == accept[i]) \
+               break; \
+         } \
+         /* assert(i >= 0 && i <= nacc); */ \
+         if (i == nacc) \
+            break; \
+         s++; \
+         len++; \
+      } \
+      \
+      return len; \
+   }
+
+#if defined(VGO_linux)
+STRSPN(VG_Z_LIBC_SONAME,          strspn)
+#endif
 
 
 /*------------------------------------------------------------*/
@@ -1155,6 +1236,10 @@ STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
 /*------------------------------------------------------------*/
 
 #if defined(VGO_linux)
+
+/* If these wind up getting generated via a macro, so that multiple
+   versions of each function exist (as above), use the _EZU variants
+   to assign equivalance class tags. */
 
 /* putenv */
 int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, putenv) (char* string);
@@ -1214,317 +1299,6 @@ int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, setenv)
 }
 
 #endif /* defined(VGO_linux) */
-
-
-/*------------------------------------------------------------*/
-/*--- AIX stuff only after this point                      ---*/
-/*------------------------------------------------------------*/
-
-/* Generate replacements for strcat, strncat, strcpy, strncpy, strcmp
-   in the given soname. */
-#define Str5FNs(_soname)       \
-    STRCAT(_soname, strcat)    \
-   STRNCAT(_soname, strncat)   \
-    STRCPY(_soname, strcpy)    \
-   STRNCPY(_soname, strncpy)   \
-    STRCMP(_soname, strcmp)
-
-#if defined(VGP_ppc32_aix5)
-Str5FNs(NONE)                             /* in main exe */
-Str5FNs(libCZdaZLshrcoreZdoZR)            /* libC.a(shrcore.o) */
-Str5FNs(libX11ZdaZLshr4ZdoZR)             /* libX11.a(shr4.o) */
-Str5FNs(libXmZdaZLshrZaZdoZR)             /* libXm.a(shr*.o) */
-Str5FNs(libXtZdaZLshr4ZdoZR)              /* libXt.a(shr4.o) */
-Str5FNs(libppeZurZdaZLdynamicZdoZR)       /* libppe_r.a(dynamic.o) */
-Str5FNs(libodmZdaZLshrZdoZR)              /* libodm.a(shr.o) */
-Str5FNs(libmpiZurZdaZLmpicoreZurZdoZR)    /* libmpi_r.a(mpicore_r.o) */
-Str5FNs(libmpiZurZdaZLmpipoeZurZdoZR)     /* libmpi_r.a(mpipoe_r.o) */
-Str5FNs(libmpiZurZdaZLmpciZurZdoZR)       /* libmpi_r.a(mpci_r.o) */
-Str5FNs(libslurmZdso)                     /* libslurm.so */
-Str5FNs(libglibZdso)                      /* libglib.so */
-Str5FNs(libIMZdaZLshrZdoZR)               /* libIM.a(shr.o) */
-Str5FNs(libiconvZdaZLshr4ZdoZR)           /* libiconv.a(shr4.o) */
-Str5FNs(libGLZdaZLshrZdoZR)               /* libGL.a(shr.o) */
-Str5FNs(libgdkZdso)                       /* libgdk.so */
-Str5FNs(libcursesZdaZLshr42ZdoZR)         /* libcurses.a(shr42.o) */
-Str5FNs(libqtZda)                         /* libqt.a */
-Str5FNs(ZaZLlibglibZhZaZdsoZaZR)          /* *(libglib-*.so*) */
-Str5FNs(ZaZLlibfontconfigZdsoZaZR)        /* *(libfontconfig.so*) */
-Str5FNs(libQtZaa)                         /* libQt*.a */
-#endif
-#if defined(VGP_ppc64_aix5)
-Str5FNs(NONE)                             /* in main exe */
-Str5FNs(libX11ZdaZLshrZu64ZdoZR)          /* libX11.a(shr_64.o) */
-Str5FNs(libiconvZdaZLshr4Zu64ZdoZR)       /* libiconv.a(shr4_64.o) */
-Str5FNs(libGLZdaZLshrZu64ZdoZR)           /* libGL.a(shr_64.o) */
-Str5FNs(libppeZurZdaZLdynamic64ZdoZR)     /* libppe_r.a(dynamic64.o) */
-Str5FNs(libodmZdaZLshrZu64ZdoZR)          /* libodm.a(shr_64.o) */
-Str5FNs(libmpiZurZdaZLmpicore64ZurZdoZR)  /* libmpi_r.a(mpicore64_r.o) */
-Str5FNs(libmpiZurZdaZLmpipoe64ZurZdoZR)   /* libmpi_r.a(mpipoe64_r.o) */
-Str5FNs(libCZdaZLshrcoreZu64ZdoZR)        /* libC.a(shrcore_64.o) */
-Str5FNs(libmpiZurZdaZLmpci64ZurZdoZR)     /* libmpi_r.a(mpci64_r.o) */
-Str5FNs(libqtZda)                         /* libqt.a */
-Str5FNs(ZaZLlibglibZhZaZdsoZaZR)          /* *(libglib-*.so*) */
-Str5FNs(ZaZLlibfontconfigZdsoZaZR)        /* *(libfontconfig.so*) */
-Str5FNs(libQtZaa)                         /* libQt*.a */
-#endif
-
-
-/* AIX's libm contains a sqrt implementation which does a nasty thing:
-   it loads the initial estimate of the root into a FP register, but
-   only the upper half of the number is initialised data.  Hence the
-   least significant 32 mantissa bits are undefined, and it then uses
-   Newton-Raphson iteration to compute the final, defined result.
-   This fools memcheck completely; the only solution I can think of is
-   provide our own substitute.  The _FAST variant is almost right
-   except the result is not correctly rounded.  The _EXACT variant,
-   which is selected by default, is always right; but it's also pretty
-   darn slow. */
-
-#if defined(VGP_ppc32_aix5) || defined(VGP_ppc64_aix5)
-#define SQRT_FAST(soname, fnname) \
-   double VG_REPLACE_FUNCTION_ZU(soname,fnname)( double x ); \
-   double VG_REPLACE_FUNCTION_ZU(soname,fnname)( double x ) \
-   { \
-      static UInt T1[32] =  \
-         { 0,       1024,   3062,   5746,   9193,  13348, \
-           18162,  23592,  29598,  36145,  43202,  50740, \
-           58733,  67158,  75992,  85215,  83599,  71378, \
-           60428,  50647,  41945,  34246,  27478,  21581, \
-           16499,  12183,   8588,   5674,   3403,   1742, \
-           661,    130 }; \
-      UInt x0, x1, sign, expo, mant0, bIGENDIAN = 1; \
-      union { UInt w[2]; double d; } u; \
-      u.d   = x; \
-      x0    = u.w[1 - bIGENDIAN]; /* high half */ \
-      x1    = u.w[bIGENDIAN];  /* low half */ \
-      sign  = x0 >> 31; \
-      expo  = (x0 >> 20) & 0x7FF; \
-      mant0 = x0 & 0xFFFFF; \
-      if ( (sign == 0 && expo >= 1 && expo <= 0x7FE) /* +normal */ \
-           || (sign == 0 && expo == 0  \
-                         && (mant0 | x1) > 0) /* +denorm */) { \
-         /* common case; do Newton-Raphson */ \
-         /* technically k should be signed int32, but since we're \
-            always entering here with x > 0, doesn't matter that it's \
-            unsigned. */ \
-         double y; \
-         UInt k = (x0>>1) + 0x1ff80000; \
-         u.w[1 - bIGENDIAN] = k - T1[31&(k>>15)]; \
-         u.w[bIGENDIAN] = 0; \
-         y = u.d; \
-         y = (y+x/y)/2.0 ; \
-         y = (y+x/y)/2.0 ; \
-         y = y-(y-x/y)/2.0 ; \
-         return y; \
-      } \
-      if ( (sign == 1 && expo >= 1 && expo <= 0x7FE) /* -normal */ \
-           || (sign == 1 && expo == 0  \
-                         && (mant0 | x1) > 0) /* -denorm */) { \
-         u.w[1 - bIGENDIAN] = 0xFFF00000; \
-         u.w[bIGENDIAN] = 0x1; \
-         return u.d; /* -Inf -> NaN */ \
-      } \
-      if ((expo | mant0 | x1) == 0) \
-         return x; /* +/-zero -> self */ \
-      if (expo == 0x7FF && (mant0 | x1) == 0) { \
-         if (sign == 0) \
-            return x; /* +Inf -> self */ \
-         u.w[1 - bIGENDIAN] = 0xFFF00000; \
-         u.w[bIGENDIAN] = 0x1; \
-         return u.d; /* -Inf -> NaN */ \
-      } \
-      /* must be +/- NaN */ \
-      return x; /* +/-NaN -> self */ \
-   }
-
-#define SQRT_EXACT(soname, fnname) \
-   /* \
-    * ==================================================== \
-    * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved. \
-    * \
-    * Developed at SunPro, a Sun Microsystems, Inc. business. \
-    * Permission to use, copy, modify, and distribute this \
-    * software is freely granted, provided that this notice \
-    * is preserved. \
-    * ==================================================== \
-    */ \
-   /* \
-    * Return correctly rounded sqrt. \
-    *           ------------------------------------------ \
-    *           |  Use the hardware sqrt if you have one | \
-    *           ------------------------------------------ \
-    * Method: \
-    *   Bit by bit method using integer arithmetic. (Slow, but portable) \
-    *   1. Normalization \
-    *      Scale x to y in [1,4) with even powers of 2: \
-    *      find an integer k such that  1 <= (y=x*2^(2k)) < 4, then \
-    *              sqrt(x) = 2^k * sqrt(y) \
-    *   2. Bit by bit computation \
-    *      Let q  = sqrt(y) truncated to i bit after binary point (q = 1), \
-    *           i                                                   0 \
-    *                                     i+1         2 \
-    *          s  = 2*q , and      y  =  2   * ( y - q  ).         (1) \
-    *           i      i            i                 i \
-    * \
-    *      To compute q    from q , one checks whether \
-    *                  i+1       i \
-    * \
-    *                            -(i+1) 2 \
-    *                      (q + 2      ) <= y.                     (2) \
-    *                        i \
-    *                                                            -(i+1) \
-    *      If (2) is false, then q   = q ; otherwise q   = q  + 2      . \
-    *                             i+1   i             i+1   i \
-    * \
-    *      With some algebric manipulation, it is not difficult to see \
-    *      that (2) is equivalent to \
-    *                             -(i+1) \
-    *                      s  +  2       <= y                      (3) \
-    *                       i                i \
-    * \
-    *      The advantage of (3) is that s  and y  can be computed by \
-    *                                    i      i \
-    *      the following recurrence formula: \
-    *          if (3) is false \
-    * \
-    *          s     =  s  ,       y    = y   ;                    (4) \
-    *           i+1      i          i+1    i \
-    * \
-    *          otherwise, \
-    *                         -i                     -(i+1) \
-    *          s     =  s  + 2  ,  y    = y  -  s  - 2             (5) \
-    *           i+1      i          i+1    i     i \
-    * \
-    * \
-    *      One may easily use induction to prove (4) and (5). \
-    *      Note. Since the left hand side of (3) contain only i+2 bits, \
-    *            it does not necessary to do a full (53-bit) comparison \
-    *            in (3). \
-    *   3. Final rounding \
-    *      After generating the 53 bits result, we compute one more bit. \
-    *      Together with the remainder, we can decide whether the \
-    *      result is exact, bigger than 1/2ulp, or less than 1/2ulp \
-    *      (it will never equal to 1/2ulp). \
-    *      The rounding mode can be detected by checking whether \
-    *      huge + tiny is equal to huge, and whether huge - tiny is \
-    *      equal to huge for some floating point number "huge" and "tiny". \
-    * \
-    * Special cases: \
-    *      sqrt(+-0) = +-0         ... exact \
-    *      sqrt(inf) = inf \
-    *      sqrt(-ve) = NaN         ... with invalid signal \
-    *      sqrt(NaN) = NaN         ... with invalid signal for signaling NaN \
-    * \
-    */ \
-   double VG_REPLACE_FUNCTION_ZU(soname,fnname)( double x ); \
-   double VG_REPLACE_FUNCTION_ZU(soname,fnname)( double x ) \
-   {  \
-      const Int    bIGENDIAN = 1; \
-      const double one = 1.0, tiny=1.0e-300; \
-      double z; \
-      Int sign = (Int)0x80000000; \
-      Int ix0,s0,q,m,t,i; \
-      UInt r,t1,s1,ix1,q1; \
-      union { UInt w[2]; double d; } u; \
-      u.d = x; \
-      ix0 = u.w[1-bIGENDIAN]; \
-      ix1 = u.w[bIGENDIAN];    \
-      \
-      /* take care of Inf and NaN */ \
-      if((ix0&0x7ff00000)==0x7ff00000) { \
-         return x*x+x;               /* sqrt(NaN)=NaN, sqrt(+inf)=+inf \
-                                        sqrt(-inf)=sNaN */ \
-      } \
-      /* take care of zero */ \
-      if(ix0<=0) { \
-         if(((ix0&(~sign))|ix1)==0) return x;/* sqrt(+-0) = +-0 */ \
-         else if(ix0<0) \
-              return (x-x)/(x-x);             /* sqrt(-ve) = sNaN */ \
-      } \
-      /* normalize x */ \
-      m = (ix0>>20); \
-      if(m==0) {                              /* subnormal x */ \
-         while(ix0==0) { \
-            m -= 21; \
-            ix0 |= (ix1>>11); ix1 <<= 21; \
-         } \
-         for(i=0;(ix0&0x00100000)==0;i++) ix0<<=1; \
-         m -= i-1; \
-         ix0 |= (ix1>>(32-i)); \
-         ix1 <<= i; \
-      } \
-      m -= 1023;      /* unbias exponent */ \
-      ix0 = (ix0&0x000fffff)|0x00100000; \
-      if(m&1){        /* odd m, double x to make it even */ \
-         ix0 += ix0 + ((ix1&sign)>>31); \
-         ix1 += ix1; \
-      } \
-      m >>= 1;        /* m = [m/2] */ \
-      /* generate sqrt(x) bit by bit */ \
-      ix0 += ix0 + ((ix1&sign)>>31); \
-      ix1 += ix1; \
-      q = q1 = s0 = s1 = 0;   /* [q,q1] = sqrt(x) */ \
-      r = 0x00200000;         /* r = moving bit from right to left */ \
-      while(r!=0) { \
-         t = s0+r; \
-         if(t<=ix0) { \
-            s0   = t+r; \
-            ix0 -= t; \
-            q   += r; \
-         } \
-         ix0 += ix0 + ((ix1&sign)>>31); \
-         ix1 += ix1; \
-         r>>=1; \
-      } \
-      r = sign; \
-      while(r!=0) { \
-         t1 = s1+r; \
-         t  = s0; \
-         if((t<ix0)||((t==ix0)&&(t1<=ix1))) { \
-            s1  = t1+r; \
-            if(((t1&sign)==sign)&&(s1&sign)==0) s0 += 1; \
-            ix0 -= t; \
-            if (ix1 < t1) ix0 -= 1; \
-            ix1 -= t1; \
-            q1  += r; \
-         } \
-         ix0 += ix0 + ((ix1&sign)>>31); \
-         ix1 += ix1; \
-         r>>=1; \
-      } \
-      /* use floating add to find out rounding direction */ \
-      if((ix0|ix1)!=0) { \
-         z = one-tiny; /* trigger inexact flag */ \
-         if (z>=one) { \
-            z = one+tiny; \
-            if (q1==(UInt)0xffffffff) { q1=0; q += 1;} \
-            else if (z>one) { \
-                    if (q1==(UInt)0xfffffffe) q+=1; \
-                    q1+=2; \
-                 } else \
-                    q1 += (q1&1); \
-         } \
-      } \
-      ix0 = (q>>1)+0x3fe00000; \
-      ix1 = q1>>1; \
-      if ((q&1)==1) ix1 |= sign; \
-      ix0 += (m <<20); \
-      ix0 = u.w[1-bIGENDIAN] = ix0; \
-      ix1 = u.w[bIGENDIAN] = ix1;    \
-      z = u.d; \
-      return z; \
-   }
-
-#if 0
-SQRT_FAST(NONE, sqrt)  /* xlC generates these */
-SQRT_FAST(NONE, _sqrt) /* xlf generates these */
-#else
-SQRT_EXACT(NONE, sqrt)  /* xlC generates these */
-SQRT_EXACT(NONE, _sqrt) /* xlf generates these */
-#endif
-
-#endif /* defined(VGP_ppc32_aix5) */
 
 /*--------------------------------------------------------------------*/
 /*--- end                                                          ---*/

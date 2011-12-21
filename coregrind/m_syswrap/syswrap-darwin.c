@@ -33,6 +33,7 @@
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
 #include "pub_core_vkiscnums.h"
+#include "pub_core_libcsetjmp.h"   // to keep _threadstate.h happy
 #include "pub_core_threadstate.h"
 #include "pub_core_aspacemgr.h"
 #include "pub_core_xarray.h"
@@ -40,6 +41,7 @@
 #include "pub_core_debuglog.h"
 #include "pub_core_debuginfo.h"    // VG_(di_notify_*)
 #include "pub_core_transtab.h"     // VG_(discard_translations)
+#include "pub_tool_gdbserver.h"    // VG_(gdbserver)
 #include "pub_core_libcbase.h"
 #include "pub_core_libcassert.h"
 #include "pub_core_libcfile.h"
@@ -101,6 +103,9 @@ static VgSchedReturnCode thread_wrapper(Word /*ThreadId*/ tidW)
    if (0)
       VG_(printf)("thread tid %d started: stack = %p\n",
                   tid, &tid);
+
+   /* Make sure error reporting is enabled in the new thread. */
+   tst->err_disablement_level = 0;
 
    VG_TRACK(pre_thread_first_insn, tid);
 
@@ -200,11 +205,15 @@ static void run_a_thread_NORETURN ( Word tidW )
 {
    Int               c;
    VgSchedReturnCode src;
-   ThreadId tid = (ThreadId)tidW;
+   ThreadId          tid = (ThreadId)tidW;
+   ThreadState*      tst;
 
    VG_(debugLog)(1, "syswrap-darwin", 
                     "run_a_thread_NORETURN(tid=%lld): pre-thread_wrapper\n",
                     (ULong)tidW);
+
+   tst = VG_(get_ThreadState)(tid);
+   vg_assert(tst);
 
    /* Run the thread all the way through. */
    src = thread_wrapper(tid);  
@@ -218,6 +227,27 @@ static void run_a_thread_NORETURN ( Word tidW )
 
    // Tell the tool this thread is exiting
    VG_TRACK( pre_thread_ll_exit, tid );
+
+   /* If the thread is exiting with errors disabled, complain loudly;
+      doing so is bad (does the user know this has happened?)  Also,
+      in all cases, be paranoid and clear the flag anyway so that the
+      thread slot is safe in this respect if later reallocated.  This
+      should be unnecessary since the flag should be cleared when the
+      slot is reallocated, in thread_wrapper(). */
+   if (tst->err_disablement_level > 0) {
+      VG_(umsg)(
+         "WARNING: exiting thread has error reporting disabled.\n"
+         "WARNING: possibly as a result of some mistake in the use\n"
+         "WARNING: of the VALGRIND_DISABLE_ERROR_REPORTING macros.\n"
+      );
+      VG_(debugLog)(
+         1, "syswrap-linux", 
+            "run_a_thread_NORETURN(tid=%lld): "
+            "WARNING: exiting thread has err_disablement_level = %u\n",
+            (ULong)tidW, tst->err_disablement_level
+      );
+   }
+   tst->err_disablement_level = 0;
 
    if (c == 1) {
 
@@ -233,7 +263,6 @@ static void run_a_thread_NORETURN ( Word tidW )
 
    } else {
 
-      ThreadState *tst;
       mach_msg_header_t msg;
 
       VG_(debugLog)(1, "syswrap-darwin", 
@@ -242,7 +271,6 @@ static void run_a_thread_NORETURN ( Word tidW )
                           (ULong)tidW);
 
       /* OK, thread is dead, but others still exist.  Just exit. */
-      tst = VG_(get_ThreadState)(tid);
 
       /* This releases the run lock */
       VG_(exit_thread)(tid);
@@ -689,9 +717,23 @@ void ML_(sync_mappings)(const HChar *when, const HChar *where, Int num)
 PRE(ioctl)
 {
    *flags |= SfMayBlock;
-   PRINT("ioctl ( %ld, 0x%lx, %#lx )",ARG1,ARG2,ARG3);
-   PRE_REG_READ3(long, "ioctl",
-                 unsigned int, fd, unsigned int, request, unsigned long, arg);
+
+   /* Handle ioctls that don't take an arg first */
+   switch (ARG2 /* request */) {
+   case VKI_TIOCSCTTY:
+   case VKI_TIOCEXCL:
+   case VKI_TIOCPTYGRANT:
+   case VKI_TIOCPTYUNLK:
+   case VKI_DTRACEHIOC_REMOVE: 
+      PRINT("ioctl ( %ld, 0x%lx )",ARG1,ARG2);
+      PRE_REG_READ2(long, "ioctl",
+                    unsigned int, fd, unsigned int, request);
+      return;
+   default:
+      PRINT("ioctl ( %ld, 0x%lx, %#lx )",ARG1,ARG2,ARG3);
+      PRE_REG_READ3(long, "ioctl",
+                    unsigned int, fd, unsigned int, request, unsigned long, arg);
+   }
 
    switch (ARG2 /* request */) {
    case VKI_TIOCGWINSZ:
@@ -719,9 +761,6 @@ PRE(ioctl)
    case VKI_TIOCSPGRP:
       /* Set a process group ID? */
       PRE_MEM_WRITE( "ioctl(TIOCGPGRP)", ARG3, sizeof(vki_pid_t) );
-      break;
-   case VKI_TIOCSCTTY:
-      /* Just takes an int value.  */
       break;
    case VKI_FIONBIO:
       PRE_MEM_READ( "ioctl(FIONBIO)",    ARG3, sizeof(int) );
@@ -845,7 +884,6 @@ PRE(ioctl)
       PRE_MEM_WRITE( "ioctl(FIONREAD)", ARG3, sizeof(int) );
       break;
 
-   case VKI_DTRACEHIOC_REMOVE: 
    case VKI_DTRACEHIOC_ADDDOF: 
        break;
 
@@ -864,9 +902,6 @@ PRE(ioctl)
        break;
    case VKI_TIOCPTYGNAME:
        PRE_MEM_WRITE( "ioctl(TIOCPTYGNAME)", ARG3, 128 );
-       break;
-   case VKI_TIOCPTYGRANT:
-   case VKI_TIOCPTYUNLK:
        break;
 
    default: 
@@ -2749,7 +2784,13 @@ PRE(posix_spawn)
    }
 
    // Decide whether or not we want to follow along
-   trace_this_child = VG_(should_we_trace_this_child)( (HChar*)ARG2 );
+   { // Make 'child_argv' be a pointer to the child's arg vector
+     // (skipping the exe name)
+     HChar** child_argv = (HChar**)ARG4;
+     if (child_argv && child_argv[0] == NULL)
+        child_argv = NULL;
+     trace_this_child = VG_(should_we_trace_this_child)( (HChar*)ARG2, child_argv );
+   }
 
    // Do the important checks:  it is a file, is executable, permissions are
    // ok, etc.  We allow setuid executables to run only in the case when
@@ -2772,6 +2813,15 @@ PRE(posix_spawn)
 
    /* Ok.  So let's give it a try. */
    VG_(debugLog)(1, "syswrap", "Posix_spawn of %s\n", (Char*)ARG2);
+
+   // Terminate gdbserver if it is active.
+   if (VG_(clo_vgdb)  != Vg_VgdbNo) {
+      // If the child will not be traced, we need to terminate gdbserver
+      // to cleanup the gdbserver resources (e.g. the FIFO files).
+      // If child will be traced, we also terminate gdbserver: the new 
+      // Valgrind will start a fresh gdbserver after exec.
+      VG_(gdbserver) (tid);
+   }
 
    // Set up the child's exe path.
    //

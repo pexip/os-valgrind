@@ -7,6 +7,8 @@ valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_e
 valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_exp-dhat-x86-linux.so
 valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_exp-ptrcheck-amd64-linux.so
 valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_exp-ptrcheck-x86-linux.so
+valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_exp-sgcheck-amd64-linux.so
+valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_exp-sgcheck-x86-linux.so
 valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_helgrind-amd64-linux.so
 valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_helgrind-x86-linux.so
 valgrind: shared-lib-without-dependency-information usr/lib/valgrind/vgpreload_massif-amd64-linux.so
@@ -25,6 +27,8 @@ valgrind: statically-linked-binary usr/lib/valgrind/exp-dhat-amd64-linux
 valgrind: statically-linked-binary usr/lib/valgrind/exp-dhat-x86-linux
 valgrind: statically-linked-binary usr/lib/valgrind/exp-ptrcheck-amd64-linux
 valgrind: statically-linked-binary usr/lib/valgrind/exp-ptrcheck-x86-linux
+valgrind: statically-linked-binary usr/lib/valgrind/exp-sgcheck-amd64-linux
+valgrind: statically-linked-binary usr/lib/valgrind/exp-sgcheck-x86-linux
 valgrind: statically-linked-binary usr/lib/valgrind/helgrind-amd64-linux
 valgrind: statically-linked-binary usr/lib/valgrind/helgrind-x86-linux
 valgrind: statically-linked-binary usr/lib/valgrind/lackey-amd64-linux
@@ -48,6 +52,8 @@ valgrind: statically-linked-binary ./usr/lib/valgrind/exp-dhat-amd64-linux
 valgrind: statically-linked-binary ./usr/lib/valgrind/exp-dhat-x86-linux
 valgrind: statically-linked-binary ./usr/lib/valgrind/exp-ptrcheck-amd64-linux
 valgrind: statically-linked-binary ./usr/lib/valgrind/exp-ptrcheck-x86-linux
+valgrind: statically-linked-binary ./usr/lib/valgrind/exp-sgcheck-amd64-linux
+valgrind: statically-linked-binary ./usr/lib/valgrind/exp-sgcheck-x86-linux
 valgrind: statically-linked-binary ./usr/lib/valgrind/helgrind-amd64-linux
 valgrind: statically-linked-binary ./usr/lib/valgrind/helgrind-x86-linux
 valgrind: statically-linked-binary ./usr/lib/valgrind/lackey-amd64-linux

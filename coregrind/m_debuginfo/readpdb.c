@@ -1285,14 +1285,15 @@ static ULong DEBUG_SnarfCodeView(
 
          if (0 /*VG_(needs).data_syms*/) {
             nmstr = ML_(addStr)(di, symname, sym->data_v1.p_name.namelen);
-
-            vsym.addr = bias + sectp[sym->data_v1.segment-1].VirtualAddress
-                             + sym->data_v1.offset;
-            vsym.name = nmstr;
-            vsym.size = sym->data_v1.p_name.namelen;
-                      // FIXME: .namelen is sizeof(.data) including .name[]
-            vsym.isText = (sym->generic.id == S_PUB_V1);
-            vsym.isIFunc = False;
+            vsym.addr      = bias + sectp[sym->data_v1.segment-1].VirtualAddress
+                                 + sym->data_v1.offset;
+            vsym.tocptr    = 0;
+            vsym.pri_name  = nmstr;
+            vsym.sec_names = NULL;
+            vsym.size      = sym->data_v1.p_name.namelen;
+                             // FIXME: .namelen is sizeof(.data) including .name[]
+            vsym.isText    = (sym->generic.id == S_PUB_V1);
+            vsym.isIFunc   = False;
             ML_(addSym)( di, &vsym );
             n_syms_read++;
          }
@@ -1310,16 +1311,17 @@ static ULong DEBUG_SnarfCodeView(
 
          if (sym->generic.id==S_PUB_V2 /*VG_(needs).data_syms*/) {
             nmstr = ML_(addStr)(di, symname, k);
-
-            vsym.addr = bias + sectp[sym->data_v2.segment-1].VirtualAddress
-                             + sym->data_v2.offset;
-            vsym.name = nmstr;
-            vsym.size = 4000;
-                        // FIXME: data_v2.len is sizeof(.data),
-                        // not size of function!
-            vsym.isText = !!(IMAGE_SCN_CNT_CODE 
-                             & sectp[sym->data_v2.segment-1].Characteristics);
-            vsym.isIFunc = False;
+            vsym.addr      = bias + sectp[sym->data_v2.segment-1].VirtualAddress
+                                  + sym->data_v2.offset;
+            vsym.tocptr    = 0;
+            vsym.pri_name  = nmstr;
+            vsym.sec_names = NULL;
+            vsym.size      = 4000;
+                             // FIXME: data_v2.len is sizeof(.data),
+                             // not size of function!
+            vsym.isText    = !!(IMAGE_SCN_CNT_CODE 
+                                & sectp[sym->data_v2.segment-1].Characteristics);
+            vsym.isIFunc   = False;
             ML_(addSym)( di, &vsym );
             n_syms_read++;
          }
@@ -1343,16 +1345,17 @@ static ULong DEBUG_SnarfCodeView(
          if (1  /*sym->generic.id==S_PUB_FUNC1_V3 
                   || sym->generic.id==S_PUB_FUNC2_V3*/) {
             nmstr = ML_(addStr)(di, symname, k);
-
-            vsym.addr = bias + sectp[sym->public_v3.segment-1].VirtualAddress
-                             + sym->public_v3.offset;
-            vsym.name = nmstr;
-            vsym.size = 4000;
-                        // FIXME: public_v3.len is not length of the
-                        // .text of the function
-            vsym.isText = !!(IMAGE_SCN_CNT_CODE
-                             & sectp[sym->data_v2.segment-1].Characteristics);
-            vsym.isIFunc = False;
+            vsym.addr      = bias + sectp[sym->public_v3.segment-1].VirtualAddress
+                                  + sym->public_v3.offset;
+            vsym.tocptr    = 0;
+            vsym.pri_name  = nmstr;
+            vsym.sec_names = NULL;
+            vsym.size      = 4000;
+                             // FIXME: public_v3.len is not length of the
+                             // .text of the function
+            vsym.isText    = !!(IMAGE_SCN_CNT_CODE
+                                & sectp[sym->data_v2.segment-1].Characteristics);
+            vsym.isIFunc   = False;
             ML_(addSym)( di, &vsym );
             n_syms_read++;
          }
@@ -1378,13 +1381,14 @@ static ULong DEBUG_SnarfCodeView(
                               sym->proc_v1.p_name.namelen);
          symname[sym->proc_v1.p_name.namelen] = '\0';
          nmstr = ML_(addStr)(di, symname, sym->proc_v1.p_name.namelen);
-
-         vsym.addr = bias + sectp[sym->proc_v1.segment-1].VirtualAddress
-                          + sym->proc_v1.offset;
-         vsym.name = nmstr;
-         vsym.size = sym->proc_v1.proc_len;
-         vsym.isText = True;
-         vsym.isIFunc = False;
+         vsym.addr      = bias + sectp[sym->proc_v1.segment-1].VirtualAddress
+                               + sym->proc_v1.offset;
+         vsym.tocptr    = 0;
+         vsym.pri_name  = nmstr;
+         vsym.sec_names = NULL;
+         vsym.size      = sym->proc_v1.proc_len;
+         vsym.isText    = True;
+         vsym.isIFunc   = False;
          if (debug)
              VG_(message)(Vg_UserMsg,
                          "  Adding function %s addr=%#lx length=%d\n",
@@ -1399,13 +1403,14 @@ static ULong DEBUG_SnarfCodeView(
                               sym->proc_v2.p_name.namelen);
          symname[sym->proc_v2.p_name.namelen] = '\0';
          nmstr = ML_(addStr)(di, symname, sym->proc_v2.p_name.namelen);
-
-         vsym.addr = bias + sectp[sym->proc_v2.segment-1].VirtualAddress
-                          + sym->proc_v2.offset;
-         vsym.name = nmstr;
-         vsym.size = sym->proc_v2.proc_len;
-         vsym.isText = True;
-         vsym.isIFunc = False;
+         vsym.addr      = bias + sectp[sym->proc_v2.segment-1].VirtualAddress
+                               + sym->proc_v2.offset;
+         vsym.tocptr    = 0;
+         vsym.pri_name  = nmstr;
+         vsym.sec_names = NULL;
+         vsym.size      = sym->proc_v2.proc_len;
+         vsym.isText    = True;
+         vsym.isIFunc   = False;
          if (debug)
             VG_(message)(Vg_UserMsg,
                          "  Adding function %s addr=%#lx length=%d\n",
@@ -1422,13 +1427,14 @@ static ULong DEBUG_SnarfCodeView(
          if (1) {
             nmstr = ML_(addStr)(di, sym->proc_v3.name,
                                     VG_(strlen)(sym->proc_v3.name));
-
-            vsym.addr = bias + sectp[sym->proc_v3.segment-1].VirtualAddress
-                             + sym->proc_v3.offset;
-            vsym.name = nmstr;
-            vsym.size  = sym->proc_v3.proc_len;
-            vsym.isText = 1;
-            vsym.isIFunc = False;
+            vsym.addr      = bias + sectp[sym->proc_v3.segment-1].VirtualAddress
+                                  + sym->proc_v3.offset;
+            vsym.tocptr    = 0;
+            vsym.pri_name  = nmstr;
+            vsym.sec_names = NULL;
+            vsym.size      = sym->proc_v3.proc_len;
+            vsym.isText    = 1;
+            vsym.isIFunc   = False;
             ML_(addSym)( di, &vsym );
             n_syms_read++;
          }
@@ -2101,21 +2107,21 @@ static void pdb_dump( struct pdb_reader* pdb,
     */
    file = symbols_image + header_size;
    while ( file - symbols_image < header_size + symbols.module_size ) {
-      int file_nr, file_index, symbol_size, lineno_size;
+      int file_nr, /* file_index, */ symbol_size, lineno_size;
       char *file_name;
 
       if ( symbols.version < 19970000 ) {
          PDB_SYMBOL_FILE *sym_file = (PDB_SYMBOL_FILE *) file;
          file_nr     = sym_file->file;
          file_name   = sym_file->filename;
-         file_index  = sym_file->range.index;
+         /* file_index  = sym_file->range.index; */ /* UNUSED */
          symbol_size = sym_file->symbol_size;
          lineno_size = sym_file->lineno_size;
       } else {
          PDB_SYMBOL_FILE_EX *sym_file = (PDB_SYMBOL_FILE_EX *) file;
          file_nr     = sym_file->file;
          file_name   = sym_file->filename;
-         file_index  = sym_file->range.index;
+         /* file_index  = sym_file->range.index; */ /* UNUSED */
          symbol_size = sym_file->symbol_size;
          lineno_size = sym_file->lineno_size;
       }
@@ -2474,7 +2480,7 @@ HChar* ML_(find_name_of_pdb_file)( HChar* pename )
                 + 100/*misc*/;
    HChar* cmd = ML_(dinfo_zalloc)("di.readpe.fnopf.cmd", cmdlen);
    vg_assert(cmd);
-   VG_(sprintf)(cmd, "%s -c \"%s %s | %s '\\.pdb|\\.PDB' >> %s\"",
+   VG_(sprintf)(cmd, "%s -c \"%s '%s' | %s '\\.pdb|\\.PDB' >> %s\"",
                      sh, strings, pename, egrep, tmpname);
    vg_assert(cmd[cmdlen-1] == 0);
    if (0) VG_(printf)("QQQQQQQQ: %s\n", cmd);
