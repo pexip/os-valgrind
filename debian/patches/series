@@ -1,7 +1,4 @@
 0001-more-vg-n-segments.patch
 0002-version.patch
 0004-allow-or-quoting-of-strings-in-.valgrindrc.patch
-0005-catch-manpages-errors.patch
 0006-workaround-SIGSEGV-on-PPC.patch
-0007-implement-extra-dwarf-ops-gcc-461.patch
-0008-configure-support-linux-3.patch
