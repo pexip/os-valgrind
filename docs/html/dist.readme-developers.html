@@ -40,6 +40,23 @@ output spewed out during compilation, letting you actually see any errors,<br>
 warnings, etc.<br>
 <br>
 <br>
+Building a distribution tarball<br>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
+To build a distribution tarball from the valgrind sources:<br>
+<br>
+  make dist<br>
+<br>
+In addition to compiling, linking and packaging everything up, the command<br>
+will also build the documentation. Even if all required tools for building the<br>
+documentation are installed, this step may not succeed because of hidden<br>
+dependencies. E.g. on Ubuntu you must have "docbook-xsl" installed.<br>
+Additionally, specific tool versions maybe needed.<br>
+<br>
+If you only want to test whether the generated tarball is complete and runs<br>
+regression tests successfully, building documentation is not needed.<br>
+Edit docs/Makefile.am, search for BUILD_ALL_DOCS and follow instructions there.<br>
+<br>
+<br>
 Running the regression tests<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
 To build and run all the regression tests, run "make [--quiet] regtest".<br>

@@ -2,12 +2,12 @@
 .\"     Title: VALGRIND
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02/15/2011
-.\"    Manual: Release 3.6.1
-.\"    Source: Release 3.6.1
+.\"      Date: 11/05/2011
+.\"    Manual: Release 3.7.0
+.\"    Source: Release 3.7.0
 .\"  Language: English
 .\"
-.TH "VALGRIND" "1" "02/15/2011" "Release 3.6.1" "Release 3.6.1"
+.TH "VALGRIND" "1" "11/05/2011" "Release 3.7.0" "Release 3.7.0"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,6 +42,15 @@ Some of the options described below work with all Valgrind tools, and some only 
 This manual page covers only basic usage and options\&. For more comprehensive information, please see the HTML documentation on your system:
 $INSTALL/share/doc/valgrind/html/index\&.html, or online:
 http://www\&.valgrind\&.org/docs/manual/index\&.html\&.
+.SH "TOOL SELECTION OPTIONS"
+.PP
+The single most important option\&.
+.PP
+\fB\-\-tool=<toolname> [default: memcheck] \fR
+.RS 4
+Run the Valgrind tool called
+\fItoolname\fR, e\&.g\&. Memcheck, Cachegrind, etc\&.
+.RE
 .SH "BASIC OPTIONS"
 .PP
 These options work with all tools\&.
@@ -90,7 +99,7 @@ calls immediately call
 anyway\&.
 .RE
 .PP
-\fB\-\-trace\-children\-skip=patt1,patt2 \fR
+\fB\-\-trace\-children\-skip=patt1,patt2,\&.\&.\&. \fR
 .RS 4
 This option only has an effect when
 \fB\-\-trace\-children=yes\fR
@@ -102,12 +111,45 @@ and
 This can be useful for pruning uninteresting branches from a tree of processes being run on Valgrind\&. But you should be careful when using it\&. When Valgrind skips tracing into an executable, it doesn\*(Aqt just skip tracing that executable, it also skips tracing any of that executable\*(Aqs child processes\&. In other words, the flag doesn\*(Aqt merely cause tracing to stop at the specified executables \-\- it skips tracing of entire process subtrees rooted at any of the specified executables\&.
 .RE
 .PP
+\fB\-\-trace\-children\-skip\-by\-arg=patt1,patt2,\&.\&.\&. \fR
+.RS 4
+This is the same as
+\fB\-\-trace\-children\-skip\fR, with one difference: the decision as to whether to trace into a child process is made by examining the arguments to the child process, rather than the name of its executable\&.
+.RE
+.PP
 \fB\-\-child\-silent\-after\-fork=<yes|no> [default: no] \fR
 .RS 4
 When enabled, Valgrind will not show any debugging or logging output for the child process resulting from a
 \fIfork\fR
 call\&. This can make the output less confusing (although more misleading) when dealing with processes that create children\&. It is particularly useful in conjunction with
 \fI\-\-trace\-children=\fR\&. Use of this option is also strongly recommended if you are requesting XML output (\fI\-\-xml=yes\fR), since otherwise the XML from child and parent may become mixed up, which usually makes it useless\&.
+.RE
+.PP
+\fB\-\-vgdb=<no|yes|full> [default: yes] \fR
+.RS 4
+Valgrind will provide "gdbserver" functionality when
+\fB\-\-vgdb=yes\fR
+or
+\fB\-\-vgdb=full\fR
+is specified\&. This allows an external GNU GDB debugger to control and debug your program when it runs on Valgrind\&. See
+???
+for a detailed description\&.
+.sp
+If the embedded gdbserver is enabled but no gdb is currently being used, the
+???
+command line utility can send "monitor commands" to Valgrind from a shell\&. The Valgrind core provides a set of
+???\&. A tool can optionally provide tool specific monitor commands, which are documented in the tool specific chapter\&.
+.sp
+\fB\-\-vgdb=full\fR
+incurs significant performance overheads\&.
+.RE
+.PP
+\fB\-\-vgdb\-error=<number> [default: 999999999] \fR
+.RS 4
+Use this option when the Valgrind gdbserver is enabled with
+\fB\-\-vgdb=yes\fR
+or
+\fB\-\-vgdb=full\fR\&. Tools that report errors will wait for "number" errors to be reported before freezing the program and waiting for you to connect with GDB\&. It follows that a value of zero will cause the gdbserver to be started before your program is executed\&. This is typically used to insert GDB breakpoints before execution, and also works with tools that do not report errors, such as Massif\&.
 .RE
 .PP
 \fB\-\-track\-fds=<yes|no> [default: no] \fR
@@ -184,7 +226,7 @@ Less important messages will still be printed in plain text, but because the XML
 and
 \fB\-\-log\-socket\fR) this should not cause problems\&.
 .sp
-This option is aimed at making life easier for tools that consume Valgrind\*(Aqs output as input, such as GUI front ends\&. Currently this option works with Memcheck, Helgrind and Ptrcheck\&. The output format is specified in the file
+This option is aimed at making life easier for tools that consume Valgrind\*(Aqs output as input, such as GUI front ends\&. Currently this option works with Memcheck, Helgrind, DRD and SGcheck\&. The output format is specified in the file
 docs/internals/xml\-output\-protocol4\&.txt
 in the source tree for Valgrind 3\&.5\&.0 or later\&.
 .sp
@@ -376,6 +418,13 @@ or
 \fIy Ret\fR
 causes Valgrind to start a debugger for the program at this point\&. When you have finished with the debugger, quit from it, and the program will continue\&. Trying to continue from inside the debugger doesn\*(Aqt work\&.
 .sp
+Note: if you use GDB, more powerful debugging support is provided by the
+\fB\-\-vgdb=\fR
+\fIyes\fR
+or
+\fIfull\fR
+value\&. This activates Valgrind\*(Aqs internal gdbserver, which provides more\-or\-less full GDB\-style control of the application: insertion of breakpoints, continuing from inside GDB, inferior function calls, and much more\&.
+.sp
 \fIC Ret\fR
 or
 \fIc Ret\fR
@@ -491,7 +540,7 @@ If you need a larger total stack size, use
 \fB\-\-main\-stacksize\fR
 to specify it\&. Only set it as high as you need, since reserving far more space than you need (that is, hundreds of megabytes more than you need) constrains Valgrind\*(Aqs memory allocators and may reduce the total amount of memory that Valgrind can use\&. This is only really of significance on 32\-bit machines\&.
 .sp
-On Linux, you may request a stack of size up to 2GB\&. Valgrind will stop with a diagnostic message if the stack cannot be allocated\&. On AIX5 the allowed stack size is restricted to 128MB\&.
+On Linux, you may request a stack of size up to 2GB\&. Valgrind will stop with a diagnostic message if the stack cannot be allocated\&.
 .sp
 \fB\-\-main\-stacksize\fR
 only affects the stack size for the program\*(Aqs initial thread\&. It has no bearing on the size of thread stacks, as Valgrind does not allocate those\&.
@@ -529,11 +578,11 @@ By default Valgrind\*(Aqs
 .PP
 These options apply to all tools, as they affect certain obscure workings of the Valgrind core\&. Most people won\*(Aqt need to use these\&.
 .PP
-\fB\-\-smc\-check=<none|stack|all> [default: stack] \fR
+\fB\-\-smc\-check=<none|stack|all|all\-non\-file> [default: stack] \fR
 .RS 4
 This option controls Valgrind\*(Aqs detection of self\-modifying code\&. If no checking is done, if a program executes some code, then overwrites it with new code, and executes the new code, Valgrind will continue to execute the translations it made for the old code\&. This will likely lead to incorrect behaviour and/or crashes\&.
 .sp
-Valgrind has three levels of self\-modifying code detection: no detection, detect self\-modifying code on the stack (which is used by GCC to implement nested functions), or detect self\-modifying code everywhere\&. Note that the default option will catch the vast majority of cases\&. The main case it will not catch is programs such as JIT compilers that dynamically generate code
+Valgrind has four levels of self\-modifying code detection: no detection, detect self\-modifying code on the stack (which is used by GCC to implement nested functions), detect self\-modifying code everywhere, and detect self\-modifying code everywhere except in file\-backed mappings\&. Note that the default option will catch the vast majority of cases\&. The main case it will not catch is programs such as JIT compilers that dynamically generate code
 \fIand\fR
 subsequently overwrite part or all of it\&. Running with
 \fIall\fR
@@ -543,9 +592,15 @@ will rarely speed things up, since very little code gets put on the stack for mo
 \fBVALGRIND_DISCARD_TRANSLATIONS\fR
 client request is an alternative to
 \fB\-\-smc\-check=all\fR
-that requires more effort but is much faster\&.
+that requires more programmer effort but allows Valgrind to run your program faster, by telling it precisely when translations need to be re\-made\&.
 .sp
-Some architectures (including ppc32, ppc64 and ARM) require programs which create code at runtime to flush the instruction cache in between code generation and first use\&. Valgrind observes and honours such instructions\&. Hence, on ppc32/Linux, ppc64/Linux and ARM/Linux, Valgrind always provides complete, transparent support for self\-modifying code\&. It is only on platforms such as x86/Linux, AMD64/Linux and x86/Darwin that you need to use this option\&.
+\fB\-\-smc\-check=all\-non\-file\fR
+provides a cheaper but more limited version of
+\fB\-\-smc\-check=all\fR\&. It adds checks to any translations that do not originate from file\-backed memory mappings\&. Typical applications that generate code, for example JITs in web browsers, generate code into anonymous mmaped areas, whereas the "fixed" code of the browser always lives in file\-backed mappings\&.
+\fB\-\-smc\-check=all\-non\-file\fR
+takes advantage of this observation, limiting the overhead of checking to code which is likely to be JIT generated\&.
+.sp
+Some architectures (including ppc32, ppc64 and ARM) require programs which create code at runtime to flush the instruction cache in between code generation and first use\&. Valgrind observes and honours such instructions\&. Hence, on ppc32/Linux, ppc64/Linux and ARM/Linux, Valgrind always provides complete, transparent support for self\-modifying code\&. It is only on platforms such as x86/Linux, AMD64/Linux, x86/Darwin and AMD64/Darwin that you need to use this option\&.
 .RE
 .PP
 \fB\-\-read\-var\-info=<yes|no> [default: no] \fR
@@ -592,6 +647,21 @@ And here are the same errors with
 .if n \{\
 .RE
 .\}
+.RE
+.PP
+\fB\-\-vgdb\-poll=<number> [default: 5000] \fR
+.RS 4
+As part of its main loop, the Valgrind scheduler will poll to check if some activity (such as an external command or some input from a gdb) has to be handled by gdbserver\&. This activity poll will be done after having run the given number of basic blocks (or slightly more than the given number of basic blocks)\&. This poll is quite cheap so the default value is set relatively low\&. You might further decrease this value if vgdb cannot use ptrace system call to interrupt Valgrind if all threads are (most of the time) blocked in a system call\&.
+.RE
+.PP
+\fB\-\-vgdb\-shadow\-registers=no|yes [default: no] \fR
+.RS 4
+When activated, gdbserver will expose the Valgrind shadow registers to GDB\&. With this, the value of the Valgrind shadow registers can be examined or changed using GDB\&. Exposing shadow registers only works with GDB version 7\&.1 or later\&.
+.RE
+.PP
+\fB\-\-vgdb\-prefix=<prefix> [default: /tmp/vgdb\-pipe] \fR
+.RS 4
+To communicate with gdb/vgdb, the Valgrind gdbserver creates 3 files (2 named FIFOs and a mmap shared memory file)\&. The prefix option controls the directory and prefix for the creation of these files\&.
 .RE
 .PP
 \fB\-\-run\-libc\-freeres=<yes|no> [default: yes] \fR
@@ -641,6 +711,18 @@ Be very lax about ioctl handling; the only assumption is that the size is correc
 .\}
 \fBenable\-inner: \fR
 Enable some special magic needed when the program being run is itself Valgrind\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBfuse\-compatible: \fR
+Enable special handling for certain system calls that may block in a FUSE file\-system\&. This may be necessary when running Valgrind on a multi\-threaded program that uses one thread to manage a FUSE file\-system and another thread to access that file\-system\&.
 .RE
 .RE
 .PP
@@ -799,6 +881,15 @@ delete
 (C++), that memory is not immediately made available for re\-allocation\&. Instead, it is marked inaccessible and placed in a queue of freed blocks\&. The purpose is to defer as long as possible the point at which freed\-up memory comes back into circulation\&. This increases the chance that Memcheck will be able to detect invalid accesses to blocks for some significant period of time after they have been freed\&.
 .sp
 This option specifies the maximum total size, in bytes, of the blocks in the queue\&. The default value is twenty million bytes\&. Increasing this increases the total amount of memory used by Memcheck but may detect invalid uses of freed blocks which would otherwise go undetected\&.
+.RE
+.PP
+\fB\-\-freelist\-big\-blocks=<number> [default: 1000000] \fR
+.RS 4
+When making blocks from the queue of freed blocks available for re\-allocation, Memcheck will in priority re\-circulate the blocks with a size greater or equal to
+\fB\-\-freelist\-big\-blocks\fR\&. This ensures that freeing big blocks (in particular freeing blocks bigger than
+\fB\-\-freelist\-vol\fR) does not immediately lead to a re\-circulation of all (or a lot of) the small blocks in the free list\&. In other words, this option increases the likelihood to discover dangling pointers for the "small" blocks, even when big blocks are freed\&.
+.sp
+Setting a value of 0 means that all the blocks are re\-circulated in a FIFO order\&.
 .RE
 .PP
 \fB\-\-workaround\-gcc296\-bugs=<yes|no> [default: no] \fR
@@ -1023,6 +1114,13 @@ Specify if you want to do branch prediction simulation\&. Further event counters
 .RE
 .SH "HELGRIND OPTIONS"
 .PP
+\fB\-\-free\-is\-write=no|yes [default: no] \fR
+.RS 4
+When enabled (not the default), Helgrind treats freeing of heap memory as if the memory was written immediately before the free\&. This exposes races where memory is referenced by one thread, and freed by another, but there is no observable synchronisation event to ensure that the reference happens before the free\&.
+.sp
+This functionality is new in Valgrind 3\&.7\&.0, and is regarded as experimental\&. It is not enabled by default because its interaction with custom memory allocators is not well understood at present\&. User feedback is welcomed\&.
+.RE
+.PP
 \fB\-\-track\-lockorders=no|yes [default: yes] \fR
 .RS 4
 When enabled (the default), Helgrind performs lock order consistency checking\&. For some buggy programs, the large number of lock order errors reported can become annoying, particularly if you\*(Aqre only interested in race errors\&. You may therefore find it helpful to disable lock order checking\&.
@@ -1057,6 +1155,11 @@ This option controls the size of the cache, in terms of the number of different 
 .sp
 The minimum value is 10,000 and the maximum is 30,000,000 (thirty times the default value)\&. Increasing the value by 1 increases Helgrind\*(Aqs memory requirement by very roughly 100 bytes, so the maximum value will easily eat up three extra gigabytes or so of memory\&.
 .RE
+.PP
+\fB\-\-check\-stack\-refs=no|yes [default: yes] \fR
+.RS 4
+By default Helgrind checks all data memory accesses made by your program\&. This flag enables you to skip checking for accesses to thread stacks (local variables)\&. This can improve performance, but comes at the cost of missing races on stack\-allocated data\&.
+.RE
 .SH "DRD OPTIONS"
 .PP
 \fB\-\-check\-stack\-var=<yes|no> [default: no]\fR
@@ -1069,6 +1172,11 @@ Controls whether DRD detects data races on stack variables\&. Verifying stack va
 Print an error message if any mutex or writer lock has been held longer than the time specified in milliseconds\&. This option enables the detection of lock contention\&.
 .RE
 .PP
+\fB\-\-join\-list\-vol=<n> [default: 10]\fR
+.RS 4
+Data races that occur between a statement at the end of one thread and another thread can be missed if memory access information is discarded immediately after a thread has been joined\&. This option allows to specify for how many joined threads memory access information should be retained\&.
+.RE
+.PP
 \fB \-\-first\-race\-only=<yes|no> [default: no] \fR
 .RS 4
 Whether to report only the first data race that has been detected on a memory location or all data races that have been detected on a memory location\&.
@@ -1076,7 +1184,38 @@ Whether to report only the first data race that has been detected on a memory lo
 .PP
 \fB \-\-free\-is\-write=<yes|no> [default: no] \fR
 .RS 4
-Whether to report accessing freed memory as a race\&. Helps to detect memory accesses that occur after memory has been freed but might cause DRD to run slightly slower\&.
+Whether to report races between accessing memory and freeing memory\&. Enabling this option may cause DRD to run slightly slower\&. Notes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Don\*(Aqt enable this option when using custom memory allocators that use the
+VG_USERREQ__MALLOCLIKE_BLOCK
+and
+VG_USERREQ__FREELIKE_BLOCK
+because that would result in false positives\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Don\*(Aqt enable this option when using reference\-counted objects because that will result in false positives, even when that code has been annotated properly with
+ANNOTATE_HAPPENS_BEFORE
+and
+ANNOTATE_HAPPENS_AFTER\&. See e\&.g\&. the output of the following command for an example:
+valgrind \-\-tool=drd \-\-free\-is\-write=yes drd/tests/annotate_smart_pointer\&.
+.RE
+.sp
 .RE
 .PP
 \fB \-\-report\-signal\-unlocked=<yes|no> [default: yes] \fR
@@ -1139,6 +1278,16 @@ Trace all condition variable activity\&.
 \fB\-\-trace\-fork\-join=<yes|no> [default: no]\fR
 .RS 4
 Trace all thread creation and all thread termination events\&.
+.RE
+.PP
+\fB\-\-trace\-hb=<yes|no> [default: no]\fR
+.RS 4
+Trace execution of the
+ANNOTATE_HAPPENS_BEFORE(),
+ANNOTATE_HAPPENS_AFTER()
+and
+ANNOTATE_HAPPENS_DONE()
+client requests\&.
 .RE
 .PP
 \fB\-\-trace\-mutex=<yes|no> [default: no]\fR
@@ -1274,26 +1423,8 @@ and
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
 \fB--log-file\fR\&.
 .RE
-.SH "PTRCHECK OPTIONS"
-.PP
-\fB\-\-enable\-sg\-checks=no|yes [default: yes] \fR
-.RS 4
-By default, Ptrcheck checks for overruns of stack, global and heap arrays\&. With
-\fI\-\-enable\-sg\-checks=no\fR, the stack and global array checks are omitted, and only heap checking is performed\&. This can be useful because the stack and global checks are quite expensive, so omitting them speeds Ptrcheck up a lot\&.
-.RE
-.PP
-\fB\-\-partial\-loads\-ok=<yes|no> [default: no] \fR
-.RS 4
-This option has the same meaning as it does for Memcheck\&.
-.sp
-Controls how Ptrcheck handles word\-sized, word\-aligned loads which partially overlap the end of heap blocks \-\- that is, some of the bytes in the word are validly addressable, but others are not\&. When
-\fIyes\fR, such loads do not produce an address error\&. When
-\fIno\fR
-(the default), loads from partially invalid addresses are treated the same as loads from completely invalid addresses: an illegal heap access error is issued\&.
-.sp
-Note that code that behaves in this way is in violation of the the ISO C/C++ standards, and should be considered broken\&. If at all possible, such code should be fixed\&. This option should be used only as a last resort\&.
-.RE
-.SH "BBV OPTIONS"
+.SH "SGCHECK OPTIONS"
+<xi:include></xi:include>.SH "BBV OPTIONS"
 .PP
 \fB\-\-bb\-out\-file=<name> [default: bb\&.out\&.%p] \fR
 .RS 4

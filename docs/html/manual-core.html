@@ -503,8 +503,9 @@ in most cases.  We group the available options by rough categories.</p>
 <div class="sect2" title="2.6.1. Tool-selection Option">
 <div class="titlepage"><div><div><h3 class="title">
 <a name="manual-core.toolopts"></a>2.6.1. Tool-selection Option</h3></div></div></div>
-<p>The single most important option.</p>
-<div class="variablelist"><dl>
+<p><a name="tool.opts.para"></a>The single most important option.</p>
+<div class="variablelist">
+<a name="tool.opts.list"></a><dl>
 <dt>
 <a name="tool_name"></a><span class="term">
       <code class="option">--tool=&lt;toolname&gt; [default: memcheck] </code>
@@ -512,7 +513,8 @@ in most cases.  We group the available options by rough categories.</p>
 </dt>
 <dd><p>Run the Valgrind tool called <code class="varname">toolname</code>,
       e.g. Memcheck, Cachegrind, etc.</p></dd>
-</dl></div>
+</dl>
+</div>
 </div>
 <div class="sect2" title="2.6.2. Basic Options">
 <div class="titlepage"><div><div><h3 class="title">
@@ -575,7 +577,7 @@ in most cases.  We group the available options by rough categories.</p>
 </dd>
 <dt>
 <a name="opt.trace-children-skip"></a><span class="term">
-      <code class="option">--trace-children-skip=patt1,patt2 </code>
+      <code class="option">--trace-children-skip=patt1,patt2,... </code>
     </span>
 </dt>
 <dd>
@@ -599,6 +601,16 @@ in most cases.  We group the available options by rough categories.</p>
         executables.</p>
 </dd>
 <dt>
+<a name="opt.trace-children-skip-by-arg"></a><span class="term">
+      <code class="option">--trace-children-skip-by-arg=patt1,patt2,... </code>
+    </span>
+</dt>
+<dd><p>This is the same as  
+        <code class="option">--trace-children-skip</code>, with one difference:
+        the decision as to whether to trace into a child process is
+        made by examining the arguments to the child process, rather
+        than the name of its executable.</p></dd>
+<dt>
 <a name="opt.child-silent-after-fork"></a><span class="term">
       <code class="option">--child-silent-after-fork=&lt;yes|no&gt; [default: no] </code>
     </span>
@@ -612,6 +624,48 @@ in most cases.  We group the available options by rough categories.</p>
       strongly recommended if you are requesting XML output
       (<code class="varname">--xml=yes</code>), since otherwise the XML from child and
       parent may become mixed up, which usually makes it useless.
+      </p></dd>
+<dt>
+<a name="opt.vgdb"></a><span class="term">
+      <code class="option">--vgdb=&lt;no|yes|full&gt; [default: yes] </code>
+    </span>
+</dt>
+<dd>
+<p>Valgrind will provide "gdbserver" functionality when
+      <code class="option">--vgdb=yes</code>
+      or <code class="option">--vgdb=full</code> is specified.  This
+      allows an external GNU GDB debugger
+      to control and debug your program when it runs on Valgrind. See
+      <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver" title="3.2. Debugging your program using Valgrind gdbserver and GDB">Debugging your program using Valgrind's gdbserver and GDB</a> for a detailed
+      description.
+      </p>
+<p> If the embedded gdbserver is enabled but no gdb is
+      currently being used, the <a class="xref" href="manual-core-adv.html#manual-core-adv.vgdb" title="3.2.9. vgdb command line options">vgdb</a>
+      command line utility can send "monitor commands" to Valgrind
+      from a shell.  The Valgrind core provides a set of
+      <a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.10. Valgrind monitor commands">Valgrind monitor commands</a>. A tool
+      can optionally provide tool specific monitor commands, which are
+      documented in the tool specific chapter.
+      </p>
+<p><code class="option">--vgdb=full</code> incurs
+      significant performance overheads.
+      </p>
+</dd>
+<dt>
+<a name="opt.vgdb-error"></a><span class="term">
+      <code class="option">--vgdb-error=&lt;number&gt; [default: 999999999] </code>
+    </span>
+</dt>
+<dd><p> Use this option when the Valgrind gdbserver is enabled with
+      <code class="option">--vgdb=yes</code> or <code class="option">--vgdb=full</code>.
+      Tools that report errors will wait
+      for "<code class="computeroutput">number</code>" errors to be
+      reported before freezing the program and waiting for you to
+      connect with GDB.  It follows that a value of zero will cause
+      the gdbserver to be started before your program is executed.
+      This is typically used to insert GDB breakpoints before
+      execution, and also works with tools that do not report
+      errors, such as Massif.
       </p></dd>
 <dt>
 <a name="opt.track-fds"></a><span class="term">
@@ -721,8 +775,8 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       </p>
 <p>This option is aimed at making life easier for tools that consume
       Valgrind's output as input, such as GUI front ends.  Currently this
-      option works with Memcheck, Helgrind and Ptrcheck.  The output format
-      is specified in the file
+      option works with Memcheck, Helgrind, DRD and SGcheck.  The output
+      format is specified in the file
       <code class="computeroutput">docs/internals/xml-output-protocol4.txt</code>
       in the source tree for Valgrind 3.5.0 or later.</p>
 <p>The recommended options for a GUI to pass, when requesting
@@ -969,6 +1023,14 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       the program at this point. When you have finished with the
       debugger, quit from it, and the program will continue. Trying to
       continue from inside the debugger doesn't work.</p>
+<p>
+      Note: if you use GDB, more powerful debugging support is
+      provided by the <code class="option">--vgdb=</code> <code class="varname">yes</code>
+      or <code class="varname">full</code> value.  This activates Valgrind's
+      internal gdbserver, which provides more-or-less full GDB-style
+      control of the application: insertion of breakpoints, continuing 
+      from inside GDB, inferior function calls, and much more.
+      </p>
 <p><code class="varname">C Ret</code> or <code class="varname">c Ret</code> causes
       Valgrind not to start a debugger, and not to ask again.</p>
 </dd>
@@ -1126,8 +1188,7 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       significance on 32-bit machines.</p>
 <p>On Linux, you may request a stack of size up to 2GB.
       Valgrind will stop with a diagnostic message if the stack cannot
-      be allocated.  On AIX5 the allowed stack size is restricted to
-      128MB.</p>
+      be allocated.</p>
 <p><code class="option">--main-stacksize</code> only affects the stack
       size for the program's initial thread.  It has no bearing on the
       size of thread stacks, as Valgrind does not allocate
@@ -1183,7 +1244,7 @@ need to use these.</p>
 <a name="uncommon.opts.list"></a><dl>
 <dt>
 <a name="opt.smc-check"></a><span class="term">
-      <code class="option">--smc-check=&lt;none|stack|all&gt; [default: stack] </code>
+      <code class="option">--smc-check=&lt;none|stack|all|all-non-file&gt; [default: stack] </code>
     </span>
 </dt>
 <dd>
@@ -1192,29 +1253,45 @@ need to use these.</p>
       overwrites it with new code, and executes the new code, Valgrind will
       continue to execute the translations it made for the old code.  This
       will likely lead to incorrect behaviour and/or crashes.</p>
-<p>Valgrind has three levels of self-modifying code detection:
+<p>Valgrind has four levels of self-modifying code detection:
       no detection, detect self-modifying code on the stack (which is used by
-      GCC to implement nested functions), or detect self-modifying code
-      everywhere.  Note that the default option will catch the vast majority
+      GCC to implement nested functions), detect self-modifying code
+      everywhere, and detect self-modifying code everywhere except in
+      file-backed mappings.
+
+      Note that the default option will catch the vast majority
       of cases.  The main case it will not catch is programs such as JIT
       compilers that dynamically generate code <span class="emphasis"><em>and</em></span>
       subsequently overwrite part or all of it.  Running with
-      <code class="varname">all</code> will slow Valgrind down noticeably.  Running with
+      <code class="varname">all</code> will slow Valgrind down noticeably.
+      Running with
       <code class="varname">none</code> will rarely speed things up, since very little
       code gets put on the stack for most programs.  The
-      <code class="function">VALGRIND_DISCARD_TRANSLATIONS</code> client request is
-      an alternative to <code class="option">--smc-check=all</code> that requires more
-      effort but is much faster.
+      <code class="function">VALGRIND_DISCARD_TRANSLATIONS</code> client
+      request is an alternative to <code class="option">--smc-check=all</code>
+      that requires more programmer effort but allows Valgrind to run
+      your program faster, by telling it precisely when translations
+      need to be re-made.
       
       </p>
+<p><code class="option">--smc-check=all-non-file</code> provides a
+      cheaper but more limited version
+      of <code class="option">--smc-check=all</code>.  It adds checks to any
+      translations that do not originate from file-backed memory
+      mappings.  Typical applications that generate code, for example
+      JITs in web browsers, generate code into anonymous mmaped areas,
+      whereas the "fixed" code of the browser always lives in
+      file-backed mappings.  <code class="option">--smc-check=all-non-file</code>
+      takes advantage of this observation, limiting the overhead of
+      checking to code which is likely to be JIT generated.</p>
 <p>Some architectures (including ppc32, ppc64 and ARM) require
       programs which create code at runtime to flush the instruction
       cache in between code generation and first use.  Valgrind
       observes and honours such instructions.  Hence, on ppc32/Linux,
       ppc64/Linux and ARM/Linux, Valgrind always provides complete, transparent
       support for self-modifying code.  It is only on platforms such as
-      x86/Linux, AMD64/Linux and x86/Darwin that you need to use this
-      option.</p>
+      x86/Linux, AMD64/Linux, x86/Darwin and AMD64/Darwin 
+      that you need to use this option.</p>
 </dd>
 <dt>
 <a name="opt.read-var-info"></a><span class="term">
@@ -1253,6 +1330,41 @@ need to use these.</p>
 ==15522==  Location 0x7fefffefc is 0 bytes inside local var "local"
 ==15522==  declared at varinfo1.c:46, in frame #1 of thread 1</pre>
 </dd>
+<dt>
+<a name="opt.vgdb-poll"></a><span class="term">
+      <code class="option">--vgdb-poll=&lt;number&gt; [default: 5000] </code>
+    </span>
+</dt>
+<dd><p> As part of its main loop, the Valgrind scheduler will
+      poll to check if some activity (such as an external command or
+      some input from a gdb) has to be handled by gdbserver.  This
+      activity poll will be done after having run the given number of
+      basic blocks (or slightly more than the given number of basic
+      blocks). This poll is quite cheap so the default value is set
+      relatively low. You might further decrease this value if vgdb
+      cannot use ptrace system call to interrupt Valgrind if all
+      threads are (most of the time) blocked in a system call.
+      </p></dd>
+<dt>
+<a name="opt.vgdb-shadow-registers"></a><span class="term">
+      <code class="option">--vgdb-shadow-registers=no|yes [default: no] </code>
+    </span>
+</dt>
+<dd><p> When activated, gdbserver will expose the Valgrind shadow registers
+      to GDB. With this, the value of the Valgrind shadow registers can be examined
+      or changed using GDB. Exposing shadow registers only works with GDB version
+      7.1 or later.
+      </p></dd>
+<dt>
+<a name="opt.vgdb-prefix"></a><span class="term">
+      <code class="option">--vgdb-prefix=&lt;prefix&gt; [default: /tmp/vgdb-pipe] </code>
+    </span>
+</dt>
+<dd><p> To communicate with gdb/vgdb, the Valgrind gdbserver
+      creates 3 files (2 named FIFOs and a mmap shared memory
+      file). The prefix option controls the directory and prefix for
+      the creation of these files.
+      </p></dd>
 <dt>
 <a name="opt.run-libc-freeres"></a><span class="term">
       <code class="option">--run-libc-freeres=&lt;yes|no&gt; [default: yes] </code>
@@ -1303,6 +1415,13 @@ need to use these.</p>
 <li class="listitem"><p><code class="option">enable-inner: </code> Enable some special
           magic needed when the program being run is itself
           Valgrind.</p></li>
+<li class="listitem"><p><code class="option">fuse-compatible: </code> Enable special
+            handling for certain system calls that may block in a FUSE
+            file-system.  This may be necessary when running Valgrind
+            on a multi-threaded program that uses one thread to manage
+            a FUSE file-system and another thread to access that
+            file-system.
+          </p></li>
 </ul></div>
 </dd>
 <dt>
@@ -1386,6 +1505,11 @@ need to use these.</p>
 Valgrind itself.  You shouldn't need to use them in the normal run of
 things.  If you wish to see the list, use the
 <code class="option">--help-debug</code> option.</p>
+<p>If you wish to debug your program rather than debugging
+Valgrind itself, then you should use the options
+<code class="option">--vgdb=yes</code> or <code class="option">--vgdb=full</code>
+or <code class="option">--db-attach=yes</code>.
+</p>
 </div>
 <div class="sect2" title="2.6.7. Setting Default Options">
 <div class="titlepage"><div><div><h3 class="title">
@@ -1576,8 +1700,8 @@ subject to the following constraints:</p>
    are supported.</p></li>
 <li class="listitem"><p>On ARM, essentially the entire ARMv7-A instruction set
     is supported, in both ARM and Thumb mode.  ThumbEE and Jazelle are
-    not supported.  NEON and VFPv3 support is fairly complete.  ARMv6
-    media instruction support is mostly done but not yet complete.
+    not supported.  NEON, VFPv3 and ARMv6 media support is fairly
+    complete.
    </p></li>
 <li class="listitem"><p>If your program does its own memory management, rather than
    using malloc/new/free/delete, it should still work, but Memcheck's
