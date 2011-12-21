@@ -9,7 +9,7 @@
    This file is part of Ptrcheck, a Valgrind tool for checking pointer
    use in programs.
 
-   Copyright (C) 2008-2010 OpenWorks Ltd
+   Copyright (C) 2008-2011 OpenWorks Ltd
       info@open-works.co.uk
 
    This program is free software; you can redistribute it and/or
@@ -309,6 +309,9 @@ void pc_pp_Error ( Error* err )
    XError *xe = (XError*)VG_(get_error_extra)(err);
    tl_assert(xe);
 
+   if (xml)
+      emit( "  <kind>%s</kind>\n", pc_get_error_name(err));
+
    switch (VG_(get_error_kind)(err)) {
 
    //----------------------------------------------------------
@@ -316,7 +319,6 @@ void pc_pp_Error ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>SorG</kind>\n");
          emit( "  <what>Invalid %s of size %ld</what>\n",
                xe->XE.SorG.sszB < 0 ? "write" : "read",
                Word__abs(xe->XE.SorG.sszB) );
@@ -324,9 +326,9 @@ void pc_pp_Error ( Error* err )
    
          emit( "  <auxwhat>Address %#lx expected vs actual:</auxwhat>\n",
                xe->XE.SorG.addr );
-         emiN( "  <auxwhat>Expected: %t</auxwhat>\n",
+         emiN( "  <auxwhat>Expected: %pS</auxwhat>\n",
                &xe->XE.SorG.expect[0] );
-         emiN( "  <auxwhat>Actual:   %t</auxwhat>\n", 
+         emiN( "  <auxwhat>Actual:   %pS</auxwhat>\n", 
                &xe->XE.SorG.actual[0] );
 
       } else {
@@ -357,7 +359,6 @@ void pc_pp_Error ( Error* err )
 
          if (xml) {
 
-            emit( "  <kind>Heap</kind>\n");
             emit( "  <what>Invalid %s of size %ld</what>\n",
                   readwrite(xe->XE.Heap.sszB),
                   Word__abs(xe->XE.Heap.sszB) );
@@ -392,7 +393,6 @@ void pc_pp_Error ( Error* err )
 
          if (xml) {
 
-            emit( "  <kind>Heap</kind>\n");
             emit( "  <what>%s %s of size %ld</what>\n",
                   how_invalid,
                   readwrite(xe->XE.Heap.sszB),
@@ -433,14 +433,14 @@ void pc_pp_Error ( Error* err )
       if (xml) {
 
          if (xe->XE.Heap.descr1)
-            emiN( "  %t\n",
+            emiN( "  %pS\n",
                   (HChar*)VG_(indexXA)( xe->XE.Heap.descr1, 0 ) );
          if (xe->XE.Heap.descr2)
-            emiN( "  %t\n",
+            emiN( "  %pS\n",
                   (HChar*)VG_(indexXA)( xe->XE.Heap.descr2, 0 ) );
          if (xe->XE.Heap.datasym[0] != 0)
             emiN( "  <auxwhat>Address 0x%llx is %llu bytes "
-                  "inside data symbol \"%t\"</auxwhat>\n",
+                  "inside data symbol \"%pS\"</auxwhat>\n",
                   (ULong)xe->XE.Heap.addr,
                   (ULong)xe->XE.Heap.datasymoff,
                   xe->XE.Heap.datasym );
@@ -475,7 +475,6 @@ void pc_pp_Error ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>Arith</kind>\n");
          emit( "  <what>Invalid arguments to %s</what>\n",
                xe->XE.Arith.opname );
          VG_(pp_ExeContext)( VG_(get_error_where)(err) );
@@ -561,7 +560,6 @@ void pc_pp_Error ( Error* err )
 
          if (xml) {
 
-            emit( "  <kind>SysParam</kind>\n");
             emit( "  <what>%s%s contains unaddressable byte(s)</what>\n",
                   what, s );
             VG_(pp_ExeContext)( VG_(get_error_where)(err) );
@@ -589,7 +587,6 @@ void pc_pp_Error ( Error* err )
 
          if (xml) {
 
-            emit( "  <kind>SysParam</kind>\n");
             emit( "  <what>%s%s is non-contiguous</what>\n",
                   what, s );
             VG_(pp_ExeContext)( VG_(get_error_where)(err) );

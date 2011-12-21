@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2004-2010 OpenWorks LLP
+   Copyright (C) 2004-2011 OpenWorks LLP
       info@open-works.net
 
    This program is free software; you can redistribute it and/or
@@ -469,8 +469,10 @@ typedef
       Iop_DivS32,   // ditto, signed
       Iop_DivU64,   // :: I64,I64 -> I64 (simple div, no mod)
       Iop_DivS64,   // ditto, signed
-      Iop_DivS64E,  // :: I64,I64 -> I64 (dividend is 64-bit arg (hi) concat with 64 0's (low))
+      Iop_DivU64E,  // :: I64,I64 -> I64 (dividend is 64-bit arg (hi) concat with 64 0's (low))
+      Iop_DivS64E,  // ditto, signed
       Iop_DivU32E,  // :: I32,I32 -> I32 (dividend is 32-bit arg (hi) concat with 32 0's (low))
+      Iop_DivS32E,  // ditto, signed
 
       Iop_DivModU64to32, // :: I64,I32 -> I64
                          // of which lo half is div and hi half is mod
@@ -921,6 +923,7 @@ typedef
       */
       Iop_QNarrowBin16Sto8Ux8,
       Iop_QNarrowBin16Sto8Sx8, Iop_QNarrowBin32Sto16Sx4,
+      Iop_NarrowBin16to8x8,    Iop_NarrowBin32to16x4,
 
       /* INTERLEAVING */
       /* Interleave lanes from low or high halves of
@@ -1168,7 +1171,7 @@ typedef
       Iop_Min8Ux16, Iop_Min16Ux8, Iop_Min32Ux4,
 
       /* COMPARISON */
-      Iop_CmpEQ8x16,  Iop_CmpEQ16x8,  Iop_CmpEQ32x4,
+      Iop_CmpEQ8x16,  Iop_CmpEQ16x8,  Iop_CmpEQ32x4,  Iop_CmpEQ64x2,
       Iop_CmpGT8Sx16, Iop_CmpGT16Sx8, Iop_CmpGT32Sx4, Iop_CmpGT64Sx2,
       Iop_CmpGT8Ux16, Iop_CmpGT16Ux8, Iop_CmpGT32Ux4,
 
@@ -1770,6 +1773,10 @@ IRDirty* unsafeIRDirty_1_N ( IRTemp dst,
 typedef
    enum { 
       Imbe_Fence=0x18000, 
+      /* Needed only on ARM.  It cancels a reservation made by a
+         preceding Linked-Load, and needs to be handed through to the
+         back end, just as LL and SC themselves are. */
+      Imbe_CancelReservation
    }
    IRMBusEvent;
 

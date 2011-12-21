@@ -9,7 +9,7 @@
    This file is part of MemCheck, a heavyweight Valgrind tool for
    detecting memory errors.
 
-   Copyright (C) 2000-2010 Julian Seward 
+   Copyright (C) 2000-2011 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -3553,6 +3553,65 @@ static MC_ReadResult is_mem_defined ( Addr a, SizeT len,
 }
 
 
+/* Like is_mem_defined but doesn't give up at the first uninitialised
+   byte -- the entire range is always checked.  This is important for
+   detecting errors in the case where a checked range strays into
+   invalid memory, but that fact is not detected by the ordinary
+   is_mem_defined(), because of an undefined section that precedes the
+   out of range section, possibly as a result of an alignment hole in
+   the checked data.  This version always checks the entire range and
+   can report both a definedness and an accessbility error, if
+   necessary. */
+static void is_mem_defined_comprehensive (
+               Addr a, SizeT len,
+               /*OUT*/Bool* errorV,    /* is there a definedness err? */
+               /*OUT*/Addr* bad_addrV, /* if so where? */
+               /*OUT*/UInt* otagV,     /* and what's its otag? */
+               /*OUT*/Bool* errorA,    /* is there an addressability err? */
+               /*OUT*/Addr* bad_addrA  /* if so where? */
+            )
+{
+   SizeT i;
+   UWord vabits2;
+   Bool  already_saw_errV = False;
+
+   PROF_EVENT(64, "is_mem_defined"); // fixme
+   DEBUG("is_mem_defined_comprehensive\n");
+
+   tl_assert(!(*errorV || *errorA));
+
+   for (i = 0; i < len; i++) {
+      PROF_EVENT(65, "is_mem_defined(loop)"); // fixme
+      vabits2 = get_vabits2(a);
+      switch (vabits2) {
+         case VA_BITS2_DEFINED: 
+            a++; 
+            break;
+         case VA_BITS2_UNDEFINED:
+         case VA_BITS2_PARTDEFINED:
+            if (!already_saw_errV) {
+               *errorV    = True;
+               *bad_addrV = a;
+               if (MC_(clo_mc_level) == 3) {
+                  *otagV = MC_(helperc_b_load1)( a );
+               } else {
+                  *otagV = 0;
+               }
+               already_saw_errV = True;
+            }
+            a++; /* keep going */
+            break;
+         case VA_BITS2_NOACCESS:
+            *errorA    = True;
+            *bad_addrA = a;
+            return; /* give up now. */
+         default:
+            tl_assert(0);
+      }
+   }
+}
+
+
 /* Check a zero-terminated ascii string.  Tricky -- don't want to
    examine the actual bytes, to find the end, until we're sure it is
    safe to do so. */
@@ -4701,6 +4760,7 @@ static Bool mc_expensive_sanity_check ( void )
 
 Bool          MC_(clo_partial_loads_ok)       = False;
 Long          MC_(clo_freelist_vol)           = 20*1000*1000LL;
+Long          MC_(clo_freelist_big_blocks)    =  1*1000*1000LL;
 LeakCheckMode MC_(clo_leak_check)             = LC_Summary;
 VgRes         MC_(clo_leak_resolution)        = Vg_HighRes;
 Bool          MC_(clo_show_reachable)         = False;
@@ -4761,7 +4821,11 @@ static Bool mc_process_cmd_line_options(Char* arg)
 
    else if VG_BINT_CLO(arg, "--freelist-vol",  MC_(clo_freelist_vol), 
                                                0, 10*1000*1000*1000LL) {}
-   
+
+   else if VG_BINT_CLO(arg, "--freelist-big-blocks",
+                       MC_(clo_freelist_big_blocks),
+                       0, 10*1000*1000*1000LL) {}
+
    else if VG_XACT_CLO(arg, "--leak-check=no",
                             MC_(clo_leak_check), LC_Off) {}
    else if VG_XACT_CLO(arg, "--leak-check=summary",
@@ -4831,7 +4895,8 @@ static void mc_print_usage(void)
 "    --undef-value-errors=no|yes      check for undefined value errors [yes]\n"
 "    --track-origins=no|yes           show origins of undefined values? [no]\n"
 "    --partial-loads-ok=no|yes        too hard to explain here; see manual [no]\n"
-"    --freelist-vol=<number>          volume of freed blocks queue [20000000]\n"
+"    --freelist-vol=<number>          volume of freed blocks queue      [20000000]\n"
+"    --freelist-big-blocks=<number>   releases first blocks with size >= [1000000]\n"
 "    --workaround-gcc296-bugs=no|yes  self explanatory [no]\n"
 "    --ignore-ranges=0xPP-0xQQ[,0xRR-0xSS]   assume given addresses are OK\n"
 "    --malloc-fill=<hexnumber>        fill malloc'd areas with given value\n"
@@ -5192,14 +5257,34 @@ static Bool mc_handle_client_request ( ThreadId tid, UWord* arg, UWord* ret )
          break;
 
       case VG_USERREQ__CHECK_MEM_IS_DEFINED: {
-         MC_ReadResult res;
-         UInt otag = 0;
-         res = is_mem_defined ( arg[1], arg[2], &bad_addr, &otag );
-         if (MC_AddrErr == res)
-            MC_(record_user_error) ( tid, bad_addr, /*isAddrErr*/True, 0 );
-         else if (MC_ValueErr == res)
-            MC_(record_user_error) ( tid, bad_addr, /*isAddrErr*/False, otag );
-         *ret = ( res==MC_Ok ? (UWord)NULL : bad_addr );
+         Bool errorV    = False;
+         Addr bad_addrV = 0;
+         UInt otagV     = 0;
+         Bool errorA    = False;
+         Addr bad_addrA = 0;
+         is_mem_defined_comprehensive( 
+            arg[1], arg[2],
+            &errorV, &bad_addrV, &otagV, &errorA, &bad_addrA
+         );
+         if (errorV) {
+            MC_(record_user_error) ( tid, bad_addrV,
+                                     /*isAddrErr*/False, otagV );
+         }
+         if (errorA) {
+            MC_(record_user_error) ( tid, bad_addrA,
+                                     /*isAddrErr*/True, 0 );
+         }
+         /* Return the lower of the two erring addresses, if any. */
+         *ret = 0;
+         if (errorV && !errorA) {
+            *ret = bad_addrV;
+         }
+         if (!errorV && errorA) {
+            *ret = bad_addrA;
+         }
+         if (errorV && errorA) {
+            *ret = bad_addrV < bad_addrA ? bad_addrV : bad_addrA;
+         }
          break;
       }
 
@@ -5839,6 +5924,13 @@ static void mc_post_clo_init ( void )
       MC_(clo_leak_check) = LC_Full;
    }
 
+   if (MC_(clo_freelist_big_blocks) >= MC_(clo_freelist_vol))
+      VG_(message)(Vg_UserMsg,
+                   "Warning: --freelist-big-blocks value %lld has no effect\n"
+                   "as it is >= to --freelist-vol value %lld\n",
+                   MC_(clo_freelist_big_blocks),
+                   MC_(clo_freelist_vol));
+
    tl_assert( MC_(clo_mc_level) >= 1 && MC_(clo_mc_level) <= 3 );
 
    if (MC_(clo_mc_level) == 3) {
@@ -6044,7 +6136,7 @@ static void mc_pre_clo_init(void)
    VG_(details_version)         (NULL);
    VG_(details_description)     ("a memory error detector");
    VG_(details_copyright_author)(
-      "Copyright (C) 2002-2010, and GNU GPL'd, by Julian Seward et al.");
+      "Copyright (C) 2002-2011, and GNU GPL'd, by Julian Seward et al.");
    VG_(details_bug_reports_to)  (VG_BUGS_TO);
    VG_(details_avg_translation_sizeB) ( 640 );
 

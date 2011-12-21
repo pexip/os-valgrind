@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2004-2010 OpenWorks LLP
+   Copyright (C) 2004-2011 OpenWorks LLP
       info@open-works.net
 
    This program is free software; you can redistribute it and/or
@@ -220,8 +220,10 @@ void ppIROp ( IROp op )
       case Iop_DivS32: vex_printf("DivS32"); return;
       case Iop_DivU64: vex_printf("DivU64"); return;
       case Iop_DivS64: vex_printf("DivS64"); return;
+      case Iop_DivU64E: vex_printf("DivU64E"); return;
       case Iop_DivS64E: vex_printf("DivS64E"); return;
       case Iop_DivU32E: vex_printf("DivU32E"); return;
+      case Iop_DivS32E: vex_printf("DivS32E"); return;
 
       case Iop_DivModU64to32: vex_printf("DivModU64to32"); return;
       case Iop_DivModS64to32: vex_printf("DivModS64to32"); return;
@@ -512,6 +514,8 @@ void ppIROp ( IROp op )
       case Iop_QNarrowBin16Sto8Ux8: vex_printf("QNarrowBin16Sto8Ux8"); return;
       case Iop_QNarrowBin16Sto8Sx8: vex_printf("QNarrowBin16Sto8Sx8"); return;
       case Iop_QNarrowBin32Sto16Sx4: vex_printf("QNarrowBin32Sto16Sx4"); return;
+      case Iop_NarrowBin16to8x8: vex_printf("NarrowBin16to8x8"); return;
+      case Iop_NarrowBin32to16x4: vex_printf("NarrowBin32to16x4"); return;
       case Iop_InterleaveHI8x8: vex_printf("InterleaveHI8x8"); return;
       case Iop_InterleaveHI16x4: vex_printf("InterleaveHI16x4"); return;
       case Iop_InterleaveHI32x2: vex_printf("InterleaveHI32x2"); return;
@@ -775,6 +779,7 @@ void ppIROp ( IROp op )
       case Iop_CmpEQ8x16:  vex_printf("CmpEQ8x16"); return;
       case Iop_CmpEQ16x8:  vex_printf("CmpEQ16x8"); return;
       case Iop_CmpEQ32x4:  vex_printf("CmpEQ32x4"); return;
+      case Iop_CmpEQ64x2:  vex_printf("CmpEQ64x2"); return;
       case Iop_CmpGT8Sx16: vex_printf("CmpGT8Sx16"); return;
       case Iop_CmpGT16Sx8: vex_printf("CmpGT16Sx8"); return;
       case Iop_CmpGT32Sx4: vex_printf("CmpGT32Sx4"); return;
@@ -1137,8 +1142,12 @@ void ppIRJumpKind ( IRJumpKind kind )
 void ppIRMBusEvent ( IRMBusEvent event )
 {
    switch (event) {
-      case Imbe_Fence: vex_printf("Fence"); break;
-      default:         vpanic("ppIRMBusEvent");
+      case Imbe_Fence:
+         vex_printf("Fence"); break;
+      case Imbe_CancelReservation:
+         vex_printf("CancelReservation"); break;
+      default:
+         vpanic("ppIRMBusEvent");
    }
 }
 
@@ -2059,6 +2068,7 @@ void typeOfPrimop ( IROp op,
       case Iop_PwAdd32Fx2:
       case Iop_QNarrowBin32Sto16Sx4:
       case Iop_QNarrowBin16Sto8Sx8: case Iop_QNarrowBin16Sto8Ux8:
+      case Iop_NarrowBin16to8x8: case Iop_NarrowBin32to16x4:
       case Iop_Sub8x8: case Iop_Sub16x4: case Iop_Sub32x2:
       case Iop_QSub8Sx8: case Iop_QSub16Sx4:
       case Iop_QSub32Sx2: case Iop_QSub64Sx1:
@@ -2164,10 +2174,10 @@ void typeOfPrimop ( IROp op,
       case Iop_Clz64: case Iop_Ctz64:
          UNARY(Ity_I64, Ity_I64);
 
-      case Iop_DivU32: case Iop_DivS32: case Iop_DivU32E:
+      case Iop_DivU32: case Iop_DivS32: case Iop_DivU32E: case Iop_DivS32E:
          BINARY(Ity_I32,Ity_I32, Ity_I32);
 
-      case Iop_DivU64: case Iop_DivS64: case Iop_DivS64E:
+      case Iop_DivU64: case Iop_DivS64: case Iop_DivS64E: case Iop_DivU64E:
          BINARY(Ity_I64,Ity_I64, Ity_I64);
 
       case Iop_DivModU64to32: case Iop_DivModS64to32:
@@ -2428,6 +2438,7 @@ void typeOfPrimop ( IROp op,
       case Iop_Min8Sx16: case Iop_Min16Sx8: case Iop_Min32Sx4:
       case Iop_Min8Ux16: case Iop_Min16Ux8: case Iop_Min32Ux4:
       case Iop_CmpEQ8x16:  case Iop_CmpEQ16x8:  case Iop_CmpEQ32x4:
+      case Iop_CmpEQ64x2:
       case Iop_CmpGT8Sx16: case Iop_CmpGT16Sx8: case Iop_CmpGT32Sx4:
       case Iop_CmpGT64Sx2:
       case Iop_CmpGT8Ux16: case Iop_CmpGT16Ux8: case Iop_CmpGT32Ux4:
@@ -3406,7 +3417,7 @@ void tcStmt ( IRSB* bb, IRStmt* stmt, IRType gWordTy )
          break;
       case Ist_MBE:
          switch (stmt->Ist.MBE.event) {
-            case Imbe_Fence:
+            case Imbe_Fence: case Imbe_CancelReservation:
                break;
             default: sanityCheckFail(bb,stmt,"IRStmt.MBE.event: unknown");
                break;

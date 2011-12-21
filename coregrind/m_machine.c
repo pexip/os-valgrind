@@ -6,7 +6,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2010 Julian Seward 
+   Copyright (C) 2000-2011 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -512,6 +512,7 @@ static UInt VG_(get_machine_model)(void)
       { "2097", VEX_S390X_MODEL_Z10_EC },
       { "2098", VEX_S390X_MODEL_Z10_BC },
       { "2817", VEX_S390X_MODEL_Z196 },
+      { "2818", VEX_S390X_MODEL_Z114 },
    };
 
    Int    model, n, fh;
@@ -586,7 +587,9 @@ static UInt VG_(get_machine_model)(void)
    }
 
    VG_(free)( file_buf );
-   VG_(debugLog)(1, "machine", "model = %s\n", model_map[model].name);
+   VG_(debugLog)(1, "machine", "model = %s\n",
+                 model == VEX_S390X_MODEL_INVALID ? "UNKNOWN"
+                                                  : model_map[model].name);
 
    return model;
 }

@@ -9,7 +9,7 @@
    This file is part of MemCheck, a heavyweight Valgrind tool for
    detecting memory errors.
 
-   Copyright (C) 2000-2010 Julian Seward 
+   Copyright (C) 2000-2011 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -93,6 +93,7 @@
    20320 STRPBRK
    20330 STRCSPN
    20340 STRSPN
+   20350 STRCASESTR
 */
 
 
@@ -140,7 +141,7 @@ static inline void my_exit ( int x )
    __asm__ __volatile__(".word 0xFFFFFFFF");
    while (1) {}
 #  else
-   extern void _exit(int status);
+   extern __attribute__ ((__noreturn__)) void _exit(int status);
    _exit(x);
 #  endif
 }
@@ -149,10 +150,12 @@ static inline void my_exit ( int x )
 // This is a macro rather than a function because we don't want to have an
 // extra function in the stack trace.
 #define RECORD_OVERLAP_ERROR(s, src, dst, len)                  \
-  VALGRIND_DO_CLIENT_REQUEST_EXPR(0,                            \
+  VALGRIND_DO_CLIENT_REQUEST_STMT(                              \
                   _VG_USERREQ__MEMCHECK_RECORD_OVERLAP_ERROR,   \
                   s, src, dst, len, 0)
 
+
+/*---------------------- strrchr ----------------------*/
 
 #define STRRCHR(soname, fnname) \
    char* VG_REPLACE_FUNCTION_EZU(20010,soname,fnname)( const char* s, int c ); \
@@ -169,16 +172,23 @@ static inline void my_exit ( int x )
    }
 
 // Apparently rindex() is the same thing as strrchr()
-STRRCHR(VG_Z_LIBC_SONAME,   strrchr)
-STRRCHR(VG_Z_LIBC_SONAME,   rindex)
 #if defined(VGO_linux)
-STRRCHR(VG_Z_LIBC_SONAME,   __GI_strrchr)
-STRRCHR(VG_Z_LD_LINUX_SO_2, rindex)
+ STRRCHR(VG_Z_LIBC_SONAME,   strrchr)
+ STRRCHR(VG_Z_LIBC_SONAME,   rindex)
+ STRRCHR(VG_Z_LIBC_SONAME,   __GI_strrchr)
+ STRRCHR(VG_Z_LD_LINUX_SO_2, rindex)
+
 #elif defined(VGO_darwin)
-STRRCHR(VG_Z_DYLD,          strrchr)
-STRRCHR(VG_Z_DYLD,          rindex)
+ //STRRCHR(VG_Z_LIBC_SONAME,   strrchr)
+ //STRRCHR(VG_Z_LIBC_SONAME,   rindex)
+ //STRRCHR(VG_Z_DYLD,          strrchr)
+ //STRRCHR(VG_Z_DYLD,          rindex)
+ STRRCHR(VG_Z_LIBC_SONAME, strrchr)
+
 #endif
    
+
+/*---------------------- strchr ----------------------*/
 
 #define STRCHR(soname, fnname) \
    char* VG_REPLACE_FUNCTION_EZU(20020,soname,fnname) ( const char* s, int c ); \
@@ -194,21 +204,28 @@ STRRCHR(VG_Z_DYLD,          rindex)
    }
 
 // Apparently index() is the same thing as strchr()
-STRCHR(VG_Z_LIBC_SONAME,          strchr)
-STRCHR(VG_Z_LIBC_SONAME,          index)
 #if defined(VGO_linux)
-STRCHR(VG_Z_LIBC_SONAME,          __GI_strchr)
-#if !defined(VGP_x86_linux)
- STRCHR(VG_Z_LD_LINUX_SO_2,        strchr)
- STRCHR(VG_Z_LD_LINUX_SO_2,        index)
- STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, strchr)
- STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, index)
-#endif
+ STRCHR(VG_Z_LIBC_SONAME,          strchr)
+ STRCHR(VG_Z_LIBC_SONAME,          index)
+ STRCHR(VG_Z_LIBC_SONAME,          __GI_strchr)
+# if !defined(VGP_x86_linux)
+  STRCHR(VG_Z_LD_LINUX_SO_2,        strchr)
+  STRCHR(VG_Z_LD_LINUX_SO_2,        index)
+  STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, strchr)
+  STRCHR(VG_Z_LD_LINUX_X86_64_SO_2, index)
+# endif
+
 #elif defined(VGO_darwin)
-STRCHR(VG_Z_DYLD,                 strchr)
-STRCHR(VG_Z_DYLD,                 index)
+ //STRCHR(VG_Z_LIBC_SONAME,          strchr)
+ //STRCHR(VG_Z_LIBC_SONAME,          index)
+ //STRCHR(VG_Z_DYLD,                 strchr)
+ //STRCHR(VG_Z_DYLD,                 index)
+ STRCHR(VG_Z_LIBC_SONAME, strchr)
+
 #endif
 
+
+/*---------------------- strcat ----------------------*/
 
 #define STRCAT(soname, fnname) \
    char* VG_REPLACE_FUNCTION_EZU(20030,soname,fnname) \
@@ -233,10 +250,17 @@ STRCHR(VG_Z_DYLD,                 index)
       return dst_orig; \
    }
 
-STRCAT(VG_Z_LIBC_SONAME, strcat)
 #if defined(VGO_linux)
-STRCAT(VG_Z_LIBC_SONAME, __GI_strcat)
+ STRCAT(VG_Z_LIBC_SONAME, strcat)
+ STRCAT(VG_Z_LIBC_SONAME, __GI_strcat)
+
+#elif defined(VGO_darwin)
+ //STRCAT(VG_Z_LIBC_SONAME, strcat)
+
 #endif
+
+
+/*---------------------- strncat ----------------------*/
 
 #define STRNCAT(soname, fnname) \
    char* VG_REPLACE_FUNCTION_EZU(20040,soname,fnname) \
@@ -263,11 +287,17 @@ STRCAT(VG_Z_LIBC_SONAME, __GI_strcat)
       return dst_orig; \
    }
 
-STRNCAT(VG_Z_LIBC_SONAME, strncat)
-#if defined(VGO_darwin)
-STRNCAT(VG_Z_DYLD,        strncat)
+#if defined(VGO_linux)
+ STRNCAT(VG_Z_LIBC_SONAME, strncat)
+
+#elif defined(VGO_darwin)
+ //STRNCAT(VG_Z_LIBC_SONAME, strncat)
+ //STRNCAT(VG_Z_DYLD,        strncat)
+
 #endif
 
+
+/*---------------------- strlcat ----------------------*/
 
 /* Append src to dst. n is the size of dst's buffer. dst is guaranteed 
    to be nul-terminated after the copy, unless n <= strlen(dst_orig). 
@@ -305,11 +335,17 @@ STRNCAT(VG_Z_DYLD,        strncat)
       return m; \
    }
 
-#if defined(VGO_darwin)
-STRLCAT(VG_Z_LIBC_SONAME, strlcat)
-STRLCAT(VG_Z_DYLD,        strlcat)
+#if defined(VGO_linux)
+
+#elif defined(VGO_darwin)
+ //STRLCAT(VG_Z_LIBC_SONAME, strlcat)
+ //STRLCAT(VG_Z_DYLD,        strlcat)
+ STRLCAT(VG_Z_LIBC_SONAME, strlcat)
+
 #endif
 
+
+/*---------------------- strnlen ----------------------*/
 
 #define STRNLEN(soname, fnname) \
    SizeT VG_REPLACE_FUNCTION_EZU(20060,soname,fnname) \
@@ -322,16 +358,23 @@ STRLCAT(VG_Z_DYLD,        strlcat)
       return i; \
    }
 
-STRNLEN(VG_Z_LIBC_SONAME, strnlen)
 #if defined(VGO_linux)
-STRNLEN(VG_Z_LIBC_SONAME, __GI_strnlen)
+ STRNLEN(VG_Z_LIBC_SONAME, strnlen)
+ STRNLEN(VG_Z_LIBC_SONAME, __GI_strnlen)
+
+#elif defined(VGO_darwin)
+ //STRNLEN(VG_Z_LIBC_SONAME, strnlen)
+
 #endif
    
 
+/*---------------------- strlen ----------------------*/
+
 // Note that this replacement often doesn't get used because gcc inlines
 // calls to strlen() with its own built-in version.  This can be very
-// confusing if you aren't expecting it.  Other small functions in this file
-// may also be inline by gcc.
+// confusing if you aren't expecting it.  Other small functions in
+// this file may also be inline by gcc.
+
 #define STRLEN(soname, fnname) \
    SizeT VG_REPLACE_FUNCTION_EZU(20070,soname,fnname) \
       ( const char* str ); \
@@ -343,11 +386,21 @@ STRNLEN(VG_Z_LIBC_SONAME, __GI_strnlen)
       return i; \
    }
 
-STRLEN(VG_Z_LIBC_SONAME,          strlen)
 #if defined(VGO_linux)
-STRLEN(VG_Z_LIBC_SONAME,          __GI_strlen)
+ STRLEN(VG_Z_LIBC_SONAME,          strlen)
+ STRLEN(VG_Z_LIBC_SONAME,          __GI_strlen)
+# if defined(VGPV_arm_linux_android)
+  STRLEN(NONE, __dl_strlen); /* in /system/bin/linker */
+# endif
+
+#elif defined(VGO_darwin)
+ //STRLEN(VG_Z_LIBC_SONAME,          strlen)
+ STRLEN(VG_Z_LIBC_SONAME, strlen)
+
 #endif
 
+
+/*---------------------- strcpy ----------------------*/
 
 #define STRCPY(soname, fnname) \
    char* VG_REPLACE_FUNCTION_EZU(20080,soname,fnname) \
@@ -372,13 +425,19 @@ STRLEN(VG_Z_LIBC_SONAME,          __GI_strlen)
       return dst_orig; \
    }
 
-STRCPY(VG_Z_LIBC_SONAME, strcpy)
 #if defined(VGO_linux)
-STRCPY(VG_Z_LIBC_SONAME, __GI_strcpy)
+ STRCPY(VG_Z_LIBC_SONAME, strcpy)
+ STRCPY(VG_Z_LIBC_SONAME, __GI_strcpy)
+
 #elif defined(VGO_darwin)
-STRCPY(VG_Z_DYLD,        strcpy)
+ //STRCPY(VG_Z_LIBC_SONAME, strcpy)
+ //STRCPY(VG_Z_DYLD,        strcpy)
+ STRCPY(VG_Z_LIBC_SONAME, strcpy)
+
 #endif
 
+
+/*---------------------- strncpy ----------------------*/
 
 #define STRNCPY(soname, fnname) \
    char* VG_REPLACE_FUNCTION_EZU(20090,soname,fnname) \
@@ -396,17 +455,23 @@ STRCPY(VG_Z_DYLD,        strcpy)
       if (is_overlap(dst_orig, src_orig, n, (m < n) ? m+1 : n)) \
          RECORD_OVERLAP_ERROR("strncpy", dst, src, n); \
       while (m++ < n) *dst++ = 0;         /* must pad remainder with nulls */ \
- \
+      \
       return dst_orig; \
    }
 
-STRNCPY(VG_Z_LIBC_SONAME, strncpy)
 #if defined(VGO_linux)
-STRNCPY(VG_Z_LIBC_SONAME, __GI_strncpy)
+ STRNCPY(VG_Z_LIBC_SONAME, strncpy)
+ STRNCPY(VG_Z_LIBC_SONAME, __GI_strncpy)
+
 #elif defined(VGO_darwin)
-STRNCPY(VG_Z_DYLD,        strncpy)
+ //STRNCPY(VG_Z_LIBC_SONAME, strncpy)
+ //STRNCPY(VG_Z_DYLD,        strncpy)
+ STRNCPY(VG_Z_LIBC_SONAME, strncpy)
+
 #endif
 
+
+/*---------------------- strlcpy ----------------------*/
 
 /* Copy up to n-1 bytes from src to dst. Then nul-terminate dst if n > 0. 
    Returns strlen(src). Does not zero-fill the remainder of dst. */
@@ -433,11 +498,17 @@ STRNCPY(VG_Z_DYLD,        strncpy)
       return src - src_orig; \
    }
 
-#if defined(VGO_darwin)
-STRLCPY(VG_Z_LIBC_SONAME, strlcpy)
-STRLCPY(VG_Z_DYLD,        strlcpy)
+#if defined(VGO_linux)
+
+#elif defined(VGO_darwin)
+ //STRLCPY(VG_Z_LIBC_SONAME, strlcpy)
+ //STRLCPY(VG_Z_DYLD,        strlcpy)
+ STRLCPY(VG_Z_LIBC_SONAME, strlcpy)
+
 #endif
 
+
+/*---------------------- strncmp ----------------------*/
 
 #define STRNCMP(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20110,soname,fnname) \
@@ -459,13 +530,19 @@ STRLCPY(VG_Z_DYLD,        strlcpy)
       } \
    }
 
-STRNCMP(VG_Z_LIBC_SONAME, strncmp)
 #if defined(VGO_linux)
-STRNCMP(VG_Z_LIBC_SONAME, __GI_strncmp)
+ STRNCMP(VG_Z_LIBC_SONAME, strncmp)
+ STRNCMP(VG_Z_LIBC_SONAME, __GI_strncmp)
+
 #elif defined(VGO_darwin)
-STRNCMP(VG_Z_DYLD,        strncmp)
+ //STRNCMP(VG_Z_LIBC_SONAME, strncmp)
+ //STRNCMP(VG_Z_DYLD,        strncmp)
+ STRNCMP(VG_Z_LIBC_SONAME,        strncmp)
+
 #endif
 
+
+/*---------------------- strcasecmp ----------------------*/
 
 #define STRCASECMP(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20120,soname,fnname) \
@@ -488,13 +565,19 @@ STRNCMP(VG_Z_DYLD,        strncmp)
       return 0; \
    }
 
-#if !defined(VGPV_arm_linux_android)
-STRCASECMP(VG_Z_LIBC_SONAME, strcasecmp)
-#endif
-#if defined(VGO_linux) && !defined(VGPV_arm_linux_android)
-STRCASECMP(VG_Z_LIBC_SONAME, __GI_strcasecmp)
+#if defined(VGO_linux)
+# if !defined(VGPV_arm_linux_android)
+  STRCASECMP(VG_Z_LIBC_SONAME, strcasecmp)
+  STRCASECMP(VG_Z_LIBC_SONAME, __GI_strcasecmp)
+# endif
+
+#elif defined(VGO_darwin)
+ //STRCASECMP(VG_Z_LIBC_SONAME, strcasecmp)
+
 #endif
 
+
+/*---------------------- strncasecmp ----------------------*/
 
 #define STRNCASECMP(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20130,soname,fnname) \
@@ -519,15 +602,20 @@ STRCASECMP(VG_Z_LIBC_SONAME, __GI_strcasecmp)
       } \
    }
 
-#if !defined(VGPV_arm_linux_android)
-STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
-#endif
-#if defined(VGO_linux) && !defined(VGPV_arm_linux_android)
-STRNCASECMP(VG_Z_LIBC_SONAME, __GI_strncasecmp)
+#if defined(VGO_linux)
+# if !defined(VGPV_arm_linux_android)
+  STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
+  STRNCASECMP(VG_Z_LIBC_SONAME, __GI_strncasecmp)
+# endif
+
 #elif defined(VGO_darwin)
-STRNCASECMP(VG_Z_DYLD,        strncasecmp)
+ //STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
+ //STRNCASECMP(VG_Z_DYLD,        strncasecmp)
+
 #endif
 
+
+/*---------------------- strcasecmp_l ----------------------*/
 
 #define STRCASECMP_L(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20140,soname,fnname) \
@@ -535,7 +623,7 @@ STRNCASECMP(VG_Z_DYLD,        strncasecmp)
    int VG_REPLACE_FUNCTION_EZU(20140,soname,fnname) \
           ( const char* s1, const char* s2, void* locale ) \
    { \
-      extern int tolower_l(int, void*) __attribute__((weak));    \
+      extern int tolower_l(int, void*) __attribute__((weak)); \
       register unsigned char c1; \
       register unsigned char c2; \
       while (True) { \
@@ -550,12 +638,18 @@ STRNCASECMP(VG_Z_DYLD,        strncasecmp)
       return 0; \
    }
 
-STRCASECMP_L(VG_Z_LIBC_SONAME, strcasecmp_l)
 #if defined(VGO_linux)
-STRCASECMP_L(VG_Z_LIBC_SONAME, __GI_strcasecmp_l)
-STRCASECMP_L(VG_Z_LIBC_SONAME, __GI___strcasecmp_l)
+ STRCASECMP_L(VG_Z_LIBC_SONAME, strcasecmp_l)
+ STRCASECMP_L(VG_Z_LIBC_SONAME, __GI_strcasecmp_l)
+ STRCASECMP_L(VG_Z_LIBC_SONAME, __GI___strcasecmp_l)
+
+#elif defined(VGO_darwin)
+ //STRCASECMP_L(VG_Z_LIBC_SONAME, strcasecmp_l)
+
 #endif
 
+
+/*---------------------- strncasecmp_l ----------------------*/
 
 #define STRNCASECMP_L(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20150,soname,fnname) \
@@ -580,13 +674,18 @@ STRCASECMP_L(VG_Z_LIBC_SONAME, __GI___strcasecmp_l)
       } \
    }
 
-STRNCASECMP_L(VG_Z_LIBC_SONAME, strncasecmp_l)
 #if defined(VGO_linux)
-STRNCASECMP_L(VG_Z_LIBC_SONAME, __GI_strncasecmp_l)
+ STRNCASECMP_L(VG_Z_LIBC_SONAME, strncasecmp_l)
+ STRNCASECMP_L(VG_Z_LIBC_SONAME, __GI_strncasecmp_l)
+
 #elif defined(VGO_darwin)
-STRNCASECMP_L(VG_Z_DYLD,        strncasecmp_l)
+ //STRNCASECMP_L(VG_Z_LIBC_SONAME, strncasecmp_l)
+ //STRNCASECMP_L(VG_Z_DYLD,        strncasecmp_l)
+
 #endif
 
+
+/*---------------------- strcmp ----------------------*/
 
 #define STRCMP(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20160,soname,fnname) \
@@ -608,13 +707,23 @@ STRNCASECMP_L(VG_Z_DYLD,        strncasecmp_l)
       return 0; \
    }
 
-STRCMP(VG_Z_LIBC_SONAME,          strcmp)
 #if defined(VGO_linux)
-STRCMP(VG_Z_LIBC_SONAME,          __GI_strcmp)
-STRCMP(VG_Z_LD_LINUX_X86_64_SO_2, strcmp)
-STRCMP(VG_Z_LD64_SO_1,            strcmp)
+ STRCMP(VG_Z_LIBC_SONAME,          strcmp)
+ STRCMP(VG_Z_LIBC_SONAME,          __GI_strcmp)
+ STRCMP(VG_Z_LD_LINUX_X86_64_SO_2, strcmp)
+ STRCMP(VG_Z_LD64_SO_1,            strcmp)
+# if defined(VGPV_arm_linux_android)
+  STRCMP(NONE, __dl_strcmp); /* in /system/bin/linker */
+# endif
+
+#elif defined(VGO_darwin)
+ //STRCMP(VG_Z_LIBC_SONAME,          strcmp)
+ STRCMP(VG_Z_LIBC_SONAME, strcmp)
+
 #endif
 
+
+/*---------------------- memchr ----------------------*/
 
 #define MEMCHR(soname, fnname) \
    void* VG_REPLACE_FUNCTION_EZU(20170,soname,fnname) \
@@ -630,11 +739,17 @@ STRCMP(VG_Z_LD64_SO_1,            strcmp)
       return NULL; \
    }
 
-MEMCHR(VG_Z_LIBC_SONAME, memchr)
-#if defined(VGO_darwin)
-MEMCHR(VG_Z_DYLD,        memchr)
+#if defined(VGO_linux)
+ MEMCHR(VG_Z_LIBC_SONAME, memchr)
+
+#elif defined(VGO_darwin)
+ //MEMCHR(VG_Z_LIBC_SONAME, memchr)
+ //MEMCHR(VG_Z_DYLD,        memchr)
+
 #endif
 
+
+/*---------------------- memcpy ----------------------*/
 
 #define MEMMOVE_OR_MEMCPY(becTag, soname, fnname, do_ol_check)  \
    void* VG_REPLACE_FUNCTION_EZZ(becTag,soname,fnname) \
@@ -716,27 +831,33 @@ MEMCHR(VG_Z_DYLD,        memchr)
    MEMMOVE_OR_MEMCPY(20180, soname, fnname, 1)
 
 #if defined(VGO_linux)
-/* For older memcpy we have to use memmove-like semantics and skip the
-   overlap check; sigh; see #275284. */
-MEMMOVE(VG_Z_LIBC_SONAME, memcpyZAGLIBCZu2Zd2Zd5) /* memcpy@GLIBC_2.2.5 */
-MEMCPY(VG_Z_LIBC_SONAME,  memcpyZAZAGLIBCZu2Zd14) /* memcpy@@GLIBC_2.14 */
-MEMCPY(VG_Z_LIBC_SONAME,  memcpy) /* fallback case */
-MEMCPY(VG_Z_LD_SO_1,      memcpy) /* ld.so.1 */
-MEMCPY(VG_Z_LD64_SO_1,    memcpy) /* ld64.so.1 */
-#elif defined(VGO_darwin)
-MEMCPY(VG_Z_LIBC_SONAME,  memcpy)
-MEMCPY(VG_Z_DYLD,         memcpy)
-#endif
-/* icc9 blats these around all over the place.  Not only in the main
-   executable but various .so's.  They are highly tuned and read
-   memory beyond the source boundary (although work correctly and
-   never go across page boundaries), so give errors when run natively,
-   at least for misaligned source arg.  Just intercepting in the exe
-   only until we understand more about the problem.  See
-   http://bugs.kde.org/show_bug.cgi?id=139776
+ /* For older memcpy we have to use memmove-like semantics and skip
+    the overlap check; sigh; see #275284. */
+ MEMMOVE(VG_Z_LIBC_SONAME, memcpyZAGLIBCZu2Zd2Zd5) /* memcpy@GLIBC_2.2.5 */
+ MEMCPY(VG_Z_LIBC_SONAME,  memcpyZAZAGLIBCZu2Zd14) /* memcpy@@GLIBC_2.14 */
+ MEMCPY(VG_Z_LIBC_SONAME,  memcpy) /* fallback case */
+ MEMCPY(VG_Z_LD_SO_1,      memcpy) /* ld.so.1 */
+ MEMCPY(VG_Z_LD64_SO_1,    memcpy) /* ld64.so.1 */
+ /* icc9 blats these around all over the place.  Not only in the main
+    executable but various .so's.  They are highly tuned and read
+    memory beyond the source boundary (although work correctly and
+    never go across page boundaries), so give errors when run
+    natively, at least for misaligned source arg.  Just intercepting
+    in the exe only until we understand more about the problem.  See
+    http://bugs.kde.org/show_bug.cgi?id=139776
  */
-MEMCPY(NONE, ZuintelZufastZumemcpy)
+ MEMCPY(NONE, ZuintelZufastZumemcpy)
 
+#elif defined(VGO_darwin)
+ //MEMCPY(VG_Z_LIBC_SONAME,  memcpy)
+ //MEMCPY(VG_Z_DYLD,         memcpy)
+ MEMCPY(VG_Z_LIBC_SONAME,  memcpyZDVARIANTZDsse3x) /* memcpy$VARIANT$sse3x */
+ MEMCPY(VG_Z_LIBC_SONAME,  memcpyZDVARIANTZDsse42) /* memcpy$VARIANT$sse42 */
+
+#endif
+
+
+/*---------------------- memcmp ----------------------*/
 
 #define MEMCMP(soname, fnname) \
    int VG_REPLACE_FUNCTION_EZU(20190,soname,fnname)       \
@@ -763,15 +884,21 @@ MEMCPY(NONE, ZuintelZufastZumemcpy)
       return 0; \
    }
 
-MEMCMP(VG_Z_LIBC_SONAME, memcmp)
-MEMCMP(VG_Z_LIBC_SONAME, bcmp)
 #if defined(VGO_linux)
-MEMCMP(VG_Z_LD_SO_1,     bcmp)
+ MEMCMP(VG_Z_LIBC_SONAME, memcmp)
+ MEMCMP(VG_Z_LIBC_SONAME, bcmp)
+ MEMCMP(VG_Z_LD_SO_1,     bcmp)
+
 #elif defined(VGO_darwin)
-MEMCMP(VG_Z_DYLD,        memcmp)
-MEMCMP(VG_Z_DYLD,        bcmp)
+ //MEMCMP(VG_Z_LIBC_SONAME, memcmp)
+ //MEMCMP(VG_Z_LIBC_SONAME, bcmp)
+ //MEMCMP(VG_Z_DYLD,        memcmp)
+ //MEMCMP(VG_Z_DYLD,        bcmp)
+
 #endif
 
+
+/*---------------------- stpcpy ----------------------*/
 
 /* Copy SRC to DEST, returning the address of the terminating '\0' in
    DEST. (minor variant of strcpy) */
@@ -798,15 +925,23 @@ MEMCMP(VG_Z_DYLD,        bcmp)
       return dst; \
    }
 
-STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
 #if defined(VGO_linux)
-STPCPY(VG_Z_LIBC_SONAME,          __GI_stpcpy)
-STPCPY(VG_Z_LD_LINUX_SO_2,        stpcpy)
-STPCPY(VG_Z_LD_LINUX_X86_64_SO_2, stpcpy)
+ STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
+ STPCPY(VG_Z_LIBC_SONAME,          __GI_stpcpy)
+ STPCPY(VG_Z_LD_LINUX_SO_2,        stpcpy)
+ STPCPY(VG_Z_LD_LINUX_X86_64_SO_2, stpcpy)
+
 #elif defined(VGO_darwin)
-STPCPY(VG_Z_DYLD,                 stpcpy)
+ //STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
+ //STPCPY(VG_Z_DYLD,                 stpcpy)
+
 #endif
 
+
+/*---------------------- memset ----------------------*/
+
+/* Why are we bothering to intercept this?  It seems entirely
+   pointless. */
 
 #define MEMSET(soname, fnname) \
    void* VG_REPLACE_FUNCTION_EZU(20210,soname,fnname) \
@@ -827,18 +962,34 @@ STPCPY(VG_Z_DYLD,                 stpcpy)
       return s; \
    }
 
-MEMSET(VG_Z_LIBC_SONAME, memset)
-#if defined(VGO_darwin)
-MEMSET(VG_Z_DYLD,        memset)
+#if defined(VGO_linux)
+ MEMSET(VG_Z_LIBC_SONAME, memset)
+
+#elif defined(VGO_darwin)
+ //MEMSET(VG_Z_LIBC_SONAME, memset)
+ //MEMSET(VG_Z_DYLD,        memset)
+ MEMSET(VG_Z_LIBC_SONAME, memset)
+
 #endif
 
+
+/*---------------------- memmove ----------------------*/
 
 /* memmove -- use the MEMMOVE defn above. */
-MEMMOVE(VG_Z_LIBC_SONAME, memmove)
-#if defined(VGO_darwin)
-MEMMOVE(VG_Z_DYLD,        memmove)
+
+#if defined(VGO_linux)
+ MEMMOVE(VG_Z_LIBC_SONAME, memmove)
+
+#elif defined(VGO_darwin)
+ //MEMMOVE(VG_Z_LIBC_SONAME, memmove)
+ //MEMMOVE(VG_Z_DYLD,        memmove)#
+ MEMMOVE(VG_Z_LIBC_SONAME,  memmoveZDVARIANTZDsse3x) /* memmove$VARIANT$sse3x */
+ MEMMOVE(VG_Z_LIBC_SONAME,  memmoveZDVARIANTZDsse42) /* memmove$VARIANT$sse42 */
+
 #endif
 
+
+/*---------------------- bcopy ----------------------*/
 
 #define BCOPY(soname, fnname) \
    void VG_REPLACE_FUNCTION_EZU(20230,soname,fnname) \
@@ -860,11 +1011,16 @@ MEMMOVE(VG_Z_DYLD,        memmove)
       } \
    }
 
-#if defined(VGO_darwin)
-BCOPY(VG_Z_LIBC_SONAME, bcopy)
-BCOPY(VG_Z_DYLD,        bcopy)
+#if defined(VGO_linux)
+
+#elif defined(VGO_darwin)
+ //BCOPY(VG_Z_LIBC_SONAME, bcopy)
+ //BCOPY(VG_Z_DYLD,        bcopy)
+
 #endif
 
+
+/*-------------------- memmove_chk --------------------*/
 
 /* glibc 2.5 variant of memmove which checks the dest is big enough.
    There is no specific part of glibc that this is copied from. */
@@ -898,8 +1054,15 @@ BCOPY(VG_Z_DYLD,        bcopy)
      return NULL; \
    }
 
-GLIBC25___MEMMOVE_CHK(VG_Z_LIBC_SONAME, __memmove_chk)
+#if defined(VGO_linux)
+ GLIBC25___MEMMOVE_CHK(VG_Z_LIBC_SONAME, __memmove_chk)
 
+#elif defined(VGO_darwin)
+
+#endif
+
+
+/*-------------------- strchrnul --------------------*/
 
 /* Find the first occurrence of C in S or the final NUL byte.  */
 #define GLIBC232_STRCHRNUL(soname, fnname) \
@@ -917,8 +1080,15 @@ GLIBC25___MEMMOVE_CHK(VG_Z_LIBC_SONAME, __memmove_chk)
       } \
    }
 
-GLIBC232_STRCHRNUL(VG_Z_LIBC_SONAME, strchrnul)
+#if defined(VGO_linux)
+ GLIBC232_STRCHRNUL(VG_Z_LIBC_SONAME, strchrnul)
 
+#elif defined(VGO_darwin)
+
+#endif
+
+
+/*---------------------- rawmemchr ----------------------*/
 
 /* Find the first occurrence of C in S.  */
 #define GLIBC232_RAWMEMCHR(soname, fnname) \
@@ -935,10 +1105,16 @@ GLIBC232_STRCHRNUL(VG_Z_LIBC_SONAME, strchrnul)
       } \
    }
 
-GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, rawmemchr)
 #if defined (VGO_linux)
-GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, __GI___rawmemchr)
+ GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, rawmemchr)
+ GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, __GI___rawmemchr)
+
+#elif defined(VGO_darwin)
+
 #endif
+
+
+/*---------------------- strcpy_chk ----------------------*/
 
 /* glibc variant of strcpy that checks the dest is big enough.
    Copied from glibc-2.5/debug/test-strcpy_chk.c. */
@@ -964,8 +1140,15 @@ GLIBC232_RAWMEMCHR(VG_Z_LIBC_SONAME, __GI___rawmemchr)
      return NULL; \
    }
 
-GLIBC25___STRCPY_CHK(VG_Z_LIBC_SONAME, __strcpy_chk)
+#if defined(VGO_linux)
+ GLIBC25___STRCPY_CHK(VG_Z_LIBC_SONAME, __strcpy_chk)
 
+#elif defined(VGO_darwin)
+
+#endif
+
+
+/*---------------------- stpcpy_chk ----------------------*/
 
 /* glibc variant of stpcpy that checks the dest is big enough.
    Copied from glibc-2.5/debug/test-stpcpy_chk.c. */
@@ -990,8 +1173,15 @@ GLIBC25___STRCPY_CHK(VG_Z_LIBC_SONAME, __strcpy_chk)
      return NULL; \
    }
 
-GLIBC25___STPCPY_CHK(VG_Z_LIBC_SONAME, __stpcpy_chk)
+#if defined(VGO_linux)
+ GLIBC25___STPCPY_CHK(VG_Z_LIBC_SONAME, __stpcpy_chk)
 
+#elif defined(VGO_darwin)
+
+#endif
+
+
+/*---------------------- mempcpy ----------------------*/
 
 /* mempcpy */
 #define GLIBC25_MEMPCPY(soname, fnname) \
@@ -1026,11 +1216,17 @@ GLIBC25___STPCPY_CHK(VG_Z_LIBC_SONAME, __stpcpy_chk)
       return (void*)( ((char*)dst) + len_saved ); \
    }
 
-GLIBC25_MEMPCPY(VG_Z_LIBC_SONAME, mempcpy)
 #if defined(VGO_linux)
-GLIBC25_MEMPCPY(VG_Z_LD_SO_1,     mempcpy) /* ld.so.1 */
+ GLIBC25_MEMPCPY(VG_Z_LIBC_SONAME, mempcpy)
+ GLIBC25_MEMPCPY(VG_Z_LD_SO_1,     mempcpy) /* ld.so.1 */
+
+#elif defined(VGO_darwin)
+ //GLIBC25_MEMPCPY(VG_Z_LIBC_SONAME, mempcpy)
+
 #endif
 
+
+/*-------------------- memcpy_chk --------------------*/
 
 #define GLIBC26___MEMCPY_CHK(soname, fnname) \
    void* VG_REPLACE_FUNCTION_EZU(20300,soname,fnname) \
@@ -1072,8 +1268,15 @@ GLIBC25_MEMPCPY(VG_Z_LD_SO_1,     mempcpy) /* ld.so.1 */
      return NULL; \
    }
 
-GLIBC26___MEMCPY_CHK(VG_Z_LIBC_SONAME, __memcpy_chk)
+#if defined(VGO_linux)
+ GLIBC26___MEMCPY_CHK(VG_Z_LIBC_SONAME, __memcpy_chk)
 
+#elif defined(VGO_darwin)
+
+#endif
+
+
+/*---------------------- strstr ----------------------*/
 
 #define STRSTR(soname, fnname) \
    void* VG_REPLACE_FUNCTION_EZU(20310,soname,fnname) \
@@ -1113,9 +1316,14 @@ GLIBC26___MEMCPY_CHK(VG_Z_LIBC_SONAME, __memcpy_chk)
    }
 
 #if defined(VGO_linux)
-STRSTR(VG_Z_LIBC_SONAME,          strstr)
+ STRSTR(VG_Z_LIBC_SONAME,          strstr)
+
+#elif defined(VGO_darwin)
+
 #endif
 
+
+/*---------------------- strpbrk ----------------------*/
 
 #define STRPBRK(soname, fnname) \
    void* VG_REPLACE_FUNCTION_EZU(20320,soname,fnname) \
@@ -1150,9 +1358,14 @@ STRSTR(VG_Z_LIBC_SONAME,          strstr)
    }
 
 #if defined(VGO_linux)
-STRPBRK(VG_Z_LIBC_SONAME,          strpbrk)
+ STRPBRK(VG_Z_LIBC_SONAME,          strpbrk)
+
+#elif defined(VGO_darwin)
+
 #endif
 
+
+/*---------------------- strcspn ----------------------*/
 
 #define STRCSPN(soname, fnname) \
    SizeT VG_REPLACE_FUNCTION_EZU(20330,soname,fnname) \
@@ -1188,9 +1401,14 @@ STRPBRK(VG_Z_LIBC_SONAME,          strpbrk)
    }
 
 #if defined(VGO_linux)
-STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
+ STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
+
+#elif defined(VGO_darwin)
+
 #endif
 
+
+/*---------------------- strspn ----------------------*/
 
 #define STRSPN(soname, fnname) \
    SizeT VG_REPLACE_FUNCTION_EZU(20340,soname,fnname) \
@@ -1227,7 +1445,60 @@ STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
    }
 
 #if defined(VGO_linux)
-STRSPN(VG_Z_LIBC_SONAME,          strspn)
+ STRSPN(VG_Z_LIBC_SONAME,          strspn)
+
+#elif defined(VGO_darwin)
+
+#endif
+
+
+/*---------------------- strcasestr ----------------------*/
+
+#define STRCASESTR(soname, fnname) \
+   void* VG_REPLACE_FUNCTION_EZU(20350,soname,fnname) \
+         (void* haystack, void* needle); \
+   void* VG_REPLACE_FUNCTION_EZU(20350,soname,fnname) \
+         (void* haystack, void* needle) \
+   { \
+      extern int tolower(int); \
+      UChar* h = (UChar*)haystack; \
+      UChar* n = (UChar*)needle; \
+      \
+      /* find the length of n, not including terminating zero */ \
+      UWord nlen = 0; \
+      while (n[nlen]) nlen++; \
+      \
+      /* if n is the empty string, match immediately. */ \
+      if (nlen == 0) return h; \
+      \
+      /* assert(nlen >= 1); */ \
+      UChar n0 = tolower(n[0]);                 \
+      \
+      while (1) { \
+         UChar hh = tolower(*h);    \
+         if (hh == 0) return NULL; \
+         if (hh != n0) { h++; continue; } \
+         \
+         UWord i; \
+         for (i = 0; i < nlen; i++) { \
+            if (tolower(n[i]) != tolower(h[i]))  \
+               break; \
+         } \
+         /* assert(i >= 0 && i <= nlen); */ \
+         if (i == nlen) \
+            return h; \
+         \
+         h++; \
+      } \
+   }
+
+#if defined(VGO_linux)
+# if !defined(VGPV_arm_linux_android)
+  STRCASESTR(VG_Z_LIBC_SONAME,      strcasestr)
+# endif
+
+#elif defined(VGO_darwin)
+
 #endif
 
 
@@ -1241,7 +1512,8 @@ STRSPN(VG_Z_LIBC_SONAME,          strspn)
    versions of each function exist (as above), use the _EZU variants
    to assign equivalance class tags. */
 
-/* putenv */
+/*---------------------- putenv ----------------------*/
+
 int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, putenv) (char* string);
 int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, putenv) (char* string)
 {
@@ -1253,12 +1525,14 @@ int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, putenv) (char* string)
        traces when hitting undefined memory. */
     if (p)
         while (*p++)
-            ;
+            __asm__ __volatile__("" ::: "memory");
     CALL_FN_W_W(result, fn, string);
     return result;
 }
 
-/* unsetenv */
+
+/*---------------------- unsetenv ----------------------*/
+
 int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, unsetenv) (const char* name);
 int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, unsetenv) (const char* name)
 {
@@ -1270,10 +1544,13 @@ int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, unsetenv) (const char* name)
        traces when hitting undefined memory. */
     if (p)
         while (*p++)
-            ;
+            __asm__ __volatile__("" ::: "memory");
     CALL_FN_W_W(result, fn, name);
     return result;
 }
+
+
+/*---------------------- setenv ----------------------*/
 
 /* setenv */
 int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, setenv)
@@ -1289,10 +1566,10 @@ int VG_WRAP_FUNCTION_ZU(VG_Z_LIBC_SONAME, setenv)
        traces when hitting undefined memory. */
     if (name)
         for (p = name; *p; p++)
-            ;
+            __asm__ __volatile__("" ::: "memory");
     if (value)
         for (p = value; *p; p++)
-            ;
+            __asm__ __volatile__("" ::: "memory");
     VALGRIND_CHECK_VALUE_IS_DEFINED (overwrite);
     CALL_FN_W_WWW(result, fn, name, value, overwrite);
     return result;

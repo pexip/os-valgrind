@@ -8,7 +8,7 @@
    This file is part of Helgrind, a Valgrind tool for detecting errors
    in threaded programs.
 
-   Copyright (C) 2007-2010 OpenWorks Ltd
+   Copyright (C) 2007-2011 OpenWorks Ltd
       info@open-works.co.uk
 
    This program is free software; you can redistribute it and/or
@@ -755,13 +755,6 @@ static void emit ( HChar* format, ... )
    emit_WRK(format, vargs);
    va_end(vargs);
 }
-static void emit_no_f_c ( HChar* format, ... )
-{
-   va_list vargs;
-   va_start(vargs, format);
-   emit_WRK(format, vargs);
-   va_end(vargs);
-}
 
 
 /* Announce (that is, print the point-of-creation) of 'thr'.  Only do
@@ -942,6 +935,9 @@ void HG_(pp_Error) ( Error* err )
    XError *xe = (XError*)VG_(get_error_extra)(err);
    tl_assert(xe);
 
+   if (xml)
+      emit( "  <kind>%s</kind>\n", HG_(get_error_name)(err));
+
    switch (VG_(get_error_kind)(err)) {
 
    case XE_Misc: {
@@ -949,7 +945,6 @@ void HG_(pp_Error) ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>Misc</kind>\n");
          emit( "  <xwhat>\n" );
          emit( "    <text>Thread #%d: %s</text>\n",
                (Int)xe->XE.Misc.thr->errmsg_index,
@@ -985,7 +980,6 @@ void HG_(pp_Error) ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>LockOrder</kind>\n");
          emit( "  <xwhat>\n" );
          emit( "    <text>Thread #%d: lock order \"%p before %p\" "
                     "violated</text>\n",
@@ -1050,10 +1044,9 @@ void HG_(pp_Error) ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>PthAPIerror</kind>\n");
          emit( "  <xwhat>\n" );
-         emit_no_f_c(
-            "    <text>Thread #%d's call to %t failed</text>\n",
+         emit(
+            "    <text>Thread #%d's call to %pS failed</text>\n",
             (Int)xe->XE.PthAPIerror.thr->errmsg_index,
             xe->XE.PthAPIerror.fnname );
          emit( "    <hthreadid>%d</hthreadid>\n",
@@ -1065,7 +1058,7 @@ void HG_(pp_Error) ( Error* err )
 
       } else {
 
-         emit_no_f_c( "Thread #%d's call to %t failed\n",
+         emit( "Thread #%d's call to %pS failed\n",
                       (Int)xe->XE.PthAPIerror.thr->errmsg_index,
                       xe->XE.PthAPIerror.fnname );
          emit( "   with error code %ld (%s)\n",
@@ -1082,7 +1075,6 @@ void HG_(pp_Error) ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>UnlockBogus</kind>\n");
          emit( "  <xwhat>\n" );
          emit( "    <text>Thread #%d unlocked an invalid "
                     "lock at %p</text>\n",
@@ -1112,7 +1104,6 @@ void HG_(pp_Error) ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>UnlockForeign</kind>\n");
          emit( "  <xwhat>\n" );
          emit( "    <text>Thread #%d unlocked lock at %p "
                     "currently held by thread #%d</text>\n",
@@ -1157,7 +1148,6 @@ void HG_(pp_Error) ( Error* err )
 
       if (xml) {
 
-         emit( "  <kind>UnlockUnlocked</kind>\n");
          emit( "  <xwhat>\n" );
          emit( "    <text>Thread #%d unlocked a "
                     "not-locked lock at %p</text>\n",
@@ -1205,7 +1195,6 @@ void HG_(pp_Error) ( Error* err )
       if (xml) {
 
          /* ------ XML ------ */
-         emit( "  <kind>Race</kind>\n" );
          emit( "  <xwhat>\n" );
          emit( "    <text>Possible data race during %s of size %d "
                     "at %p by thread #%d</text>\n",

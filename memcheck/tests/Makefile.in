@@ -65,18 +65,19 @@ DIST_COMMON = $(dist_noinst_SCRIPTS) $(noinst_HEADERS) \
 check_PROGRAMS = addressable$(EXEEXT) atomic_incs$(EXEEXT) \
 	badaddrvalue$(EXEEXT) badfree$(EXEEXT) badjump$(EXEEXT) \
 	badjump2$(EXEEXT) badloop$(EXEEXT) badpoll$(EXEEXT) \
-	badrw$(EXEEXT) brk2$(EXEEXT) buflen_check$(EXEEXT) \
-	calloc-overflow$(EXEEXT) clientperm$(EXEEXT) \
-	custom_alloc$(EXEEXT) custom-overlap$(EXEEXT) \
-	deep_templates$(EXEEXT) describe-block$(EXEEXT) \
-	doublefree$(EXEEXT) error_counts$(EXEEXT) errs1$(EXEEXT) \
-	exitprog$(EXEEXT) execve$(EXEEXT) execve2$(EXEEXT) \
-	erringfds$(EXEEXT) err_disable1$(EXEEXT) err_disable2$(EXEEXT) \
+	badrw$(EXEEXT) big_blocks_freed_list$(EXEEXT) brk2$(EXEEXT) \
+	buflen_check$(EXEEXT) calloc-overflow$(EXEEXT) \
+	clientperm$(EXEEXT) custom_alloc$(EXEEXT) \
+	custom-overlap$(EXEEXT) deep_templates$(EXEEXT) \
+	describe-block$(EXEEXT) doublefree$(EXEEXT) \
+	error_counts$(EXEEXT) errs1$(EXEEXT) exitprog$(EXEEXT) \
+	execve1$(EXEEXT) execve2$(EXEEXT) erringfds$(EXEEXT) \
+	err_disable1$(EXEEXT) err_disable2$(EXEEXT) \
 	err_disable3$(EXEEXT) err_disable4$(EXEEXT) \
 	file_locking$(EXEEXT) fprw$(EXEEXT) fwrite$(EXEEXT) \
-	inits$(EXEEXT) inline$(EXEEXT) leak-0$(EXEEXT) \
-	leak-cases$(EXEEXT) leak-cycle$(EXEEXT) leak-delta$(EXEEXT) \
-	leak-pool$(EXEEXT) leak-tree$(EXEEXT) \
+	inits$(EXEEXT) inline$(EXEEXT) holey_buffer_too_small$(EXEEXT) \
+	leak-0$(EXEEXT) leak-cases$(EXEEXT) leak-cycle$(EXEEXT) \
+	leak-delta$(EXEEXT) leak-pool$(EXEEXT) leak-tree$(EXEEXT) \
 	long_namespace_xml$(EXEEXT) long-supps$(EXEEXT) \
 	mallinfo$(EXEEXT) malloc_free_fill$(EXEEXT) \
 	malloc_usable$(EXEEXT) malloc1$(EXEEXT) malloc2$(EXEEXT) \
@@ -104,7 +105,7 @@ check_PROGRAMS = addressable$(EXEEXT) atomic_incs$(EXEEXT) \
 	vcpu_fbench$(EXEEXT) vcpu_fnfns$(EXEEXT) xml1$(EXEEXT) \
 	wrap1$(EXEEXT) wrap2$(EXEEXT) wrap3$(EXEEXT) wrap4$(EXEEXT) \
 	wrap5$(EXEEXT) wrap6$(EXEEXT) wrap7$(EXEEXT) \
-	wrap7so.so$(EXEEXT) wrap8$(EXEEXT) writev$(EXEEXT)
+	wrap7so.so$(EXEEXT) wrap8$(EXEEXT) writev1$(EXEEXT)
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@am__append_9 = -mfloat-abi=softfp
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@am__append_10 = -mfloat-abi=softfp
 subdir = memcheck/tests
@@ -145,6 +146,9 @@ badpoll_LDADD = $(LDADD)
 badrw_SOURCES = badrw.c
 badrw_OBJECTS = badrw.$(OBJEXT)
 badrw_LDADD = $(LDADD)
+big_blocks_freed_list_SOURCES = big_blocks_freed_list.c
+big_blocks_freed_list_OBJECTS = big_blocks_freed_list.$(OBJEXT)
+big_blocks_freed_list_LDADD = $(LDADD)
 brk2_SOURCES = brk2.c
 brk2_OBJECTS = brk2.$(OBJEXT)
 brk2_LDADD = $(LDADD)
@@ -197,10 +201,10 @@ error_counts_LINK = $(CCLD) $(error_counts_CFLAGS) $(CFLAGS) \
 errs1_SOURCES = errs1.c
 errs1_OBJECTS = errs1.$(OBJEXT)
 errs1_LDADD = $(LDADD)
-execve_SOURCES = execve.c
-execve_OBJECTS = execve-execve.$(OBJEXT)
-execve_LDADD = $(LDADD)
-execve_LINK = $(CCLD) $(execve_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+execve1_SOURCES = execve1.c
+execve1_OBJECTS = execve1-execve1.$(OBJEXT)
+execve1_LDADD = $(LDADD)
+execve1_LINK = $(CCLD) $(execve1_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 execve2_SOURCES = execve2.c
 execve2_OBJECTS = execve2-execve2.$(OBJEXT)
@@ -219,6 +223,9 @@ fprw_LDADD = $(LDADD)
 fwrite_SOURCES = fwrite.c
 fwrite_OBJECTS = fwrite.$(OBJEXT)
 fwrite_LDADD = $(LDADD)
+holey_buffer_too_small_SOURCES = holey_buffer_too_small.c
+holey_buffer_too_small_OBJECTS = holey_buffer_too_small.$(OBJEXT)
+holey_buffer_too_small_LDADD = $(LDADD)
 inits_SOURCES = inits.c
 inits_OBJECTS = inits-inits.$(OBJEXT)
 inits_LDADD = $(LDADD)
@@ -517,9 +524,9 @@ wrap7so_so_LINK = $(CCLD) $(wrap7so_so_CFLAGS) $(CFLAGS) \
 wrap8_SOURCES = wrap8.c
 wrap8_OBJECTS = wrap8.$(OBJEXT)
 wrap8_LDADD = $(LDADD)
-writev_SOURCES = writev.c
-writev_OBJECTS = writev.$(OBJEXT)
-writev_LDADD = $(LDADD)
+writev1_SOURCES = writev1.c
+writev1_OBJECTS = writev1.$(OBJEXT)
+writev1_LDADD = $(LDADD)
 xml1_SOURCES = xml1.c
 xml1_OBJECTS = xml1.$(OBJEXT)
 xml1_LDADD = $(LDADD)
@@ -538,23 +545,24 @@ CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
-	badjump.c badjump2.c badloop.c badpoll.c badrw.c brk2.c \
-	buflen_check.c calloc-overflow.c clientperm.c custom-overlap.c \
-	custom_alloc.c $(deep_templates_SOURCES) describe-block.c \
-	doublefree.c err_disable1.c err_disable2.c err_disable3.c \
-	err_disable4.c erringfds.c error_counts.c errs1.c execve.c \
-	execve2.c exitprog.c file_locking.c fprw.c fwrite.c inits.c \
-	inline.c leak-0.c leak-cases.c leak-cycle.c leak-delta.c \
-	leak-pool.c leak-tree.c long-supps.c \
-	$(long_namespace_xml_SOURCES) mallinfo.c malloc1.c malloc2.c \
-	malloc3.c malloc_free_fill.c malloc_usable.c manuel1.c \
-	manuel2.c manuel3.c match-overrun.c memalign2.c \
-	memalign_test.c memcmptest.c mempool.c mempool2.c metadata.c \
-	$(mismatches_SOURCES) mmaptest.c nanoleak2.c nanoleak_supp.c \
-	$(new_nothrow_SOURCES) $(new_override_SOURCES) noisy_child.c \
-	null_socket.c origin1-yes.c origin2-not-quite.c origin3-no.c \
-	origin4-many.c origin5-bz2.c origin6-fp.c overlap.c \
-	partial_load.c partiallydefinedeq.c pdb-realloc.c \
+	badjump.c badjump2.c badloop.c badpoll.c badrw.c \
+	big_blocks_freed_list.c brk2.c buflen_check.c \
+	calloc-overflow.c clientperm.c custom-overlap.c custom_alloc.c \
+	$(deep_templates_SOURCES) describe-block.c doublefree.c \
+	err_disable1.c err_disable2.c err_disable3.c err_disable4.c \
+	erringfds.c error_counts.c errs1.c execve1.c execve2.c \
+	exitprog.c file_locking.c fprw.c fwrite.c \
+	holey_buffer_too_small.c inits.c inline.c leak-0.c \
+	leak-cases.c leak-cycle.c leak-delta.c leak-pool.c leak-tree.c \
+	long-supps.c $(long_namespace_xml_SOURCES) mallinfo.c \
+	malloc1.c malloc2.c malloc3.c malloc_free_fill.c \
+	malloc_usable.c manuel1.c manuel2.c manuel3.c match-overrun.c \
+	memalign2.c memalign_test.c memcmptest.c mempool.c mempool2.c \
+	metadata.c $(mismatches_SOURCES) mmaptest.c nanoleak2.c \
+	nanoleak_supp.c $(new_nothrow_SOURCES) $(new_override_SOURCES) \
+	noisy_child.c null_socket.c origin1-yes.c origin2-not-quite.c \
+	origin3-no.c origin4-many.c origin5-bz2.c origin6-fp.c \
+	overlap.c partial_load.c partiallydefinedeq.c pdb-realloc.c \
 	pdb-realloc2.c pipe.c pointer-trace.c post-syscall.c \
 	realloc1.c realloc2.c realloc3.c sbfragment.c sh-mem.c \
 	sh-mem-random.c sigaltstack.c sigkill.c signal2.c \
@@ -564,25 +572,27 @@ SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
 	varinfo2.c varinfo3.c varinfo4.c $(varinfo5_SOURCES) \
 	$(varinfo5so_so_SOURCES) varinfo6.c vcpu_fbench.c vcpu_fnfns.c \
 	wrap1.c wrap2.c wrap3.c wrap4.c wrap5.c wrap6.c \
-	$(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c writev.c xml1.c
+	$(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c writev1.c \
+	xml1.c
 DIST_SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
-	badjump.c badjump2.c badloop.c badpoll.c badrw.c brk2.c \
-	buflen_check.c calloc-overflow.c clientperm.c custom-overlap.c \
-	custom_alloc.c $(deep_templates_SOURCES) describe-block.c \
-	doublefree.c err_disable1.c err_disable2.c err_disable3.c \
-	err_disable4.c erringfds.c error_counts.c errs1.c execve.c \
-	execve2.c exitprog.c file_locking.c fprw.c fwrite.c inits.c \
-	inline.c leak-0.c leak-cases.c leak-cycle.c leak-delta.c \
-	leak-pool.c leak-tree.c long-supps.c \
-	$(long_namespace_xml_SOURCES) mallinfo.c malloc1.c malloc2.c \
-	malloc3.c malloc_free_fill.c malloc_usable.c manuel1.c \
-	manuel2.c manuel3.c match-overrun.c memalign2.c \
-	memalign_test.c memcmptest.c mempool.c mempool2.c metadata.c \
-	$(mismatches_SOURCES) mmaptest.c nanoleak2.c nanoleak_supp.c \
-	$(new_nothrow_SOURCES) $(new_override_SOURCES) noisy_child.c \
-	null_socket.c origin1-yes.c origin2-not-quite.c origin3-no.c \
-	origin4-many.c origin5-bz2.c origin6-fp.c overlap.c \
-	partial_load.c partiallydefinedeq.c pdb-realloc.c \
+	badjump.c badjump2.c badloop.c badpoll.c badrw.c \
+	big_blocks_freed_list.c brk2.c buflen_check.c \
+	calloc-overflow.c clientperm.c custom-overlap.c custom_alloc.c \
+	$(deep_templates_SOURCES) describe-block.c doublefree.c \
+	err_disable1.c err_disable2.c err_disable3.c err_disable4.c \
+	erringfds.c error_counts.c errs1.c execve1.c execve2.c \
+	exitprog.c file_locking.c fprw.c fwrite.c \
+	holey_buffer_too_small.c inits.c inline.c leak-0.c \
+	leak-cases.c leak-cycle.c leak-delta.c leak-pool.c leak-tree.c \
+	long-supps.c $(long_namespace_xml_SOURCES) mallinfo.c \
+	malloc1.c malloc2.c malloc3.c malloc_free_fill.c \
+	malloc_usable.c manuel1.c manuel2.c manuel3.c match-overrun.c \
+	memalign2.c memalign_test.c memcmptest.c mempool.c mempool2.c \
+	metadata.c $(mismatches_SOURCES) mmaptest.c nanoleak2.c \
+	nanoleak_supp.c $(new_nothrow_SOURCES) $(new_override_SOURCES) \
+	noisy_child.c null_socket.c origin1-yes.c origin2-not-quite.c \
+	origin3-no.c origin4-many.c origin5-bz2.c origin6-fp.c \
+	overlap.c partial_load.c partiallydefinedeq.c pdb-realloc.c \
 	pdb-realloc2.c pipe.c pointer-trace.c post-syscall.c \
 	realloc1.c realloc2.c realloc3.c sbfragment.c sh-mem.c \
 	sh-mem-random.c sigaltstack.c sigkill.c signal2.c \
@@ -592,7 +602,8 @@ DIST_SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
 	varinfo2.c varinfo3.c varinfo4.c $(varinfo5_SOURCES) \
 	$(varinfo5so_so_SOURCES) varinfo6.c vcpu_fbench.c vcpu_fnfns.c \
 	wrap1.c wrap2.c wrap3.c wrap4.c wrap5.c wrap6.c \
-	$(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c writev.c xml1.c
+	$(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c writev1.c \
+	xml1.c
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -778,6 +789,8 @@ inplacedir = $(top_builddir)/.in_place
 
 # Baseline flags for all compilations.  Aim here is to maximise
 # performance and get whatever useful warnings we can out of gcc.
+# -fno-builtin is important for defeating LLVM's idiom recognition
+# that somehow causes VG_(memset) to get into infinite recursion.
 AM_CFLAGS_BASE = \
 	-O2 -g \
 	-Wall \
@@ -787,16 +800,20 @@ AM_CFLAGS_BASE = \
 	-Wstrict-prototypes \
 	-Wmissing-declarations \
 	@FLAG_W_NO_FORMAT_ZERO_LENGTH@ \
-	-fno-strict-aliasing
+	-fno-strict-aliasing \
+	-fno-builtin
 
-@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing
+@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
+@VGCONF_OS_IS_DARWIN_FALSE@		-fno-builtin
+
 
 # These flags are used for building the preload shared objects.
 # The aim is to give reasonable performance but also to have good
 # stack traces, since users often see stack traces extending 
 # into (and through) the preloads.
 @VGCONF_OS_IS_DARWIN_TRUE@AM_CFLAGS_PIC = -dynamic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
-@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC
+@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC \
+@VGCONF_OS_IS_DARWIN_TRUE@		-fno-builtin
 
 
 # Flags for specific targets.
@@ -919,7 +936,8 @@ dist_noinst_SCRIPTS = \
 	filter_allocs \
 	filter_leak_cases_possible \
 	filter_stderr filter_xml \
-	filter_varinfo3
+	filter_varinfo3 \
+	filter_memcheck
 
 noinst_HEADERS = leak.h
 EXTRA_DIST = \
@@ -933,35 +951,38 @@ EXTRA_DIST = \
 	badfree3.stderr.exp badfree3.vgtest \
 	badjump.stderr.exp badjump.vgtest \
 	badjump2.stderr.exp badjump2.vgtest \
-	badjump.stderr.exp-s390x \
-	badjump2.stderr.exp-s390x \
+	badjump.stderr.exp-kfail \
+	badjump2.stderr.exp-kfail \
 	badloop.stderr.exp badloop.vgtest \
 	badpoll.stderr.exp badpoll.vgtest \
-	badrw.stderr.exp badrw.vgtest \
+	badrw.stderr.exp badrw.vgtest badrw.stderr.exp-s390x-mvc \
+	big_blocks_freed_list.stderr.exp big_blocks_freed_list.vgtest \
 	brk2.stderr.exp brk2.vgtest \
-	buflen_check.stderr.exp buflen_check.vgtest \
+	buflen_check.stderr.exp buflen_check.vgtest buflen_check.stderr.exp-kfail \
 	calloc-overflow.stderr.exp calloc-overflow.vgtest\
 	clientperm.stderr.exp \
 	clientperm.stdout.exp clientperm.vgtest \
-	custom_alloc.stderr.exp custom_alloc.vgtest \
+	custom_alloc.stderr.exp custom_alloc.vgtest custom_alloc.stderr.exp-s390x-mvc \
 	custom-overlap.stderr.exp custom-overlap.vgtest \
 	deep_templates.vgtest \
 	deep_templates.stdout.exp deep_templates.stderr.exp \
 	describe-block.stderr.exp describe-block.vgtest \
 	doublefree.stderr.exp doublefree.vgtest \
-	err_disable1.vgtest err_disable1.stderr.exp err_disable1.stdout.exp \
-	err_disable2.vgtest err_disable2.stderr.exp err_disable2.stdout.exp \
-	err_disable3.vgtest err_disable3.stderr.exp err_disable3.stdout.exp \
-	err_disable4.vgtest err_disable4.stderr.exp err_disable4.stdout.exp \
+	err_disable1.vgtest err_disable1.stderr.exp \
+	err_disable2.vgtest err_disable2.stderr.exp \
+	err_disable3.vgtest err_disable3.stderr.exp \
+	err_disable4.vgtest err_disable4.stderr.exp \
 	erringfds.stderr.exp erringfds.stdout.exp erringfds.vgtest \
 	error_counts.stderr.exp error_counts.vgtest \
 	errs1.stderr.exp errs1.vgtest \
 	exitprog.stderr.exp exitprog.vgtest \
-	execve.stderr.exp execve.vgtest \
-	execve2.stderr.exp execve2.vgtest \
+	execve1.stderr.exp execve1.vgtest execve1.stderr.exp-kfail \
+	execve2.stderr.exp execve2.vgtest execve2.stderr.exp-kfail \
 	file_locking.stderr.exp file_locking.vgtest \
 	fprw.stderr.exp fprw.vgtest \
-	fwrite.stderr.exp fwrite.vgtest \
+	fwrite.stderr.exp fwrite.vgtest fwrite.stderr.exp-kfail \
+	holey_buffer_too_small.vgtest holey_buffer_too_small.stdout.exp \
+	holey_buffer_too_small.stderr.exp \
 	inits.stderr.exp inits.vgtest \
 	inline.stderr.exp inline.stdout.exp inline.vgtest \
 	leak-0.vgtest leak-0.stderr.exp \
@@ -1018,6 +1039,7 @@ EXTRA_DIST = \
 	origin5-bz2.stderr.exp-glibc25-amd64 \
 	origin5-bz2.stderr.exp-glibc27-ppc64 \
 	origin5-bz2.stderr.exp-glibc212-s390x \
+	origin5-bz2.stderr.exp-glibc234-s390x \
 	origin6-fp.vgtest origin6-fp.stdout.exp \
 	origin6-fp.stderr.exp-glibc25-amd64 \
 	origin6-fp.stderr.exp-glibc27-ppc64 \
@@ -1029,6 +1051,7 @@ EXTRA_DIST = \
 	partiallydefinedeq.stdout.exp \
 	partial_load_ok.vgtest partial_load_ok.stderr.exp partial_load_ok.stderr.exp64 \
 	partial_load_dflt.vgtest partial_load_dflt.stderr.exp partial_load_dflt.stderr.exp64 \
+	partial_load_dflt.stderr.expr-s390x-mvc \
 	pdb-realloc.stderr.exp pdb-realloc.vgtest \
 	pdb-realloc2.stderr.exp pdb-realloc2.stdout.exp pdb-realloc2.vgtest \
 	pipe.stderr.exp pipe.vgtest \
@@ -1051,12 +1074,12 @@ EXTRA_DIST = \
 	str_tester.stderr.exp str_tester.vgtest \
 	supp-dir.vgtest supp-dir.stderr.exp \
 	supp_unknown.stderr.exp supp_unknown.vgtest supp_unknown.supp \
-	supp_unknown.stderr.exp-s390x \
+	supp_unknown.stderr.exp-kfail \
 	supp1.stderr.exp supp1.vgtest \
 	supp2.stderr.exp supp2.vgtest \
 	supp.supp \
 	suppfree.stderr.exp suppfree.vgtest \
-	trivialleak.stderr.exp trivialleak.vgtest \
+	trivialleak.stderr.exp trivialleak.vgtest trivialleak.stderr.exp2 \
 	unit_libcbase.stderr.exp unit_libcbase.vgtest \
 	unit_oset.stderr.exp unit_oset.stdout.exp unit_oset.vgtest \
 	varinfo1.vgtest varinfo1.stdout.exp varinfo1.stderr.exp varinfo1.stderr.exp-ppc64\
@@ -1078,8 +1101,8 @@ EXTRA_DIST = \
 	wrap7.vgtest wrap7.stdout.exp wrap7.stderr.exp \
 	wrap8.vgtest wrap8.stdout.exp wrap8.stderr.exp \
 	wrap8.stdout.exp2 wrap8.stderr.exp2 \
-	writev.stderr.exp writev.vgtest \
-	xml1.stderr.exp xml1.stdout.exp xml1.vgtest
+	writev1.stderr.exp writev1.vgtest \
+	xml1.stderr.exp xml1.stdout.exp xml1.vgtest xml1.stderr.exp-s390x-mvc
 
 @VGCONF_OS_IS_DARWIN_FALSE@atomic_incs_CFLAGS = $(AM_CFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@atomic_incs_CFLAGS = $(AM_CFLAGS) -mdynamic-no-pic
@@ -1088,8 +1111,8 @@ deep_templates_CXXFLAGS = $(AM_CFLAGS) -O -gstabs
 err_disable3_LDADD = -lpthread
 err_disable4_LDADD = -lpthread
 error_counts_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
-execve_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
-execve2_CFLAGS = $(AM_CFLASG) @FLAG_W_NO_NONNULL@
+execve1_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
+execve2_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
 inits_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
 long_namespace_xml_SOURCES = long_namespace_xml.cpp
 manuel1_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
@@ -1228,6 +1251,9 @@ badpoll$(EXEEXT): $(badpoll_OBJECTS) $(badpoll_DEPENDENCIES)
 badrw$(EXEEXT): $(badrw_OBJECTS) $(badrw_DEPENDENCIES) 
 	@rm -f badrw$(EXEEXT)
 	$(LINK) $(badrw_OBJECTS) $(badrw_LDADD) $(LIBS)
+big_blocks_freed_list$(EXEEXT): $(big_blocks_freed_list_OBJECTS) $(big_blocks_freed_list_DEPENDENCIES) 
+	@rm -f big_blocks_freed_list$(EXEEXT)
+	$(LINK) $(big_blocks_freed_list_OBJECTS) $(big_blocks_freed_list_LDADD) $(LIBS)
 brk2$(EXEEXT): $(brk2_OBJECTS) $(brk2_DEPENDENCIES) 
 	@rm -f brk2$(EXEEXT)
 	$(LINK) $(brk2_OBJECTS) $(brk2_LDADD) $(LIBS)
@@ -1276,9 +1302,9 @@ error_counts$(EXEEXT): $(error_counts_OBJECTS) $(error_counts_DEPENDENCIES)
 errs1$(EXEEXT): $(errs1_OBJECTS) $(errs1_DEPENDENCIES) 
 	@rm -f errs1$(EXEEXT)
 	$(LINK) $(errs1_OBJECTS) $(errs1_LDADD) $(LIBS)
-execve$(EXEEXT): $(execve_OBJECTS) $(execve_DEPENDENCIES) 
-	@rm -f execve$(EXEEXT)
-	$(execve_LINK) $(execve_OBJECTS) $(execve_LDADD) $(LIBS)
+execve1$(EXEEXT): $(execve1_OBJECTS) $(execve1_DEPENDENCIES) 
+	@rm -f execve1$(EXEEXT)
+	$(execve1_LINK) $(execve1_OBJECTS) $(execve1_LDADD) $(LIBS)
 execve2$(EXEEXT): $(execve2_OBJECTS) $(execve2_DEPENDENCIES) 
 	@rm -f execve2$(EXEEXT)
 	$(execve2_LINK) $(execve2_OBJECTS) $(execve2_LDADD) $(LIBS)
@@ -1294,6 +1320,9 @@ fprw$(EXEEXT): $(fprw_OBJECTS) $(fprw_DEPENDENCIES)
 fwrite$(EXEEXT): $(fwrite_OBJECTS) $(fwrite_DEPENDENCIES) 
 	@rm -f fwrite$(EXEEXT)
 	$(LINK) $(fwrite_OBJECTS) $(fwrite_LDADD) $(LIBS)
+holey_buffer_too_small$(EXEEXT): $(holey_buffer_too_small_OBJECTS) $(holey_buffer_too_small_DEPENDENCIES) 
+	@rm -f holey_buffer_too_small$(EXEEXT)
+	$(LINK) $(holey_buffer_too_small_OBJECTS) $(holey_buffer_too_small_LDADD) $(LIBS)
 inits$(EXEEXT): $(inits_OBJECTS) $(inits_DEPENDENCIES) 
 	@rm -f inits$(EXEEXT)
 	$(inits_LINK) $(inits_OBJECTS) $(inits_LDADD) $(LIBS)
@@ -1549,9 +1578,9 @@ wrap7so.so$(EXEEXT): $(wrap7so_so_OBJECTS) $(wrap7so_so_DEPENDENCIES)
 wrap8$(EXEEXT): $(wrap8_OBJECTS) $(wrap8_DEPENDENCIES) 
 	@rm -f wrap8$(EXEEXT)
 	$(LINK) $(wrap8_OBJECTS) $(wrap8_LDADD) $(LIBS)
-writev$(EXEEXT): $(writev_OBJECTS) $(writev_DEPENDENCIES) 
-	@rm -f writev$(EXEEXT)
-	$(LINK) $(writev_OBJECTS) $(writev_LDADD) $(LIBS)
+writev1$(EXEEXT): $(writev1_OBJECTS) $(writev1_DEPENDENCIES) 
+	@rm -f writev1$(EXEEXT)
+	$(LINK) $(writev1_OBJECTS) $(writev1_LDADD) $(LIBS)
 xml1$(EXEEXT): $(xml1_OBJECTS) $(xml1_DEPENDENCIES) 
 	@rm -f xml1$(EXEEXT)
 	$(LINK) $(xml1_OBJECTS) $(xml1_LDADD) $(LIBS)
@@ -1571,6 +1600,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/badloop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/badpoll.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/badrw.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/big_blocks_freed_list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/brk2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buflen_check.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/calloc-overflow.Po@am__quote@
@@ -1587,12 +1617,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/erringfds.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error_counts-error_counts.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errs1.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execve-execve.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execve1-execve1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execve2-execve2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exitprog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file_locking.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fprw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fwrite.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/holey_buffer_too_small.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inits-inits.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leak-0.Po@am__quote@
@@ -1676,7 +1707,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wrap7.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wrap7so_so-wrap7so.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wrap8.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/writev.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/writev1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml1.Po@am__quote@
 
 .c.o:
@@ -1721,19 +1752,19 @@ error_counts-error_counts.obj: error_counts.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(error_counts_CFLAGS) $(CFLAGS) -c -o error_counts-error_counts.obj `if test -f 'error_counts.c'; then $(CYGPATH_W) 'error_counts.c'; else $(CYGPATH_W) '$(srcdir)/error_counts.c'; fi`
 
-execve-execve.o: execve.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve_CFLAGS) $(CFLAGS) -MT execve-execve.o -MD -MP -MF $(DEPDIR)/execve-execve.Tpo -c -o execve-execve.o `test -f 'execve.c' || echo '$(srcdir)/'`execve.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/execve-execve.Tpo $(DEPDIR)/execve-execve.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='execve.c' object='execve-execve.o' libtool=no @AMDEPBACKSLASH@
+execve1-execve1.o: execve1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve1_CFLAGS) $(CFLAGS) -MT execve1-execve1.o -MD -MP -MF $(DEPDIR)/execve1-execve1.Tpo -c -o execve1-execve1.o `test -f 'execve1.c' || echo '$(srcdir)/'`execve1.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/execve1-execve1.Tpo $(DEPDIR)/execve1-execve1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='execve1.c' object='execve1-execve1.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve_CFLAGS) $(CFLAGS) -c -o execve-execve.o `test -f 'execve.c' || echo '$(srcdir)/'`execve.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve1_CFLAGS) $(CFLAGS) -c -o execve1-execve1.o `test -f 'execve1.c' || echo '$(srcdir)/'`execve1.c
 
-execve-execve.obj: execve.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve_CFLAGS) $(CFLAGS) -MT execve-execve.obj -MD -MP -MF $(DEPDIR)/execve-execve.Tpo -c -o execve-execve.obj `if test -f 'execve.c'; then $(CYGPATH_W) 'execve.c'; else $(CYGPATH_W) '$(srcdir)/execve.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/execve-execve.Tpo $(DEPDIR)/execve-execve.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='execve.c' object='execve-execve.obj' libtool=no @AMDEPBACKSLASH@
+execve1-execve1.obj: execve1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve1_CFLAGS) $(CFLAGS) -MT execve1-execve1.obj -MD -MP -MF $(DEPDIR)/execve1-execve1.Tpo -c -o execve1-execve1.obj `if test -f 'execve1.c'; then $(CYGPATH_W) 'execve1.c'; else $(CYGPATH_W) '$(srcdir)/execve1.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/execve1-execve1.Tpo $(DEPDIR)/execve1-execve1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='execve1.c' object='execve1-execve1.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve_CFLAGS) $(CFLAGS) -c -o execve-execve.obj `if test -f 'execve.c'; then $(CYGPATH_W) 'execve.c'; else $(CYGPATH_W) '$(srcdir)/execve.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve1_CFLAGS) $(CFLAGS) -c -o execve1-execve1.obj `if test -f 'execve1.c'; then $(CYGPATH_W) 'execve1.c'; else $(CYGPATH_W) '$(srcdir)/execve1.c'; fi`
 
 execve2-execve2.o: execve2.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve2_CFLAGS) $(CFLAGS) -MT execve2-execve2.o -MD -MP -MF $(DEPDIR)/execve2-execve2.Tpo -c -o execve2-execve2.o `test -f 'execve2.c' || echo '$(srcdir)/'`execve2.c

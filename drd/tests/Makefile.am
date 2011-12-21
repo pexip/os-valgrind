@@ -3,11 +3,14 @@ include $(top_srcdir)/Makefile.tool-tests.am
 
 dist_noinst_SCRIPTS =		    \
 	compare_error_count_with    \
+	filter_annotate_barrier_xml \
 	filter_error_count	    \
 	filter_error_summary	    \
 	filter_stderr               \
 	filter_stderr_and_thread_no \
 	filter_stderr_and_thread_no_and_offset \
+	filter_thread_no	    \
+	filter_xml_and_thread_no    \
 	run_openmp_test             \
 	supported_libpthread	    \
 	supported_sem_init
@@ -19,6 +22,8 @@ noinst_HEADERS =                                    \
 EXTRA_DIST =                                        \
 	annotate_barrier.stderr.exp		    \
 	annotate_barrier.vgtest			    \
+	annotate_barrier_xml.stderr.exp		    \
+	annotate_barrier_xml.vgtest		    \
 	annotate_hb_err.stderr.exp		    \
 	annotate_hb_err.vgtest			    \
 	annotate_hb_race.stderr.exp		    \
@@ -55,12 +60,16 @@ EXTRA_DIST =                                        \
 	annotate_ignore_write2.vgtest		    \
 	annotate_trace_memory.stderr.exp	    \
 	annotate_trace_memory.vgtest		    \
+	annotate_trace_memory_xml.stderr.exp	    \
+	annotate_trace_memory_xml.vgtest	    \
 	annotate_static.stderr.exp	            \
 	annotate_static.vgtest		            \
 	atomic_var.stderr.exp			    \
 	atomic_var.vgtest			    \
 	bar_bad.stderr.exp			    \
 	bar_bad.vgtest				    \
+	bar_bad_xml.stderr.exp			    \
+	bar_bad_xml.vgtest			    \
 	bar_trivial.stderr.exp			    \
 	bar_trivial.stdout.exp			    \
 	bar_trivial.vgtest			    \
@@ -78,6 +87,8 @@ EXTRA_DIST =                                        \
 	fp_race.vgtest                              \
 	fp_race2.stderr.exp                         \
 	fp_race2.vgtest                             \
+	fp_race_xml.stderr.exp                      \
+	fp_race_xml.vgtest                          \
 	free_is_write.stderr.exp		    \
 	free_is_write.vgtest			    \
 	free_is_write2.stderr.exp		    \
@@ -178,14 +189,6 @@ EXTRA_DIST =                                        \
 	pth_spinlock.vgtest                         \
 	pth_uninitialized_cond.stderr.exp           \
 	pth_uninitialized_cond.vgtest               \
-	qt4_atomic.stderr.exp                       \
-	qt4_atomic.vgtest                           \
-	qt4_mutex.stderr.exp                        \
-	qt4_mutex.vgtest                            \
-	qt4_rwlock.stderr.exp                       \
-	qt4_rwlock.vgtest                           \
-	qt4_semaphore.stderr.exp                    \
-	qt4_semaphore.vgtest                        \
 	read_and_free_race.stderr.exp		    \
 	read_and_free_race.vgtest		    \
 	recursive_mutex.stderr.exp-linux            \
@@ -271,6 +274,8 @@ EXTRA_DIST =                                        \
 	tc24_nonzero_sem.vgtest                     \
 	thread_name.stderr.exp			    \
 	thread_name.vgtest			    \
+	thread_name_xml.stderr.exp		    \
+	thread_name_xml.vgtest			    \
 	threaded-fork.stderr.exp		    \
 	threaded-fork.vgtest			    \
 	trylock.stderr.exp                          \

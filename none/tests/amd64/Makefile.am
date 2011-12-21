@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/Makefile.tool-tests.am
 
-dist_noinst_SCRIPTS = filter_cpuid filter_stderr filter_int gen_insn_test.pl
+dist_noinst_SCRIPTS = filter_cpuid filter_stderr gen_insn_test.pl
 
 CLEANFILES = $(addsuffix .c,$(INSN_TESTS))
 
@@ -29,6 +29,7 @@ EXTRA_DIST = \
 	bug137714-amd64.vgtest bug137714-amd64.stdout.exp \
 	bug137714-amd64.stderr.exp \
 	bug132918.vgtest bug132918.stderr.exp bug132918.stdout.exp \
+	bug132918.stdout.exp-older-glibc \
 	bug156404-amd64.vgtest bug156404-amd64.stdout.exp \
 	bug156404-amd64.stderr.exp \
 	clc.vgtest clc.stdout.exp clc.stderr.exp \
@@ -37,9 +38,12 @@ EXTRA_DIST = \
 	faultstatus.disabled faultstatus.stderr.exp \
 	fcmovnu.vgtest fcmovnu.stderr.exp fcmovnu.stdout.exp \
 	fxtract.vgtest fxtract.stderr.exp fxtract.stdout.exp \
+	fxtract.stdout.exp-older-glibc \
 	$(addsuffix .stderr.exp,$(INSN_TESTS)) \
 	$(addsuffix .stdout.exp,$(INSN_TESTS)) \
 	$(addsuffix .vgtest,$(INSN_TESTS)) \
+	insn_pclmulqdq.vgtest insn_pclmulqdq.stdout.exp \
+	insn_pclmulqdq.stderr.exp \
 	insn_sse3.stdout.exp insn_sse3.stderr.exp insn_sse3.vgtest \
 	insn_ssse3.stdout.exp insn_ssse3.stderr.exp insn_ssse3.vgtest \
 	jrcxz.stderr.exp jrcxz.stdout.exp jrcxz.vgtest \
@@ -61,6 +65,7 @@ EXTRA_DIST = \
 	ssse3_misaligned.stderr.exp ssse3_misaligned.stdout.exp \
 	ssse3_misaligned.vgtest \
 	sse4-64.stderr.exp sse4-64.stdout.exp sse4-64.vgtest \
+	sse4-64.stdout.exp-older-glibc \
 	slahf-amd64.stderr.exp slahf-amd64.stdout.exp \
 	slahf-amd64.vgtest \
 	xadd.stderr.exp xadd.stdout.exp xadd.vgtest
@@ -125,6 +130,7 @@ insn_ssse3_SOURCES	= insn_ssse3.def
 insn_ssse3_LDADD	= -lm
 insn_fpu_SOURCES	= insn_fpu.def
 insn_fpu_LDADD		= -lm
+insn_pclmulqdq_SOURCES  = insn_pclmulqdq.def
 fxtract_LDADD		= -lm
 
 .def.c: $(srcdir)/gen_insn_test.pl

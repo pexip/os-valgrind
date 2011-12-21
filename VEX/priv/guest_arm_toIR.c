@@ -7,11 +7,11 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2004-2010 OpenWorks LLP
+   Copyright (C) 2004-2011 OpenWorks LLP
       info@open-works.net
 
    NEON support is
-   Copyright (C) 2010-2010 Samsung Electronics
+   Copyright (C) 2010-2011 Samsung Electronics
    contributed by Dmitry Zhurikhin <zhur@ispras.ru>
               and Kirill Batuzov <batuzovk@ispras.ru>
 
@@ -10234,6 +10234,7 @@ static void mk_ldm_stm ( Bool arm,     /* True: ARM, False: Thumb */
                          UInt regList )
 {
    Int i, r, m, nRegs;
+   IRTemp jk = Ijk_Boring;
 
    /* Get hold of the old Rn value.  We might need to write its value
       to memory during a store, and if it's also the writeback
@@ -10360,6 +10361,15 @@ static void mk_ldm_stm ( Bool arm,     /* True: ARM, False: Thumb */
       }
    }
 
+   /* According to the Cortex A8 TRM Sec. 5.2.1, LDM(1) with r13 as the base
+       register and PC in the register list is a return for purposes of branch
+       prediction.
+      The ARM ARM Sec. C9.10.1 further specifies that writeback must be enabled
+       to be counted in event 0x0E (Procedure return).*/
+   if (rN == 13 && bL == 1 && bINC && !bBEFORE && bW == 1) {
+      jk = Ijk_Ret;
+   }
+
    /* Actually generate the transfers */
    for (i = 0; i < nX; i++) {
       r = xReg[i];
@@ -10368,7 +10378,7 @@ static void mk_ldm_stm ( Bool arm,     /* True: ARM, False: Thumb */
                             binop(opADDorSUB, mkexpr(anchorT),
                                   mkU32(xOff[i])));
          if (arm) {
-            putIRegA( r, e, IRTemp_INVALID, Ijk_Ret );
+            putIRegA( r, e, IRTemp_INVALID, jk );
          } else {
             // no: putIRegT( r, e, IRTemp_INVALID );
             // putIRegT refuses to write to R15.  But that might happen.
@@ -11991,6 +12001,16 @@ static Bool decode_NV_instruction ( /*MOD*/DisResult* dres,
          break;
    }
 
+   /* ------------------- CLREX ------------------ */
+   if (insn == 0xF57FF01F) {
+      /* AFAICS, this simply cancels a (all?) reservations made by a
+         (any?) preceding LDREX(es).  Arrange to hand it through to
+         the back end. */
+      stmt( IRStmt_MBE(Imbe_CancelReservation) );
+      DIP("clrex\n");
+      return True;
+   }
+
    /* ------------------- NEON ------------------- */
    if (archinfo->hwcaps & VEX_HWCAPS_ARM_NEON) {
       Bool ok_neon = decode_NEON_instruction(
@@ -12282,6 +12302,7 @@ DisResult disInstr_ARM_WRK (
          case BITS4(1,1,0,1):   /* MOV: Rd = shifter_operand */
          case BITS4(1,1,1,1): { /* MVN: Rd = not(shifter_operand) */
             Bool isMVN = INSN(24,21) == BITS4(1,1,1,1);
+            IRTemp jk = Ijk_Boring;
             if (rN != 0)
                break; /* rN must be zero */
             ok = mk_shifter_operand(
@@ -12300,8 +12321,13 @@ DisResult disInstr_ARM_WRK (
             } else {
                vassert(shco == IRTemp_INVALID);
             }
+            /* According to the Cortex A8 TRM Sec. 5.2.1, MOV PC, r14 is a
+                return for purposes of branch prediction. */
+            if (!isMVN && INSN(11,0) == 14) {
+              jk = Ijk_Ret;
+            }
             // can't safely read guest state after here
-            putIRegA( rD, mkexpr(res), condT, Ijk_Boring );
+            putIRegA( rD, mkexpr(res), condT, jk );
             /* Update the flags thunk if necessary */
             if (bitS) {
                setFlags_D1_D2_ND( ARMG_CC_OP_LOGIC, 
@@ -12605,8 +12631,18 @@ DisResult disInstr_ARM_WRK (
 
         /* generate the transfer */
         if (bB == 0) { // word load
+           IRTemp jk = Ijk_Boring;
+           /* According to the Cortex A8 TRM Sec. 5.2.1, LDR(1) with r13 as the
+               base register and PC as the destination register is a return for
+               purposes of branch prediction.
+              The ARM ARM Sec. C9.10.1 further specifies that it must use a
+               post-increment by immediate addressing mode to be counted in
+               event 0x0E (Procedure return).*/
+           if (rN == 13 && summary == (3 | 16) && bB == 0) {
+              jk = Ijk_Ret;
+           }
            putIRegA( rD, loadLE(Ity_I32, mkexpr(taT)),
-                     IRTemp_INVALID, Ijk_Boring );
+                     IRTemp_INVALID, jk );
         } else { // byte load
            vassert(bB == 1);
            putIRegA( rD, unop(Iop_8Uto32, loadLE(Ity_I8, mkexpr(taT))),
@@ -12997,7 +13033,7 @@ DisResult disInstr_ARM_WRK (
             stmt( IRStmt_Exit( unop(Iop_32to1, mkexpr(condT)),
                                jk, IRConst_U32(dst) ));
             irsb->next     = mkU32(guest_R15_curr_instr_notENC + 4);
-            irsb->jumpkind = jk;
+            irsb->jumpkind = Ijk_Boring;
             dres.whatNext  = Dis_StopHere;
          }
          DIP("b%s%s 0x%x %s\n", link ? "l" : "", nCC(INSN_COND),
@@ -14940,7 +14976,7 @@ DisResult disInstr_THUMB_WRK (
             assign( dst, mkU32(guest_R15_curr_instr_notENC + 4) );
          }
          irsb->next     = mkexpr(dst);
-         irsb->jumpkind = Ijk_Boring;
+         irsb->jumpkind = rM == 14 ? Ijk_Ret : Ijk_Boring;
          dres.whatNext  = Dis_StopHere;
          DIP("bx r%u (possibly switch to ARM mode)\n", rM);
          goto decode_success;
@@ -15079,7 +15115,7 @@ DisResult disInstr_THUMB_WRK (
             // now uncond
             /* non-interworking branch */
             irsb->next = binop(Iop_Or32, mkexpr(val), mkU32(1));
-            irsb->jumpkind = Ijk_Boring;
+            irsb->jumpkind = rM == 14 ? Ijk_Ret : Ijk_Boring;
             dres.whatNext = Dis_StopHere;
          }
          DIP("mov r%u, r%u\n", rD, rM);
@@ -16041,8 +16077,8 @@ DisResult disInstr_THUMB_WRK (
       UInt rN = INSN0(3,0);
       UInt rD = INSN1(11,8);
       Bool valid = !isBadRegT(rN) && !isBadRegT(rD);
-      /* but allow "add.w reg, sp, #constT" */ 
-      if (!valid && rN == 13 && rD != 15)
+      /* but allow "add.w reg, sp, #constT" for reg != PC */ 
+      if (!valid && rD <= 14 && rN == 13)
          valid = True;
       if (valid) {
          IRTemp argL  = newTemp(Ity_I32);
@@ -16068,8 +16104,8 @@ DisResult disInstr_THUMB_WRK (
       UInt rN = INSN0(3,0);
       UInt rD = INSN1(11,8);
       Bool valid = !isBadRegT(rN) && !isBadRegT(rD);
-      /* but allow "addw sp, sp, #uimm12" */
-      if (!valid && rD == 13 && rN == 13)
+      /* but allow "addw reg, sp, #uimm12" for reg != PC */
+      if (!valid && rD <= 14 && rN == 13)
          valid = True;
       if (valid) {
          IRTemp argL = newTemp(Ity_I32);
@@ -16532,7 +16568,6 @@ DisResult disInstr_THUMB_WRK (
       UInt rM  = INSN1(3,0);
       UInt bS  = INSN0(4,4);
       Bool valid = !isBadRegT(rN) && !isBadRegT(rM) && !isBadRegT(rD);
-      if (how == 3) valid = False; //ATC
       if (valid) {
          IRTemp rNt    = newTemp(Ity_I32);
          IRTemp rMt    = newTemp(Ity_I32);
@@ -17987,6 +18022,7 @@ DisResult disInstr_THUMB_WRK (
    }
    /* -------------- v7 barrier insns -------------- */
    if (INSN0(15,0) == 0xF3BF && (INSN1(15,0) & 0xFF00) == 0x8F00) {
+      /* FIXME: should this be unconditional? */
       /* XXX this isn't really right, is it?  The generated IR does
          them unconditionally.  I guess it doesn't matter since it
          doesn't do any harm to do them even when the guarding
@@ -18025,6 +18061,7 @@ DisResult disInstr_THUMB_WRK (
 
    /* ---------------------- PLD{,W} ---------------------- */
    if ((INSN0(15,4) & 0xFFD) == 0xF89 && INSN1(15,12) == 0xF) {
+      /* FIXME: should this be unconditional? */
       /* PLD/PLDW immediate, encoding T1 */
       UInt rN    = INSN0(3,0);
       UInt bW    = INSN0(5,5);
@@ -18034,6 +18071,7 @@ DisResult disInstr_THUMB_WRK (
    }
 
    if ((INSN0(15,4) & 0xFFD) == 0xF81 && INSN1(15,8) == 0xFC) {
+      /* FIXME: should this be unconditional? */
       /* PLD/PLDW immediate, encoding T2 */
       UInt rN    = INSN0(3,0);
       UInt bW    = INSN0(5,5);
@@ -18043,6 +18081,7 @@ DisResult disInstr_THUMB_WRK (
    }
 
    if ((INSN0(15,4) & 0xFFD) == 0xF81 && INSN1(15,6) == 0x3C0) {
+      /* FIXME: should this be unconditional? */
       /* PLD/PLDW register, encoding T1 */
       UInt rN   = INSN0(3,0);
       UInt rM   = INSN1(3,0);
@@ -18062,8 +18101,8 @@ DisResult disInstr_THUMB_WRK (
    /* I don't know whether this is really v7-only.  But anyway, we
       have to support it since arm-linux uses TPIDRURO as a thread
       state register. */
-   
    if ((INSN0(15,0) == 0xEE1D) && (INSN1(11,0) == 0x0F70)) {
+      /* FIXME: should this be unconditional? */
       UInt rD = INSN1(15,12);
       if (!isBadRegT(rD)) {
          putIRegT(rD, IRExpr_Get(OFFB_TPIDRURO, Ity_I32), IRTemp_INVALID);
@@ -18071,6 +18110,17 @@ DisResult disInstr_THUMB_WRK (
          goto decode_success;
       }
       /* fall through */
+   }
+
+   /* ------------------- CLREX ------------------ */
+   if (INSN0(15,0) == 0xF3BF && INSN1(15,0) == 0x8F2F) {
+      /* AFAICS, this simply cancels a (all?) reservations made by a
+         (any?) preceding LDREX(es).  Arrange to hand it through to
+         the back end. */
+      mk_skip_over_T32_if_cond_is_false( condT );
+      stmt( IRStmt_MBE(Imbe_CancelReservation) );
+      DIP("clrex\n");
+      goto decode_success;
    }
 
    /* ------------------- NOP ------------------ */

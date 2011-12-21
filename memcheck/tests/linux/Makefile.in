@@ -251,6 +251,8 @@ inplacedir = $(top_builddir)/.in_place
 
 # Baseline flags for all compilations.  Aim here is to maximise
 # performance and get whatever useful warnings we can out of gcc.
+# -fno-builtin is important for defeating LLVM's idiom recognition
+# that somehow causes VG_(memset) to get into infinite recursion.
 AM_CFLAGS_BASE = \
 	-O2 -g \
 	-Wall \
@@ -260,16 +262,20 @@ AM_CFLAGS_BASE = \
 	-Wstrict-prototypes \
 	-Wmissing-declarations \
 	@FLAG_W_NO_FORMAT_ZERO_LENGTH@ \
-	-fno-strict-aliasing
+	-fno-strict-aliasing \
+	-fno-builtin
 
-@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing
+@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
+@VGCONF_OS_IS_DARWIN_FALSE@		-fno-builtin
+
 
 # These flags are used for building the preload shared objects.
 # The aim is to give reasonable performance but also to have good
 # stack traces, since users often see stack traces extending 
 # into (and through) the preloads.
 @VGCONF_OS_IS_DARWIN_TRUE@AM_CFLAGS_PIC = -dynamic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
-@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC
+@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC \
+@VGCONF_OS_IS_DARWIN_TRUE@		-fno-builtin
 
 
 # Flags for specific targets.
@@ -384,16 +390,16 @@ AM_CCASFLAGS = $(AM_CPPFLAGS)
 dist_noinst_SCRIPTS = filter_stderr
 EXTRA_DIST = \
 	brk.stderr.exp brk.vgtest \
-	capget capget.stderr.exp capget.stderr.exp2 \
+	capget.vgtest capget.stderr.exp capget.stderr.exp2 \
 	lsframe1.vgtest lsframe1.stdout.exp lsframe1.stderr.exp \
 	lsframe2.vgtest lsframe2.stdout.exp lsframe2.stderr.exp \
 	sigqueue.vgtest sigqueue.stderr.exp \
 	stack_changes.stderr.exp stack_changes.stdout.exp \
 	    stack_changes.stdout.exp2 stack_changes.vgtest \
 	stack_switch.stderr.exp stack_switch.vgtest \
-	syscalls-2007 syscalls-2007.stderr.exp \
-	syslog-syscall syslog-syscall.stderr.exp \
-	timerfd-syscall timerfd-syscall.stderr.exp \
+	syscalls-2007.vgtest syscalls-2007.stderr.exp \
+	syslog-syscall.vgtest syslog-syscall.stderr.exp \
+	timerfd-syscall.vgtest timerfd-syscall.stderr.exp \
 	with-space.stderr.exp with-space.stdout.exp with-space.vgtest
 
 stack_switch_LDADD = -lpthread

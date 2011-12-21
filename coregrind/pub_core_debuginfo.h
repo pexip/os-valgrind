@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2010 Julian Seward
+   Copyright (C) 2000-2011 Julian Seward
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -55,9 +55,15 @@ extern void VG_(di_initialise) ( void );
    refer to the debuginfo read as a result of this specific mapping,
    in later queries to m_debuginfo.  In this case the handle value
    will be one or above.  If the returned value is zero, no debug info
-   was read. */
+   was read.
+
+   For VG_(di_notify_mmap), if use_fd is not -1, that is used instead
+   of the filename; this avoids perturbing fcntl locks, which are
+   released by simply re-opening and closing the same file (even via
+   different fd!).
+*/
 #if defined(VGO_linux) || defined(VGO_darwin)
-extern ULong VG_(di_notify_mmap)( Addr a, Bool allow_SkFileV );
+extern ULong VG_(di_notify_mmap)( Addr a, Bool allow_SkFileV, Int use_fd );
 
 extern void VG_(di_notify_munmap)( Addr a, SizeT len );
 
@@ -67,6 +73,9 @@ extern void VG_(di_notify_mprotect)( Addr a, SizeT len, UInt prot );
 extern void VG_(di_notify_pdb_debuginfo)( Int fd, Addr avma,
                                           SizeT total_size,
                                           PtrdiffT unknown_purpose__reloc );
+
+/* this should also really return ULong */
+extern void VG_(di_notify_vm_protect)( Addr a, SizeT len, UInt prot );
 #endif
 
 extern void VG_(di_discard_ALL_debuginfo)( void );

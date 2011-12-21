@@ -8,10 +8,10 @@
    This file is part of Callgrind, a Valgrind tool for call graph
    profiling programs.
 
-   Copyright (C) 2002-2010, Josef Weidendorfer (Josef.Weidendorfer@gmx.de)
+   Copyright (C) 2002-2011, Josef Weidendorfer (Josef.Weidendorfer@gmx.de)
 
    This tool is derived from and contains code from Cachegrind
-   Copyright (C) 2002-2010 Nicholas Nethercote (njn@valgrind.org)
+   Copyright (C) 2002-2011 Nicholas Nethercote (njn@valgrind.org)
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -1450,7 +1450,7 @@ static void print_monitor_help ( void )
    VG_(gdb_printf) ("  zero\n");
    VG_(gdb_printf) ("        zero counters\n");
    VG_(gdb_printf) ("  status\n");
-   VG_(gdb_printf) ("        print status (statistics and shadow stacks)\n");
+   VG_(gdb_printf) ("        print status\n");
    VG_(gdb_printf) ("  instrumentation [on|off]\n");
    VG_(gdb_printf) ("        get/set (if on/off given) instrumentation state\n");
    VG_(gdb_printf) ("\n");
@@ -1483,10 +1483,28 @@ static Bool handle_gdb_monitor_command (ThreadId tid, Char *req)
       CLG_(zero_all_cost)(False);
       return True;
    }
+
    case 3: { /* status */
-     dump_state_togdb();
+     Char* arg = VG_(strtok_r) (0, " ", &ssaveptr);
+     if (arg && (VG_(strcmp)(arg, "internal") == 0)) {
+       /* internal interface to callgrind_control */
+       dump_state_togdb();
+       return True;
+     }
+
+     if (!CLG_(instrument_state)) {
+       VG_(gdb_printf)("No status available as instrumentation is switched off\n");
+     } else {
+       // Status information to be improved ...
+       thread_info** th = CLG_(get_threads)();
+       Int t, tcount = 0;
+       for(t=1;t<VG_N_THREADS;t++)
+	 if (th[t]) tcount++;
+       VG_(gdb_printf)("%d thread(s) running.\n", tcount);
+     }
      return True;
    }
+
    case 4: { /* instrumentation */
      Char* arg = VG_(strtok_r) (0, " ", &ssaveptr);
      if (!arg) {
@@ -1873,7 +1891,7 @@ void CLG_(pre_clo_init)(void)
     VG_(details_name)            ("Callgrind");
     VG_(details_version)         (NULL);
     VG_(details_description)     ("a call-graph generating cache profiler");
-    VG_(details_copyright_author)("Copyright (C) 2002-2010, and GNU GPL'd, "
+    VG_(details_copyright_author)("Copyright (C) 2002-2011, and GNU GPL'd, "
 				  "by Josef Weidendorfer et al.");
     VG_(details_bug_reports_to)  (VG_BUGS_TO);
     VG_(details_avg_translation_sizeB) ( 500 );

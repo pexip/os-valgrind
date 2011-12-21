@@ -258,26 +258,16 @@ void DRD_(barrier_init)(const Addr barrier,
 
    p = DRD_(barrier_get_or_allocate)(barrier, barrier_type, count);
 
-   if (s_trace_barrier)
-   {
+   if (s_trace_barrier) {
       if (reinitialization)
-      {
-         VG_(message)(Vg_UserMsg,
-                      "[%d] barrier_reinit    %s 0x%lx count %ld -> %ld\n",
-                      DRD_(thread_get_running_tid)(),
-                      barrier_get_typename(p),
-                      barrier,
-                      p->count,
-                      count);
-      }
+         DRD_(trace_msg)("[%d] barrier_reinit    %s 0x%lx count %ld -> %ld",
+                         DRD_(thread_get_running_tid)(),
+                         barrier_get_typename(p), barrier, p->count, count);
       else
-      {
-         VG_(message)(Vg_UserMsg,
-                      "[%d] barrier_init      %s 0x%lx\n",
-                      DRD_(thread_get_running_tid)(),
-                      barrier_get_typename(p),
-                      barrier);
-      }
+         DRD_(trace_msg)("[%d] barrier_init      %s 0x%lx",
+                         DRD_(thread_get_running_tid)(),
+                         barrier_get_typename(p),
+                         barrier);
    }
 
    if (reinitialization && p->count != count)
@@ -304,13 +294,9 @@ void DRD_(barrier_destroy)(const Addr barrier, const BarrierT barrier_type)
    p = DRD_(barrier_get)(barrier);
 
    if (s_trace_barrier)
-   {
-      VG_(message)(Vg_UserMsg,
-                   "[%d] barrier_destroy   %s 0x%lx\n",
-                   DRD_(thread_get_running_tid)(),
-                   barrier_get_typename(p),
-                   barrier);
-   }
+      DRD_(trace_msg)("[%d] barrier_destroy   %s 0x%lx",
+                      DRD_(thread_get_running_tid)(),
+                      barrier_get_typename(p), barrier);
 
    if (p == 0)
    {
@@ -349,32 +335,27 @@ void DRD_(barrier_pre_wait)(const DrdThreadId tid, const Addr barrier,
    OSet* oset;
 
    p = DRD_(barrier_get)(barrier);
-   if (p == 0 && barrier_type == gomp_barrier)
-   {
+   if (p == 0 && barrier_type == gomp_barrier) {
       /*
        * gomp_barrier_wait() call has been intercepted but gomp_barrier_init()
        * not. The only cause I know of that can trigger this is that libgomp.so
        * has been compiled with --enable-linux-futex.
        */
-      VG_(message)(Vg_UserMsg, "\n");
-      VG_(message)(Vg_UserMsg,
-                   "Please verify whether gcc has been configured"
-                   " with option --disable-linux-futex.\n");
-      VG_(message)(Vg_UserMsg,
-                   "See also the section about OpenMP in the DRD manual.\n");
-      VG_(message)(Vg_UserMsg, "\n");
+      BarrierErrInfo bei = { DRD_(thread_get_running_tid)(), 0, 0, 0 };
+      VG_(maybe_record_error)(VG_(get_running_tid)(),
+                              BarrierErr,
+                              VG_(get_IP)(VG_(get_running_tid)()),
+                              "Please verify whether gcc has been configured"
+                              " with option --disable-linux-futex. See also"
+                              " the section about OpenMP in the DRD manual.",
+                              &bei);
    }
    tl_assert(p);
 
    if (s_trace_barrier)
-   {
-      VG_(message)(Vg_UserMsg,
-                   "[%d] barrier_pre_wait  %s 0x%lx iteration %ld\n",
-                   DRD_(thread_get_running_tid)(),
-                   barrier_get_typename(p),
-                   barrier,
-                   p->pre_iteration);
-   }
+      DRD_(trace_msg)("[%d] barrier_pre_wait  %s 0x%lx iteration %ld",
+                      DRD_(thread_get_running_tid)(),
+                      barrier_get_typename(p), barrier, p->pre_iteration);
 
    /* Clean up nodes associated with finished threads. */
    oset = p->oset[p->pre_iteration & 1];
@@ -433,15 +414,10 @@ void DRD_(barrier_post_wait)(const DrdThreadId tid, const Addr barrier,
    p = DRD_(barrier_get)(barrier);
 
    if (s_trace_barrier)
-   {
-      VG_(message)(Vg_UserMsg,
-                   "[%d] barrier_post_wait %s 0x%lx iteration %ld%s\n",
-                   tid,
-                   p ? barrier_get_typename(p) : "(?)",
-                   barrier,
-                   p ? p->post_iteration : -1,
-                   serializing ? " (serializing)" : "");
-   }
+      DRD_(trace_msg)("[%d] barrier_post_wait %s 0x%lx iteration %ld%s",
+                      tid, p ? barrier_get_typename(p) : "(?)",
+                      barrier, p ? p->post_iteration : -1,
+                      serializing ? " (serializing)" : "");
 
    /*
     * If p == 0, this means that the barrier has been destroyed after

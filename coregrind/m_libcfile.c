@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2010 Julian Seward 
+   Copyright (C) 2000-2011 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -601,6 +601,18 @@ SysRes VG_(pread) ( Int fd, void* buf, Int count, OffT offset )
 #  endif
 }
 
+/* Return the name of a directory for temporary files. */
+const HChar *VG_(tmpdir)(void)
+{
+   const HChar *tmpdir;
+
+   tmpdir = VG_(getenv)("TMPDIR");
+   if (tmpdir == NULL || *tmpdir == '\0') tmpdir = VG_TMPDIR;
+   if (tmpdir == NULL || *tmpdir == '\0') tmpdir = "/tmp";    /* fallback */
+
+   return tmpdir;
+}
+
 /* Create and open (-rw------) a tmp file name incorporating said arg.
    Returns -1 on failure, else the fd of the file.  If fullname is
    non-NULL, the file's name is written into it.  The number of bytes
@@ -621,9 +633,7 @@ Int VG_(mkstemp) ( HChar* part_of_name, /*OUT*/HChar* fullname )
    seed = (VG_(getpid)() << 9) ^ VG_(getppid)();
 
    /* Determine sensible location for temporary files */
-   tmpdir = VG_(getenv)("TMPDIR");
-   if (tmpdir == NULL || *tmpdir == '\0') tmpdir = VG_TMPDIR;
-   if (tmpdir == NULL || *tmpdir == '\0') tmpdir = "/tmp";    /* fallback */
+   tmpdir = VG_(tmpdir)();
 
    tries = 0;
    while (True) {
@@ -637,8 +647,10 @@ Int VG_(mkstemp) ( HChar* part_of_name, /*OUT*/HChar* fullname )
       sres = VG_(open)(buf,
                        VKI_O_CREAT|VKI_O_RDWR|VKI_O_EXCL|VKI_O_TRUNC,
                        VKI_S_IRUSR|VKI_S_IWUSR);
-      if (sr_isError(sres))
+      if (sr_isError(sres)) {
+         VG_(umsg)("VG_(mkstemp): failed to create temp file: %s\n", buf);
          continue;
+      }
       /* VG_(safe_fd) doesn't return if it fails. */
       fd = VG_(safe_fd)( sr_Res(sres) );
       if (fullname)

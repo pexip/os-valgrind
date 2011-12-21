@@ -46,23 +46,25 @@ host_triplet = @host@
 DIST_COMMON = $(dist_noinst_SCRIPTS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.all.am \
 	$(top_srcdir)/Makefile.tool-tests.am
-check_PROGRAMS = annotate_hbefore$(EXEEXT) free_is_write$(EXEEXT) \
+check_PROGRAMS = annotate_hbefore$(EXEEXT) \
+	cond_timedwait_invalid$(EXEEXT) free_is_write$(EXEEXT) \
 	hg01_all_ok$(EXEEXT) hg02_deadlock$(EXEEXT) \
 	hg03_inherit$(EXEEXT) hg04_race$(EXEEXT) hg05_race2$(EXEEXT) \
 	hg06_readshared$(EXEEXT) locked_vs_unlocked1$(EXEEXT) \
 	locked_vs_unlocked2$(EXEEXT) locked_vs_unlocked3$(EXEEXT) \
-	tc01_simple_race$(EXEEXT) tc02_simple_tls$(EXEEXT) \
-	tc03_re_excl$(EXEEXT) tc04_free_lock$(EXEEXT) \
-	tc05_simple_race$(EXEEXT) tc06_two_races$(EXEEXT) \
-	tc07_hbl1$(EXEEXT) tc08_hbl2$(EXEEXT) tc09_bad_unlock$(EXEEXT) \
-	tc10_rec_lock$(EXEEXT) tc11_XCHG$(EXEEXT) \
-	tc12_rwl_trivial$(EXEEXT) tc13_laog1$(EXEEXT) \
-	tc14_laog_dinphils$(EXEEXT) tc15_laog_lockdel$(EXEEXT) \
-	tc16_byterace$(EXEEXT) tc17_sembar$(EXEEXT) \
-	tc18_semabuse$(EXEEXT) tc19_shadowmem$(EXEEXT) \
-	tc21_pthonce$(EXEEXT) tc23_bogus_condwait$(EXEEXT) \
-	tc24_nonzero_sem$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4)
+	t2t$(EXEEXT) tc01_simple_race$(EXEEXT) \
+	tc02_simple_tls$(EXEEXT) tc03_re_excl$(EXEEXT) \
+	tc04_free_lock$(EXEEXT) tc05_simple_race$(EXEEXT) \
+	tc06_two_races$(EXEEXT) tc07_hbl1$(EXEEXT) tc08_hbl2$(EXEEXT) \
+	tc09_bad_unlock$(EXEEXT) tc10_rec_lock$(EXEEXT) \
+	tc11_XCHG$(EXEEXT) tc12_rwl_trivial$(EXEEXT) \
+	tc13_laog1$(EXEEXT) tc14_laog_dinphils$(EXEEXT) \
+	tc15_laog_lockdel$(EXEEXT) tc16_byterace$(EXEEXT) \
+	tc17_sembar$(EXEEXT) tc18_semabuse$(EXEEXT) \
+	tc19_shadowmem$(EXEEXT) tc21_pthonce$(EXEEXT) \
+	tc23_bogus_condwait$(EXEEXT) tc24_nonzero_sem$(EXEEXT) \
+	$(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
+	$(am__EXEEXT_4)
 
 # DDD: it seg faults, and then the Valgrind exit path hangs
 # JRS 29 July 09: it craps out in the stack unwinder, in
@@ -122,6 +124,9 @@ bar_trivial_SOURCES = bar_trivial.c
 bar_trivial_OBJECTS = bar_trivial.$(OBJEXT)
 bar_trivial_LDADD = $(LDADD)
 bar_trivial_DEPENDENCIES =
+cond_timedwait_invalid_SOURCES = cond_timedwait_invalid.c
+cond_timedwait_invalid_OBJECTS = cond_timedwait_invalid.$(OBJEXT)
+cond_timedwait_invalid_DEPENDENCIES =
 free_is_write_SOURCES = free_is_write.c
 free_is_write_OBJECTS = free_is_write.$(OBJEXT)
 free_is_write_LDADD = $(LDADD)
@@ -162,6 +167,10 @@ locked_vs_unlocked3_SOURCES = locked_vs_unlocked3.c
 locked_vs_unlocked3_OBJECTS = locked_vs_unlocked3.$(OBJEXT)
 locked_vs_unlocked3_LDADD = $(LDADD)
 locked_vs_unlocked3_DEPENDENCIES =
+t2t_SOURCES = t2t.c
+t2t_OBJECTS = t2t.$(OBJEXT)
+t2t_LDADD = $(LDADD)
+t2t_DEPENDENCIES =
 tc01_simple_race_SOURCES = tc01_simple_race.c
 tc01_simple_race_OBJECTS = tc01_simple_race.$(OBJEXT)
 tc01_simple_race_LDADD = $(LDADD)
@@ -272,25 +281,27 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = annotate_hbefore.c annotate_rwlock.c bar_bad.c bar_trivial.c \
-	free_is_write.c hg01_all_ok.c hg02_deadlock.c hg03_inherit.c \
-	hg04_race.c hg05_race2.c hg06_readshared.c \
-	locked_vs_unlocked1.c locked_vs_unlocked2.c \
-	locked_vs_unlocked3.c tc01_simple_race.c tc02_simple_tls.c \
-	tc03_re_excl.c tc04_free_lock.c tc05_simple_race.c \
-	tc06_two_races.c tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c \
-	tc10_rec_lock.c tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
-	tc14_laog_dinphils.c tc15_laog_lockdel.c tc16_byterace.c \
-	tc17_sembar.c tc18_semabuse.c tc19_shadowmem.c \
-	tc20_verifywrap.c tc21_pthonce.c tc22_exit_w_lock.c \
-	tc23_bogus_condwait.c tc24_nonzero_sem.c
+	cond_timedwait_invalid.c free_is_write.c hg01_all_ok.c \
+	hg02_deadlock.c hg03_inherit.c hg04_race.c hg05_race2.c \
+	hg06_readshared.c locked_vs_unlocked1.c locked_vs_unlocked2.c \
+	locked_vs_unlocked3.c t2t.c tc01_simple_race.c \
+	tc02_simple_tls.c tc03_re_excl.c tc04_free_lock.c \
+	tc05_simple_race.c tc06_two_races.c tc07_hbl1.c tc08_hbl2.c \
+	tc09_bad_unlock.c tc10_rec_lock.c tc11_XCHG.c \
+	tc12_rwl_trivial.c tc13_laog1.c tc14_laog_dinphils.c \
+	tc15_laog_lockdel.c tc16_byterace.c tc17_sembar.c \
+	tc18_semabuse.c tc19_shadowmem.c tc20_verifywrap.c \
+	tc21_pthonce.c tc22_exit_w_lock.c tc23_bogus_condwait.c \
+	tc24_nonzero_sem.c
 DIST_SOURCES = annotate_hbefore.c annotate_rwlock.c bar_bad.c \
-	bar_trivial.c free_is_write.c hg01_all_ok.c hg02_deadlock.c \
-	hg03_inherit.c hg04_race.c hg05_race2.c hg06_readshared.c \
-	locked_vs_unlocked1.c locked_vs_unlocked2.c \
-	locked_vs_unlocked3.c tc01_simple_race.c tc02_simple_tls.c \
-	tc03_re_excl.c tc04_free_lock.c tc05_simple_race.c \
-	tc06_two_races.c tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c \
-	tc10_rec_lock.c tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
+	bar_trivial.c cond_timedwait_invalid.c free_is_write.c \
+	hg01_all_ok.c hg02_deadlock.c hg03_inherit.c hg04_race.c \
+	hg05_race2.c hg06_readshared.c locked_vs_unlocked1.c \
+	locked_vs_unlocked2.c locked_vs_unlocked3.c t2t.c \
+	tc01_simple_race.c tc02_simple_tls.c tc03_re_excl.c \
+	tc04_free_lock.c tc05_simple_race.c tc06_two_races.c \
+	tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c tc10_rec_lock.c \
+	tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
 	tc14_laog_dinphils.c tc15_laog_lockdel.c tc16_byterace.c \
 	tc17_sembar.c tc18_semabuse.c tc19_shadowmem.c \
 	tc20_verifywrap.c tc21_pthonce.c tc22_exit_w_lock.c \
@@ -442,6 +453,8 @@ inplacedir = $(top_builddir)/.in_place
 
 # Baseline flags for all compilations.  Aim here is to maximise
 # performance and get whatever useful warnings we can out of gcc.
+# -fno-builtin is important for defeating LLVM's idiom recognition
+# that somehow causes VG_(memset) to get into infinite recursion.
 AM_CFLAGS_BASE = \
 	-O2 -g \
 	-Wall \
@@ -451,16 +464,20 @@ AM_CFLAGS_BASE = \
 	-Wstrict-prototypes \
 	-Wmissing-declarations \
 	@FLAG_W_NO_FORMAT_ZERO_LENGTH@ \
-	-fno-strict-aliasing
+	-fno-strict-aliasing \
+	-fno-builtin
 
-@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing
+@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
+@VGCONF_OS_IS_DARWIN_FALSE@		-fno-builtin
+
 
 # These flags are used for building the preload shared objects.
 # The aim is to give reasonable performance but also to have good
 # stack traces, since users often see stack traces extending 
 # into (and through) the preloads.
 @VGCONF_OS_IS_DARWIN_TRUE@AM_CFLAGS_PIC = -dynamic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
-@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC
+@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC \
+@VGCONF_OS_IS_DARWIN_TRUE@		-fno-builtin
 
 
 # Flags for specific targets.
@@ -572,7 +589,10 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -g $(AM_FLAG_M3264_PRI)
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_stderr
+dist_noinst_SCRIPTS = filter_stderr   \
+		      filter_helgrind \
+		      filter_xml
+
 EXTRA_DIST = \
 	annotate_hbefore.vgtest annotate_hbefore.stdout.exp \
 		annotate_hbefore.stderr.exp \
@@ -580,6 +600,8 @@ EXTRA_DIST = \
 		annotate_rwlock.stderr.exp \
 	annotate_smart_pointer.vgtest annotate_smart_pointer.stdout.exp \
 		annotate_smart_pointer.stderr.exp \
+	cond_timedwait_invalid.vgtest cond_timedwait_invalid.stdout.exp \
+		cond_timedwait_invalid.stderr.exp \
 	bar_bad.vgtest bar_bad.stdout.exp bar_bad.stderr.exp \
 	bar_trivial.vgtest bar_trivial.stdout.exp bar_trivial.stderr.exp \
 	free_is_write.vgtest free_is_write.stdout.exp \
@@ -609,6 +631,7 @@ EXTRA_DIST = \
 	pth_spinlock.vgtest pth_spinlock.stdout.exp pth_spinlock.stderr.exp \
 	rwlock_race.vgtest rwlock_race.stdout.exp rwlock_race.stderr.exp \
 	rwlock_test.vgtest rwlock_test.stdout.exp rwlock_test.stderr.exp \
+	t2t_laog.vgtest t2t_laog.stdout.exp t2t_laog.stderr.exp \
 	tc01_simple_race.vgtest tc01_simple_race.stdout.exp \
 		tc01_simple_race.stderr.exp \
 	tc02_simple_tls.vgtest tc02_simple_tls.stdout.exp \
@@ -626,7 +649,7 @@ EXTRA_DIST = \
 	tc07_hbl1.vgtest tc07_hbl1.stdout.exp tc07_hbl1.stderr.exp \
 	tc08_hbl2.vgtest tc08_hbl2.stdout.exp tc08_hbl2.stderr.exp \
 	tc09_bad_unlock.vgtest tc09_bad_unlock.stdout.exp \
-		tc09_bad_unlock.stderr.exp-glibc25-amd64 \
+		tc09_bad_unlock.stderr.exp \
 	tc10_rec_lock.vgtest tc10_rec_lock.stdout.exp tc10_rec_lock.stderr.exp \
 	tc11_XCHG.vgtest tc11_XCHG.stdout.exp tc11_XCHG.stderr.exp \
 	tc12_rwl_trivial.vgtest tc12_rwl_trivial.stdout.exp \
@@ -642,14 +665,15 @@ EXTRA_DIST = \
 	tc17_sembar.vgtest tc17_sembar.stdout.exp \
 		tc17_sembar.stderr.exp \
 	tc18_semabuse.vgtest tc18_semabuse.stdout.exp \
-		tc18_semabuse.stderr.exp-glibc28-amd64 \
+		tc18_semabuse.stderr.exp \
 	tc19_shadowmem.vgtest tc19_shadowmem.stdout.exp \
 		tc19_shadowmem.stderr.exp \
 	tc20_verifywrap.vgtest tc20_verifywrap.stdout.exp \
-		tc20_verifywrap.stderr.exp-glibc27-amd64 \
+		tc20_verifywrap.stderr.exp \
 	tc21_pthonce.vgtest tc21_pthonce.stdout.exp tc21_pthonce.stderr.exp \
 	tc22_exit_w_lock.vgtest tc22_exit_w_lock.stdout.exp \
 		tc22_exit_w_lock.stderr.exp \
+		tc22_exit_w_lock.stderr.exp-kfail-x86 \
 	tc23_bogus_condwait.vgtest tc23_bogus_condwait.stdout.exp \
 		tc23_bogus_condwait.stderr.exp \
 	tc24_nonzero_sem.vgtest tc24_nonzero_sem.stdout.exp \
@@ -664,6 +688,7 @@ EXTRA_DIST = \
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_FALSE@tc08_hbl2_CFLAGS = $(AM_CFLAGS)
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@tc08_hbl2_CFLAGS = $(AM_CFLAGS) -mcpu=cortex-a8
 LDADD = -lpthread
+@VGCONF_OS_IS_LINUX_TRUE@cond_timedwait_invalid_LDADD = -lrt
 all: all-am
 
 .SUFFIXES:
@@ -713,6 +738,9 @@ bar_bad$(EXEEXT): $(bar_bad_OBJECTS) $(bar_bad_DEPENDENCIES)
 bar_trivial$(EXEEXT): $(bar_trivial_OBJECTS) $(bar_trivial_DEPENDENCIES) 
 	@rm -f bar_trivial$(EXEEXT)
 	$(LINK) $(bar_trivial_OBJECTS) $(bar_trivial_LDADD) $(LIBS)
+cond_timedwait_invalid$(EXEEXT): $(cond_timedwait_invalid_OBJECTS) $(cond_timedwait_invalid_DEPENDENCIES) 
+	@rm -f cond_timedwait_invalid$(EXEEXT)
+	$(LINK) $(cond_timedwait_invalid_OBJECTS) $(cond_timedwait_invalid_LDADD) $(LIBS)
 free_is_write$(EXEEXT): $(free_is_write_OBJECTS) $(free_is_write_DEPENDENCIES) 
 	@rm -f free_is_write$(EXEEXT)
 	$(LINK) $(free_is_write_OBJECTS) $(free_is_write_LDADD) $(LIBS)
@@ -743,6 +771,9 @@ locked_vs_unlocked2$(EXEEXT): $(locked_vs_unlocked2_OBJECTS) $(locked_vs_unlocke
 locked_vs_unlocked3$(EXEEXT): $(locked_vs_unlocked3_OBJECTS) $(locked_vs_unlocked3_DEPENDENCIES) 
 	@rm -f locked_vs_unlocked3$(EXEEXT)
 	$(LINK) $(locked_vs_unlocked3_OBJECTS) $(locked_vs_unlocked3_LDADD) $(LIBS)
+t2t$(EXEEXT): $(t2t_OBJECTS) $(t2t_DEPENDENCIES) 
+	@rm -f t2t$(EXEEXT)
+	$(LINK) $(t2t_OBJECTS) $(t2t_LDADD) $(LIBS)
 tc01_simple_race$(EXEEXT): $(tc01_simple_race_OBJECTS) $(tc01_simple_race_DEPENDENCIES) 
 	@rm -f tc01_simple_race$(EXEEXT)
 	$(LINK) $(tc01_simple_race_OBJECTS) $(tc01_simple_race_LDADD) $(LIBS)
@@ -826,6 +857,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_rwlock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bar_bad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bar_trivial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_timedwait_invalid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/free_is_write.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hg01_all_ok.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hg02_deadlock.Po@am__quote@
@@ -836,6 +868,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locked_vs_unlocked1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locked_vs_unlocked2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locked_vs_unlocked3.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t2t.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc01_simple_race.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc02_simple_tls.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc03_re_excl.Po@am__quote@

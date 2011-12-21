@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2004-2010 OpenWorks LLP
+   Copyright (C) 2004-2011 OpenWorks LLP
       info@open-works.net
 
    This program is free software; you can redistribute it and/or
@@ -228,6 +228,8 @@ VexTranslateResult LibVEX_Translate ( VexTranslateArgs* vta )
    vex_traceflags = vta->traceflags;
 
    vassert(vex_initdone);
+   vassert(vta->needs_self_check != NULL);
+
    vexSetAllocModeTEMP_and_clear();
    vexAllocSanityCheck();
 

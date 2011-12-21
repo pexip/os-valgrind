@@ -152,8 +152,8 @@ insn_fpu_DEPENDENCIES =
 am_insn_mmx_OBJECTS = insn_mmx.$(OBJEXT)
 insn_mmx_OBJECTS = $(am_insn_mmx_OBJECTS)
 insn_mmx_DEPENDENCIES =
-insn_pclmulqdq_SOURCES = insn_pclmulqdq.c
-insn_pclmulqdq_OBJECTS = insn_pclmulqdq.$(OBJEXT)
+am_insn_pclmulqdq_OBJECTS = insn_pclmulqdq.$(OBJEXT)
+insn_pclmulqdq_OBJECTS = $(am_insn_pclmulqdq_OBJECTS)
 insn_pclmulqdq_LDADD = $(LDADD)
 am_insn_sse_OBJECTS = insn_sse.$(OBJEXT)
 insn_sse_OBJECTS = $(am_insn_sse_OBJECTS)
@@ -228,20 +228,22 @@ SOURCES = amd64locked.c asorep.c bug127521-64.c bug132813-amd64.c \
 	bug132918.c bug137714-amd64.c bug156404-amd64.c clc.c \
 	cmpxchg.c crc32.c faultstatus.c fcmovnu.c fxtract.c \
 	$(insn_basic_SOURCES) $(insn_fpu_SOURCES) $(insn_mmx_SOURCES) \
-	insn_pclmulqdq.c $(insn_sse_SOURCES) $(insn_sse2_SOURCES) \
-	$(insn_sse3_SOURCES) $(insn_ssse3_SOURCES) jrcxz.c looper.c \
-	loopnel.c lzcnt64.c nibz_bennee_mmap.c pcmpstr64.c \
-	pcmpxstrx64.c rcl-amd64.c redundantRexW.c sbbmisc.c shrld.c \
-	slahf-amd64.c smc1.c sse4-64.c ssse3_misaligned.c xadd.c
+	$(insn_pclmulqdq_SOURCES) $(insn_sse_SOURCES) \
+	$(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
+	$(insn_ssse3_SOURCES) jrcxz.c looper.c loopnel.c lzcnt64.c \
+	nibz_bennee_mmap.c pcmpstr64.c pcmpxstrx64.c rcl-amd64.c \
+	redundantRexW.c sbbmisc.c shrld.c slahf-amd64.c smc1.c \
+	sse4-64.c ssse3_misaligned.c xadd.c
 DIST_SOURCES = amd64locked.c asorep.c bug127521-64.c bug132813-amd64.c \
 	bug132918.c bug137714-amd64.c bug156404-amd64.c clc.c \
 	cmpxchg.c crc32.c faultstatus.c fcmovnu.c fxtract.c \
 	$(insn_basic_SOURCES) $(insn_fpu_SOURCES) $(insn_mmx_SOURCES) \
-	insn_pclmulqdq.c $(insn_sse_SOURCES) $(insn_sse2_SOURCES) \
-	$(insn_sse3_SOURCES) $(insn_ssse3_SOURCES) jrcxz.c looper.c \
-	loopnel.c lzcnt64.c nibz_bennee_mmap.c pcmpstr64.c \
-	pcmpxstrx64.c rcl-amd64.c redundantRexW.c sbbmisc.c shrld.c \
-	slahf-amd64.c smc1.c sse4-64.c ssse3_misaligned.c xadd.c
+	$(insn_pclmulqdq_SOURCES) $(insn_sse_SOURCES) \
+	$(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
+	$(insn_ssse3_SOURCES) jrcxz.c looper.c loopnel.c lzcnt64.c \
+	nibz_bennee_mmap.c pcmpstr64.c pcmpxstrx64.c rcl-amd64.c \
+	redundantRexW.c sbbmisc.c shrld.c slahf-amd64.c smc1.c \
+	sse4-64.c ssse3_misaligned.c xadd.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -389,6 +391,8 @@ inplacedir = $(top_builddir)/.in_place
 
 # Baseline flags for all compilations.  Aim here is to maximise
 # performance and get whatever useful warnings we can out of gcc.
+# -fno-builtin is important for defeating LLVM's idiom recognition
+# that somehow causes VG_(memset) to get into infinite recursion.
 AM_CFLAGS_BASE = \
 	-O2 -g \
 	-Wall \
@@ -398,16 +402,20 @@ AM_CFLAGS_BASE = \
 	-Wstrict-prototypes \
 	-Wmissing-declarations \
 	@FLAG_W_NO_FORMAT_ZERO_LENGTH@ \
-	-fno-strict-aliasing
+	-fno-strict-aliasing \
+	-fno-builtin
 
-@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing
+@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
+@VGCONF_OS_IS_DARWIN_FALSE@		-fno-builtin
+
 
 # These flags are used for building the preload shared objects.
 # The aim is to give reasonable performance but also to have good
 # stack traces, since users often see stack traces extending 
 # into (and through) the preloads.
 @VGCONF_OS_IS_DARWIN_TRUE@AM_CFLAGS_PIC = -dynamic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
-@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC
+@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC \
+@VGCONF_OS_IS_DARWIN_TRUE@		-fno-builtin
 
 
 # Flags for specific targets.
@@ -519,7 +527,7 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -g @FLAG_M64@
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS) @FLAG_M64@
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_cpuid filter_stderr filter_int gen_insn_test.pl
+dist_noinst_SCRIPTS = filter_cpuid filter_stderr gen_insn_test.pl
 CLEANFILES = $(addsuffix .c,$(INSN_TESTS))
 INSN_TESTS = insn_basic insn_mmx insn_sse insn_sse2 insn_fpu \
 	$(am__append_1) $(am__append_2) $(am__append_3)
@@ -536,6 +544,7 @@ EXTRA_DIST = \
 	bug137714-amd64.vgtest bug137714-amd64.stdout.exp \
 	bug137714-amd64.stderr.exp \
 	bug132918.vgtest bug132918.stderr.exp bug132918.stdout.exp \
+	bug132918.stdout.exp-older-glibc \
 	bug156404-amd64.vgtest bug156404-amd64.stdout.exp \
 	bug156404-amd64.stderr.exp \
 	clc.vgtest clc.stdout.exp clc.stderr.exp \
@@ -544,9 +553,12 @@ EXTRA_DIST = \
 	faultstatus.disabled faultstatus.stderr.exp \
 	fcmovnu.vgtest fcmovnu.stderr.exp fcmovnu.stdout.exp \
 	fxtract.vgtest fxtract.stderr.exp fxtract.stdout.exp \
+	fxtract.stdout.exp-older-glibc \
 	$(addsuffix .stderr.exp,$(INSN_TESTS)) \
 	$(addsuffix .stdout.exp,$(INSN_TESTS)) \
 	$(addsuffix .vgtest,$(INSN_TESTS)) \
+	insn_pclmulqdq.vgtest insn_pclmulqdq.stdout.exp \
+	insn_pclmulqdq.stderr.exp \
 	insn_sse3.stdout.exp insn_sse3.stderr.exp insn_sse3.vgtest \
 	insn_ssse3.stdout.exp insn_ssse3.stderr.exp insn_ssse3.vgtest \
 	jrcxz.stderr.exp jrcxz.stdout.exp jrcxz.vgtest \
@@ -568,6 +580,7 @@ EXTRA_DIST = \
 	ssse3_misaligned.stderr.exp ssse3_misaligned.stdout.exp \
 	ssse3_misaligned.vgtest \
 	sse4-64.stderr.exp sse4-64.stdout.exp sse4-64.vgtest \
+	sse4-64.stdout.exp-older-glibc \
 	slahf-amd64.stderr.exp slahf-amd64.stdout.exp \
 	slahf-amd64.vgtest \
 	xadd.stderr.exp xadd.stdout.exp xadd.vgtest
@@ -591,6 +604,7 @@ insn_ssse3_SOURCES = insn_ssse3.def
 insn_ssse3_LDADD = -lm
 insn_fpu_SOURCES = insn_fpu.def
 insn_fpu_LDADD = -lm
+insn_pclmulqdq_SOURCES = insn_pclmulqdq.def
 fxtract_LDADD = -lm
 all: all-am
 

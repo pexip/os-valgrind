@@ -9,7 +9,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2010 Julian Seward 
+   Copyright (C) 2000-2011 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -74,7 +74,8 @@ void ML_(symerr) ( struct _DebugInfo* di, Bool serious, HChar* msg )
             or below, since that won't already have been shown */
          VG_(message)(Vg_DebugMsg, 
                       "When reading debug info from %s:\n",
-                      (di && di->filename) ? di->filename : (UChar*)"???");
+                      (di && di->fsm.filename) ? di->fsm.filename
+                                               : (UChar*)"???");
       }
       VG_(message)(Vg_DebugMsg, "%s\n", msg);
 
@@ -94,8 +95,10 @@ void ML_(ppSym) ( Int idx, DiSym* sym )
    vg_assert(sym->pri_name);
    if (sec_names)
       vg_assert(sec_names);
-   VG_(printf)( "%5d:  %#8lx .. %#8lx (%d)      %s%s",
+   VG_(printf)( "%5d:  %c%c %#8lx .. %#8lx (%d)      %s%s",
                 idx,
+                sym->isText ? 'T' : '-',
+                sym->isIFunc ? 'I' : '-',
                 sym->addr, 
                 sym->addr + sym->size - 1, sym->size,
                 sym->pri_name, sec_names ? " " : "" );
@@ -280,24 +283,6 @@ void ML_(addSym) ( struct _DebugInfo* di, DiSym* sym )
 }
 
 
-/* Resize the symbol table to save memory.
-*/
-void ML_(shrinkSym)( struct _DebugInfo* di )
-{
-   DiSym* new_tab;
-   UInt new_sz = di->symtab_used;
-   if (new_sz == di->symtab_size) return;
-
-   new_tab = ML_(dinfo_zalloc)( "di.storage.shrinkSym", 
-                                new_sz * sizeof(DiSym) );
-   VG_(memcpy)(new_tab, di->symtab, new_sz * sizeof(DiSym));
-
-   ML_(dinfo_free)(di->symtab);
-   di->symtab = new_tab;
-   di->symtab_size = new_sz;
-}
-
-
 /* Add a location to the location table. 
 */
 static void addLoc ( struct _DebugInfo* di, DiLoc* loc )
@@ -328,15 +313,18 @@ static void addLoc ( struct _DebugInfo* di, DiLoc* loc )
 }
 
 
-/* Resize the lineinfo table to save memory.
+/* Resize the LocTab (line number table) to save memory, by removing
+   (and, potentially, allowing m_mallocfree to unmap) any unused space
+   at the end of the table.
 */
-void ML_(shrinkLineInfo)( struct _DebugInfo* di )
+static void shrinkLocTab ( struct _DebugInfo* di )
 {
    DiLoc* new_tab;
-   UInt new_sz = di->loctab_used;
+   UWord new_sz = di->loctab_used;
    if (new_sz == di->loctab_size) return;
+   vg_assert(new_sz < di->loctab_size);
 
-   new_tab = ML_(dinfo_zalloc)( "di.storage.shrinkLineInfo", 
+   new_tab = ML_(dinfo_zalloc)( "di.storage.shrinkLocTab", 
                                 new_sz * sizeof(DiLoc) );
    VG_(memcpy)(new_tab, di->loctab, new_sz * sizeof(DiLoc));
 
@@ -396,9 +384,9 @@ void ML_(addLineInfo) ( struct _DebugInfo* di,
    /* Rule out ones which are completely outside the r-x mapped area.
       See "Comment_Regarding_Text_Range_Checks" elsewhere in this file
       for background and rationale. */
-   vg_assert(di->have_rx_map && di->have_rw_map);
-   if (next-1 < di->rx_map_avma
-       || this >= di->rx_map_avma + di->rx_map_size ) {
+   vg_assert(di->fsm.have_rx_map && di->fsm.have_rw_map);
+   if (next-1 < di->fsm.rx_map_avma
+       || this >= di->fsm.rx_map_avma + di->fsm.rx_map_size ) {
        if (0)
           VG_(message)(Vg_DebugMsg, 
                        "warning: ignoring line info entry falling "
@@ -467,17 +455,17 @@ void ML_(addDiCfSI) ( struct _DebugInfo* di, DiCfSI* cfsi_orig )
       would fall within a single procedure. */
    vg_assert(cfsi.len < 5000000);
 
-   vg_assert(di->have_rx_map && di->have_rw_map);
+   vg_assert(di->fsm.have_rx_map && di->fsm.have_rw_map);
    /* If we have an empty r-x mapping (is that possible?) then the
       DiCfSI can't possibly fall inside it.  In which case skip. */
-   if (di->rx_map_size == 0)
+   if (di->fsm.rx_map_size == 0)
       return;
 
    /* Rule out ones which are completely outside the r-x mapped area.
       See "Comment_Regarding_Text_Range_Checks" elsewhere in this file
       for background and rationale. */
-   if (cfsi.base + cfsi.len - 1 < di->rx_map_avma
-       || cfsi.base >= di->rx_map_avma + di->rx_map_size) {
+   if (cfsi.base + cfsi.len - 1 < di->fsm.rx_map_avma
+       || cfsi.base >= di->fsm.rx_map_avma + di->fsm.rx_map_size) {
       static Int complaints = 10;
       if (VG_(clo_trace_cfi) || complaints > 0) {
          complaints--;
@@ -505,25 +493,26 @@ void ML_(addDiCfSI) ( struct _DebugInfo* di, DiCfSI* cfsi_orig )
       will fail.  See
       "Comment_on_IMPORTANT_CFSI_REPRESENTATIONAL_INVARIANTS" in
       priv_storage.h for background. */
-   if (cfsi.base < di->rx_map_avma) {
+   if (cfsi.base < di->fsm.rx_map_avma) {
       /* Lower end is outside the mapped area.  Hence upper end must
          be inside it. */
       if (0) VG_(printf)("XXX truncate lower\n");
-      vg_assert(cfsi.base + cfsi.len - 1 >= di->rx_map_avma);
-      delta = (SSizeT)(di->rx_map_avma - cfsi.base);
+      vg_assert(cfsi.base + cfsi.len - 1 >= di->fsm.rx_map_avma);
+      delta = (SSizeT)(di->fsm.rx_map_avma - cfsi.base);
       vg_assert(delta > 0);
       vg_assert(delta < (SSizeT)cfsi.len);
       cfsi.base += delta;
       cfsi.len -= delta;
    }
    else
-   if (cfsi.base + cfsi.len - 1 > di->rx_map_avma + di->rx_map_size - 1) {
+   if (cfsi.base + cfsi.len - 1 > di->fsm.rx_map_avma
+                                  + di->fsm.rx_map_size - 1) {
       /* Upper end is outside the mapped area.  Hence lower end must be
          inside it. */
       if (0) VG_(printf)("XXX truncate upper\n");
-      vg_assert(cfsi.base <= di->rx_map_avma + di->rx_map_size - 1);
+      vg_assert(cfsi.base <= di->fsm.rx_map_avma + di->fsm.rx_map_size - 1);
       delta = (SSizeT)( (cfsi.base + cfsi.len - 1) 
-                        - (di->rx_map_avma + di->rx_map_size - 1) );
+                        - (di->fsm.rx_map_avma + di->fsm.rx_map_size - 1) );
       vg_assert(delta > 0); vg_assert(delta < (SSizeT)cfsi.len);
       cfsi.len -= delta;
    }
@@ -537,9 +526,9 @@ void ML_(addDiCfSI) ( struct _DebugInfo* di, DiCfSI* cfsi_orig )
    vg_assert(cfsi.len > 0);
 
    /* Similar logic applies for the next two assertions. */
-   vg_assert(cfsi.base >= di->rx_map_avma);
+   vg_assert(cfsi.base >= di->fsm.rx_map_avma);
    vg_assert(cfsi.base + cfsi.len - 1
-             <= di->rx_map_avma + di->rx_map_size - 1);
+             <= di->fsm.rx_map_avma + di->fsm.rx_map_size - 1);
 
    if (di->cfsi_used == di->cfsi_size) {
       new_sz = 2 * di->cfsi_size;
@@ -927,10 +916,10 @@ void ML_(addVar)( struct _DebugInfo* di,
    /* This is assured us by top level steering logic in debuginfo.c,
       and it is re-checked at the start of
       ML_(read_elf_debug_info). */
-   vg_assert(di->have_rx_map && di->have_rw_map);
+   vg_assert(di->fsm.have_rx_map && di->fsm.have_rw_map);
    if (level > 0
-       && (aMax < di->rx_map_avma
-           || aMin >= di->rx_map_avma + di->rx_map_size)) {
+       && (aMax < di->fsm.rx_map_avma
+           || aMin >= di->fsm.rx_map_avma + di->fsm.rx_map_size)) {
       if (VG_(clo_verbosity) >= 0) {
          VG_(message)(Vg_DebugMsg, 
             "warning: addVar: in range %#lx .. %#lx outside "
@@ -1646,6 +1635,9 @@ static void canonicaliseLoctab ( struct _DebugInfo* di )
                 < di->loctab[i+1].addr);
    }
 #  undef SWAP
+
+   /* Free up unused space at the end of the table. */
+   shrinkLocTab(di);
 }
 
 
@@ -1858,7 +1850,7 @@ Word ML_(search_one_cfitab) ( struct _DebugInfo* di, Addr ptr )
 
 Word ML_(search_one_fpotab) ( struct _DebugInfo* di, Addr ptr )
 {
-   Addr const addr = ptr - di->rx_map_avma;
+   Addr const addr = ptr - di->fsm.rx_map_avma;
    Addr a_mid_lo, a_mid_hi;
    Word mid, size,
         lo = 0,

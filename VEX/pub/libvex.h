@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2004-2010 OpenWorks LLP
+   Copyright (C) 2004-2011 OpenWorks LLP
       info@open-works.net
 
    This program is free software; you can redistribute it and/or
@@ -119,7 +119,8 @@ typedef
 #define VEX_S390X_MODEL_Z10_EC   6
 #define VEX_S390X_MODEL_Z10_BC   7
 #define VEX_S390X_MODEL_Z196     8
-#define VEX_S390X_MODEL_INVALID  9
+#define VEX_S390X_MODEL_Z114     9
+#define VEX_S390X_MODEL_INVALID  10
 #define VEX_S390X_MODEL_MASK     0x3F
 
 #define VEX_HWCAPS_S390X_LDISP (1<<6)   /* Long-displacement facility */
@@ -538,10 +539,10 @@ typedef
       IRSB* (*finaltidy) ( IRSB* );
 
       /* IN: a callback used to ask the caller which of the extents,
-         if any, a self check is required for.  The returned value is
-         a bitmask with a 1 in position i indicating that the i'th
-         extent needs a check.  Since there can be at most 3 extents,
-         the returned values must be between 0 and 7. */
+         if any, a self check is required for.  Must not be NULL.
+         The returned value is a bitmask with a 1 in position i indicating
+         that the i'th extent needs a check.  Since there can be at most
+         3 extents, the returned values must be between 0 and 7. */
       UInt (*needs_self_check)( /*callback_opaque*/void*,
                                 VexGuestExtents* );
 

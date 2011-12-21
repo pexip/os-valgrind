@@ -49,7 +49,8 @@ DIST_COMMON = $(dist_noinst_SCRIPTS) $(srcdir)/Makefile.am \
 check_PROGRAMS = jm-insns$(EXEEXT) lsw$(EXEEXT) round$(EXEEXT) \
 	std_reg_imm$(EXEEXT) twi_tdi$(EXEEXT) tw_td$(EXEEXT) \
 	power6_bcmp$(EXEEXT) power6_mf_gpr$(EXEEXT) \
-	test_isa_2_06_part1$(EXEEXT) test_isa_2_06_part2$(EXEEXT)
+	test_isa_2_06_part1$(EXEEXT) test_isa_2_06_part2$(EXEEXT) \
+	test_isa_2_06_part3$(EXEEXT)
 subdir = none/tests/ppc64
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -91,6 +92,12 @@ test_isa_2_06_part2_OBJECTS =  \
 test_isa_2_06_part2_LDADD = $(LDADD)
 test_isa_2_06_part2_LINK = $(CCLD) $(test_isa_2_06_part2_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+test_isa_2_06_part3_SOURCES = test_isa_2_06_part3.c
+test_isa_2_06_part3_OBJECTS =  \
+	test_isa_2_06_part3-test_isa_2_06_part3.$(OBJEXT)
+test_isa_2_06_part3_LDADD = $(LDADD)
+test_isa_2_06_part3_LINK = $(CCLD) $(test_isa_2_06_part3_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 tw_td_SOURCES = tw_td.c
 tw_td_OBJECTS = tw_td.$(OBJEXT)
 tw_td_LDADD = $(LDADD)
@@ -108,10 +115,10 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = jm-insns.c lsw.c power6_bcmp.c power6_mf_gpr.c round.c \
 	std_reg_imm.c test_isa_2_06_part1.c test_isa_2_06_part2.c \
-	tw_td.c twi_tdi.c
+	test_isa_2_06_part3.c tw_td.c twi_tdi.c
 DIST_SOURCES = jm-insns.c lsw.c power6_bcmp.c power6_mf_gpr.c round.c \
 	std_reg_imm.c test_isa_2_06_part1.c test_isa_2_06_part2.c \
-	tw_td.c twi_tdi.c
+	test_isa_2_06_part3.c tw_td.c twi_tdi.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -259,6 +266,8 @@ inplacedir = $(top_builddir)/.in_place
 
 # Baseline flags for all compilations.  Aim here is to maximise
 # performance and get whatever useful warnings we can out of gcc.
+# -fno-builtin is important for defeating LLVM's idiom recognition
+# that somehow causes VG_(memset) to get into infinite recursion.
 AM_CFLAGS_BASE = \
 	-O2 -g \
 	-Wall \
@@ -268,16 +277,20 @@ AM_CFLAGS_BASE = \
 	-Wstrict-prototypes \
 	-Wmissing-declarations \
 	@FLAG_W_NO_FORMAT_ZERO_LENGTH@ \
-	-fno-strict-aliasing
+	-fno-strict-aliasing \
+	-fno-builtin
 
-@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing
+@VGCONF_OS_IS_DARWIN_FALSE@AM_CFLAGS_PIC = -fpic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
+@VGCONF_OS_IS_DARWIN_FALSE@		-fno-builtin
+
 
 # These flags are used for building the preload shared objects.
 # The aim is to give reasonable performance but also to have good
 # stack traces, since users often see stack traces extending 
 # into (and through) the preloads.
 @VGCONF_OS_IS_DARWIN_TRUE@AM_CFLAGS_PIC = -dynamic -O -g -fno-omit-frame-pointer -fno-strict-aliasing \
-@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC
+@VGCONF_OS_IS_DARWIN_TRUE@		-mno-dynamic-no-pic -fpic -fPIC \
+@VGCONF_OS_IS_DARWIN_TRUE@		-fno-builtin
 
 
 # Flags for specific targets.
@@ -403,7 +416,8 @@ EXTRA_DIST = \
 	power6_bcmp.stderr.exp power6_bcmp.stdout.exp power6_bcmp.vgtest \
 	power6_mf_gpr.stderr.exp power6_mf_gpr.stdout.exp power6_mf_gpr.vgtest \
 	test_isa_2_06_part1.stderr.exp  test_isa_2_06_part1.stdout.exp  test_isa_2_06_part1.vgtest \
-	test_isa_2_06_part2.stderr.exp  test_isa_2_06_part2.stdout.exp  test_isa_2_06_part2.vgtest
+	test_isa_2_06_part2.stderr.exp  test_isa_2_06_part2.stdout.exp  test_isa_2_06_part2.vgtest \
+	test_isa_2_06_part3.stderr.exp  test_isa_2_06_part3.stdout.exp  test_isa_2_06_part3.vgtest
 
 @HAS_ALTIVEC_FALSE@ALTIVEC_FLAG = 
 @HAS_ALTIVEC_TRUE@ALTIVEC_FLAG = -DHAS_ALTIVEC
@@ -415,6 +429,9 @@ test_isa_2_06_part1_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames $(VSX_
 			@FLAG_M64@ $(ALTIVEC_FLAG) $(BUILD_FLAG_VSX)
 
 test_isa_2_06_part2_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames $(VSX_FLAG) \
+			@FLAG_M64@ $(ALTIVEC_FLAG) $(BUILD_FLAG_VSX)
+
+test_isa_2_06_part3_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -lm -g -mregnames $(VSX_FLAG) \
 			@FLAG_M64@ $(ALTIVEC_FLAG) $(BUILD_FLAG_VSX)
 
 jm_insns_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames -maltivec \
@@ -481,6 +498,9 @@ test_isa_2_06_part1$(EXEEXT): $(test_isa_2_06_part1_OBJECTS) $(test_isa_2_06_par
 test_isa_2_06_part2$(EXEEXT): $(test_isa_2_06_part2_OBJECTS) $(test_isa_2_06_part2_DEPENDENCIES) 
 	@rm -f test_isa_2_06_part2$(EXEEXT)
 	$(test_isa_2_06_part2_LINK) $(test_isa_2_06_part2_OBJECTS) $(test_isa_2_06_part2_LDADD) $(LIBS)
+test_isa_2_06_part3$(EXEEXT): $(test_isa_2_06_part3_OBJECTS) $(test_isa_2_06_part3_DEPENDENCIES) 
+	@rm -f test_isa_2_06_part3$(EXEEXT)
+	$(test_isa_2_06_part3_LINK) $(test_isa_2_06_part3_OBJECTS) $(test_isa_2_06_part3_LDADD) $(LIBS)
 tw_td$(EXEEXT): $(tw_td_OBJECTS) $(tw_td_DEPENDENCIES) 
 	@rm -f tw_td$(EXEEXT)
 	$(LINK) $(tw_td_OBJECTS) $(tw_td_LDADD) $(LIBS)
@@ -502,6 +522,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/std_reg_imm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_2_06_part1-test_isa_2_06_part1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_2_06_part2-test_isa_2_06_part2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tw_td.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/twi_tdi.Po@am__quote@
 
@@ -560,6 +581,20 @@ test_isa_2_06_part2-test_isa_2_06_part2.obj: test_isa_2_06_part2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_isa_2_06_part2.c' object='test_isa_2_06_part2-test_isa_2_06_part2.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part2_CFLAGS) $(CFLAGS) -c -o test_isa_2_06_part2-test_isa_2_06_part2.obj `if test -f 'test_isa_2_06_part2.c'; then $(CYGPATH_W) 'test_isa_2_06_part2.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_2_06_part2.c'; fi`
+
+test_isa_2_06_part3-test_isa_2_06_part3.o: test_isa_2_06_part3.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part3_CFLAGS) $(CFLAGS) -MT test_isa_2_06_part3-test_isa_2_06_part3.o -MD -MP -MF $(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Tpo -c -o test_isa_2_06_part3-test_isa_2_06_part3.o `test -f 'test_isa_2_06_part3.c' || echo '$(srcdir)/'`test_isa_2_06_part3.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Tpo $(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_isa_2_06_part3.c' object='test_isa_2_06_part3-test_isa_2_06_part3.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part3_CFLAGS) $(CFLAGS) -c -o test_isa_2_06_part3-test_isa_2_06_part3.o `test -f 'test_isa_2_06_part3.c' || echo '$(srcdir)/'`test_isa_2_06_part3.c
+
+test_isa_2_06_part3-test_isa_2_06_part3.obj: test_isa_2_06_part3.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part3_CFLAGS) $(CFLAGS) -MT test_isa_2_06_part3-test_isa_2_06_part3.obj -MD -MP -MF $(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Tpo -c -o test_isa_2_06_part3-test_isa_2_06_part3.obj `if test -f 'test_isa_2_06_part3.c'; then $(CYGPATH_W) 'test_isa_2_06_part3.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_2_06_part3.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Tpo $(DEPDIR)/test_isa_2_06_part3-test_isa_2_06_part3.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_isa_2_06_part3.c' object='test_isa_2_06_part3-test_isa_2_06_part3.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_2_06_part3_CFLAGS) $(CFLAGS) -c -o test_isa_2_06_part3-test_isa_2_06_part3.obj `if test -f 'test_isa_2_06_part3.c'; then $(CYGPATH_W) 'test_isa_2_06_part3.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_2_06_part3.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

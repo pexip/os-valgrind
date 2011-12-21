@@ -8,7 +8,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2010 Julian Seward 
+   Copyright (C) 2000-2011 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -2070,7 +2070,7 @@ ML_(generic_PRE_sys_mmap) ( ThreadId tid,
       );
       /* Load symbols? */
       di_handle = VG_(di_notify_mmap)( (Addr)sr_Res(sres), 
-                                       False/*allow_SkFileV*/ );
+                                       False/*allow_SkFileV*/, (Int)arg5 );
       /* Notify the tool. */
       notify_tool_of_mmap(
          (Addr)sr_Res(sres), /* addr kernel actually assigned */

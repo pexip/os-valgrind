@@ -7,7 +7,7 @@
    This file is part of Lackey, an example Valgrind tool that does
    some simple program measurement and tracing.
 
-   Copyright (C) 2002-2010 Nicholas Nethercote
+   Copyright (C) 2002-2011 Nicholas Nethercote
       njn@valgrind.org
 
    This program is free software; you can redistribute it and/or
@@ -908,8 +908,8 @@ IRSB* lk_instrument ( VgCallbackClosure* closure,
 
 static void lk_fini(Int exitcode)
 {
-   char percentify_buf[4]; /* Two digits, '%' and 0. */
-   const int percentify_size = sizeof(percentify_buf);
+   char percentify_buf[5]; /* Two digits, '%' and 0. */
+   const int percentify_size = sizeof(percentify_buf) - 1;
    const int percentify_decs = 0;
    
    tl_assert(clo_fnname);
@@ -967,7 +967,7 @@ static void lk_pre_clo_init(void)
    VG_(details_version)         (NULL);
    VG_(details_description)     ("an example Valgrind tool");
    VG_(details_copyright_author)(
-      "Copyright (C) 2002-2010, and GNU GPL'd, by Nicholas Nethercote.");
+      "Copyright (C) 2002-2011, and GNU GPL'd, by Nicholas Nethercote.");
    VG_(details_bug_reports_to)  (VG_BUGS_TO);
    VG_(details_avg_translation_sizeB) ( 200 );
 

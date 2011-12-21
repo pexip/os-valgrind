@@ -53,6 +53,7 @@ SUPP_FILES = \
 	exp-sgcheck.supp \
 	darwin9.supp darwin9-drd.supp \
 	darwin10.supp darwin10-drd.supp \
+	darwin11.supp \
 	bionic.supp
 DEFAULT_SUPP_FILES = @DEFAULT_SUPP@
 
@@ -75,6 +76,7 @@ default.supp: $(DEFAULT_SUPP_FILES)
 
 ## Preprend @PERL@ because tests/vg_regtest isn't executable
 regtest: check
+	-tests/check_makefile_consistency gdbserver_tests $(TEST_TOOLS) $(TEST_EXP_TOOLS)
 	gdbserver_tests/make_local_links $(GDB)
 	@PERL@ tests/vg_regtest gdbserver_tests $(TEST_TOOLS) $(TEST_EXP_TOOLS)
 nonexp-regtest: check
@@ -116,4 +118,5 @@ all-local: default.supp
 clean-local:
 	rm -rf $(inplacedir)
 
-
+# Need config.h in the installed tree, since some files depend on it
+pkginclude_HEADERS = config.h
