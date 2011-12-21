@@ -1,4 +1,4 @@
 0001-more-vg-n-segments.patch
 0002-version.patch
-0004-allow-or-quoting-of-strings-in-.valgrindrc.patch
-0006-workaround-SIGSEGV-on-PPC.patch
+0003-allow-or-quoting-of-strings-in-.valgrindrc.patch
+0004-workaround-SIGSEGV-on-PPC.patch
