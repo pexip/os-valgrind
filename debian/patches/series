@@ -2,3 +2,4 @@
 0002-version.patch
 0003-allow-or-quoting-of-strings-in-.valgrindrc.patch
 0004-workaround-SIGSEGV-on-PPC.patch
+0005-fix-callgrind_control.patch

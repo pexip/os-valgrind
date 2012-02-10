@@ -1,3 +1,10 @@
+valgrind (1:3.7.0-2) unstable; urgency=low
+
+  * Fix callgrind_control that should look for valgrind.bin and not
+    "valgrind". Closes: 659215. Thanks to Martin Apel.
+
+ -- Pierre Habouzit <madcoder@debian.org>  Fri, 10 Feb 2012 14:16:17 +0100
+
 valgrind (1:3.7.0-1) unstable; urgency=low
 
   * New upstream release.
