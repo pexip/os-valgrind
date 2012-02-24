@@ -1,3 +1,10 @@
+valgrind (1:3.7.0-3) UNRELEASED; urgency=low
+
+  * Set myself as maintainer of valgrind, removing Andrés on his request.
+    Thanks for the more than 7 years of maintenance Andrés!
+
+ -- Pierre Habouzit <madcoder@debian.org>  Fri, 24 Feb 2012 17:40:24 +0100
+
 valgrind (1:3.7.0-2) unstable; urgency=low
 
   * Fix callgrind_control that should look for valgrind.bin and not
@@ -99,7 +106,6 @@ valgrind (1:3.6.1-2) unstable; urgency=low
  -- Pierre Habouzit <madcoder@debian.org>  Tue, 10 May 2011 23:12:23 +0200
 
 valgrind (1:3.6.1-1) unstable; urgency=low
-
   * Migrate to format 3.0 (quilt):
       - use upstream .tar.bz2 directly;
       - migrate patches from dpatch to debian/patches/*.
@@ -193,7 +199,7 @@ valgrind (1:3.5.0-3) unstable; urgency=low
 valgrind (1:3.5.0-2) unstable; urgency=low
 
   * debian/control:
-    - Added libc6-dev-i386 to build-dependencies on amd64. 
+    - Added libc6-dev-i386 to build-dependencies on amd64.
       May reopen #507752 but closes: #548067.
 
  -- Andrés Roldán <aroldan@debian.org>  Thu, 24 Sep 2009 20:18:57 +0000
@@ -201,7 +207,7 @@ valgrind (1:3.5.0-2) unstable; urgency=low
 valgrind (1:3.5.0-1) unstable; urgency=low
 
   * New upstream version. (Closes: #545700)
-  * debian/patches/02_version: 
+  * debian/patches/02_version:
     - Updated to fit this new version (Thanks to Andreas Beckmann)
   * debian/patches/01_pcm-ioctl.patch:
     - Updated
@@ -212,11 +218,11 @@ valgrind (1:3.5.0-1) unstable; urgency=low
   * debian/watch:
     - Added (Again, thanks to Andreas Beckmann)
   * debian/control:
-    - Removed Uploaders field (Closes: #519380, #540834) 
+    - Removed Uploaders field (Closes: #519380, #540834)
   * debian/valgrind.bash:
     - Provides a first bash completion script for valgrind. (Closes: #539137)
       Thanks to Jerome Reybert
-  * debian/debian.supp: 
+  * debian/debian.supp:
     - Updated to fit Debian's libc6 2.10.x
 
  -- Andrés Roldán <aroldan@debian.org>  Wed, 09 Sep 2009 16:26:29 +0000
@@ -252,7 +258,7 @@ valgrind (1:3.3.1-3) unstable; urgency=low
 valgrind (1:3.3.1-2) unstable; urgency=low
 
   * debian/rules:
-    - Forgot to copy debian-libc6-dbg.supp to /usr/lib/valgrind. 
+    - Forgot to copy debian-libc6-dbg.supp to /usr/lib/valgrind.
       (Closes: #486021)
 
  -- Andrés Roldán <aroldan@debian.org>  Fri, 13 Jun 2008 02:31:40 +0000
@@ -266,7 +272,7 @@ valgrind (1:3.3.1-1) unstable; urgency=low
       themselves. (Closes: #479165)
   * debian/control:
     - Made valgrind buildable for etch. (Closes: #472335)
-  * Bumped standard version to 3.7.3 
+  * Bumped standard version to 3.7.3
 
  -- Andrés Roldán <aroldan@debian.org>  Wed, 11 Jun 2008 23:10:08 +0000
 
@@ -346,7 +352,7 @@ valgrind (1:3.1.1-1) unstable; urgency=low
   * New upstream release
   * Updated 02_version and 01_suppression-strip patches
   * Updated debian.supp
-  * Suggests alleyoop and valgrind-callgrind instead of callgrind 
+  * Suggests alleyoop and valgrind-callgrind instead of callgrind
 
  -- Andrés Roldán <aroldan@debian.org>  Wed, 29 Mar 2006 22:23:53 +0000
 
@@ -383,7 +389,7 @@ valgrind (1:3.0.1-2) unstable; urgency=low
   * debian/patches/02_version.dpatch:
     - Adds "Debian" to package version string
   * debian/debian.supp:
-    - Adds suppression for Debian's libc6 2.3.5 dynamic linker. 
+    - Adds suppression for Debian's libc6 2.3.5 dynamic linker.
       (Closes: #331727, #326832)
 
  -- Andrés Roldán <aroldan@debian.org>  Wed,  2 Nov 2005 14:35:58 +0000
@@ -397,7 +403,7 @@ valgrind (1:3.0.1-1) unstable; urgency=low
 
 valgrind (1:3.0.0-1) unstable; urgency=low
 
-  * New upstream release. (Closes: 
+  * New upstream release. (Closes:
     - Now valgrind run on AMD64.
   * debian/patches/{01_manpage,01_configure,01_pcm-ioctl}.dpatch:
     - Updated to fit this version.
@@ -417,7 +423,7 @@ valgrind (1:2.4.0-3) unstable; urgency=low
   * debian/valgrind.sh:
     - Prepends LD_LIBRARY_PATH over DBGPATH. (Closes: #304315)
     - Adds GLIBCPP_FORCE_NEW=1 (for gcc < 3.4) and GLIBCXX_FORCE_NEW=1 (for
-      gcc >= 3.4) to force C++ STL to use malloc and to free memory by 
+      gcc >= 3.4) to force C++ STL to use malloc and to free memory by
       disabling memory caching (Closes: #307956)
   * debian/patches/01_manpage.dpatch:
     - New, adds reference to valgrind's authors and contributos on manpage.
@@ -426,7 +432,7 @@ valgrind (1:2.4.0-3) unstable; urgency=low
     - New, adds PCM ioctls. (Closes: #305051)
       Patch sent by Samuel Thibault <samuel.thibault@ens-lyon.org>.
   * debian/debian-libc6-dbg.supp:
-    - Updated. Thanks to Jeremy Nimmer <jwnimmer@alum.mit.edu>. 
+    - Updated. Thanks to Jeremy Nimmer <jwnimmer@alum.mit.edu>.
       (Closes: #302250)
 
  -- Andrés Roldán <aroldan@debian.org>  Fri, 20 May 2005 10:37:30 +0000
@@ -458,7 +464,7 @@ valgrind (1:2.2.0+2.4.0rc4+1-1) unstable; urgency=low
     - Fix unexpected SIGSEGV when using memcheck on programs where the
       first write to a particular 64k chunk is done by the FPU.
     - Fix a problem with the sys_futex wrapper which was inspecting
-      the wrong arguments for FUTEX_REQUEUE. (Closes: #299514) 
+      the wrong arguments for FUTEX_REQUEUE. (Closes: #299514)
     - Format fixup for a debug printf.
 
  -- Andrés Roldán <aroldan@debian.org>  Tue, 15 Mar 2005 13:47:00 +0000
@@ -589,7 +595,7 @@ valgrind (1:2.2.0-1) unstable; urgency=low
 valgrind (1:2.1.2-3) unstable; urgency=low
 
   * debian/patches/01_libpthread.dpatch:
-    - Patch to improving the logic in valgrind's libpthread that handles 
+    - Patch to improving the logic in valgrind's libpthread that handles
       looking for functions in libc to forward to. If you have assertions
       like "Assertion `open_ptr != ((void *)0)", you may love this patch.
   * debian/patches/01_memcpy.dpatch:
@@ -610,14 +616,14 @@ valgrind (1:2.1.2-2) unstable; urgency=low
     subtraction.
   * debian/patches/02_sbbl.dpatch: New. gcc sometimes generates "sbbl
     %reg,%reg" to convert the carry flag into 0 or -1 in reg.  This has no
-    actual dependency on reg, but memcheck can't see that, and so will help 
+    actual dependency on reg, but memcheck can't see that, and so will help
     if reg contains garbage.
-  * debian/valgrind.1: 
+  * debian/valgrind.1:
     + s/--logfile-fd/--log-fd/
     + s/--logfile/--log-file/
     + s/--logsocket/--log-socket/
 
- -- Andrés Roldán <aroldan@debian.org>  Sun,  8 Aug 2004 17:08:08 +0000 
+ -- Andrés Roldán <aroldan@debian.org>  Sun,  8 Aug 2004 17:08:08 +0000
 
 valgrind (1:2.1.2-1) unstable; urgency=low
 
@@ -677,7 +683,7 @@ valgrind (1:2.1.1-3) unstable; urgency=low
 
 valgrind (1:2.1.1-2) unstable; urgency=medium
 
-  * debian/control: 
+  * debian/control:
     sed -ne '/^Description:/,//p' control | sed -e 's/skins/tools/g'
   * debian/patches/12_readdir.dpatch: New. Add support for readdir syscall.
     (closes: #237996)
@@ -765,7 +771,7 @@ valgrind (1:2.1.0-7) unstable; urgency=low
 valgrind (1:2.1.0-6) unstable; urgency=low
 
   * Fixes bug generated by gcc which generates negatively-sized scopes and out
-    of order line number information in the stabs debug info. 
+    of order line number information in the stabs debug info.
     Really fixes Bug#231093.
 
  -- Andrés Roldán <aroldan@debian.org>  Wed, 11 Feb 2004 13:42:04 +0000
@@ -825,8 +831,8 @@ valgrind (1:2.1.0-1) unstable; urgency=low
        08_scas
     - Now blocking syscalls behave behave exactly as they do when running
       natively (not in valgrind). Hopefully closes: #166514
-    - Added support for file descriptors leakage checks (--track-fds=yes). 
-      When enabled, valgrind will print out a list of open file descriptors 
+    - Added support for file descriptors leakage checks (--track-fds=yes).
+      When enabled, valgrind will print out a list of open file descriptors
       on exit.
   * Increased the number of semaphores supported. (closes: #221745)
 
@@ -839,7 +845,7 @@ valgrind (1:2.0.0-4) unstable; urgency=low
   * Added stolen from head patch to support LFENCE and MFENCE.
   * Added stolen from head patch to implement SCAS.
   * Removed potato suppressions.
-  * Updated sarge suppressions. 
+  * Updated sarge suppressions.
 
  -- Andrés Roldán <aroldan@debian.org>  Sat,  6 Dec 2003 02:33:13 +0000
 
@@ -850,14 +856,14 @@ valgrind (1:2.0.0-3) unstable; urgency=low
     and __NR_utimes (syscall 271) syscalls.
   * Added patch to support posix_memalign function.
   * Increased the line error message. Useful when your code has long lines.
-  * Improved 03_vg_main.c.dpatch. Hopefully closes: #206917 
+  * Improved 03_vg_main.c.dpatch. Hopefully closes: #206917
 
  -- Andrés Roldán <aroldan@debian.org>  Mon, 17 Nov 2003 18:14:02 +0000
 
 valgrind (1:2.0.0-2) unstable; urgency=low
 
   * Build-depends and Recommends gdb. When configuring, it tries to determine
-    where is gdb and if it's not installed, --gdb-attach will not work. 
+    where is gdb and if it's not installed, --gdb-attach will not work.
     (closes: #220729)
 
  -- Andrés Roldán <aroldan@debian.org>  Fri, 14 Nov 2003 13:39:52 +0000
@@ -903,8 +909,8 @@ valgrind (20031012-4) unstable; urgency=low
 
 valgrind (20031012-3) unstable; urgency=low
 
-  * Added patch that solves the unhandled instruction bytes bug found on 
-    valgrind. 
+  * Added patch that solves the unhandled instruction bytes bug found on
+    valgrind.
 
  -- Andrés Roldán <aroldan@debian.org>  Mon, 20 Oct 2003 13:50:08 +0000
 
@@ -925,14 +931,14 @@ valgrind (20031012-1) unstable; urgency=low
 valgrind (20030725-8) unstable; urgency=low
 
   * Put together again all the package. I know, that was a bad idea.
-  * Added vg_profile.c to includes. 
+  * Added vg_profile.c to includes.
 
  -- Andrés Roldán <aroldan@debian.org>  Fri, 10 Oct 2003 17:36:26 +0000
 
 valgrind (20030725-7) unstable; urgency=low
 
   * At last, there has been included a full valgrind manpage written by me.
-    (closes: #166561) 
+    (closes: #166561)
 
  -- Andrés Roldán <aroldan@debian.org>  Thu,  2 Oct 2003 20:44:29 +0000
 
@@ -947,7 +953,7 @@ valgrind (20030725-6) unstable; urgency=low
     none) to make them support profiling.
   * Updated debian/README.Debian and debian/copyright.
 
- -- Andrés Roldán <aroldan@debian.org>  Sun, 28 Sep 2003 16:44:04 -0500 
+ -- Andrés Roldán <aroldan@debian.org>  Sun, 28 Sep 2003 16:44:04 -0500
 
 valgrind (20030725-5) unstable; urgency=low
 
@@ -966,7 +972,7 @@ valgrind (20030725-3) unstable; urgency=low
 
   * Changed the valgrind wrapper. It didn't work when it was using libraries
     on a non-standard location. (Thanks Jason :). (closes: #207771)
-  * Added patch to support compilation for 2.6 kernels (closes: #208142) 
+  * Added patch to support compilation for 2.6 kernels (closes: #208142)
 
  -- Andrés Roldán <aroldan@fluidsignal.com>  Mon,  1 Sep 2003 16:38:59 +0000
 
@@ -977,7 +983,7 @@ valgrind (20030725-2) unstable; urgency=low
   * Added wrapper to use libc6-dbg if it's installed.
   * Added sid.supp to work with the newest libc6 version.
   * Built with newer libc6.
-  * Added patch to support waitpid syscall. (closes: #206366) 
+  * Added patch to support waitpid syscall. (closes: #206366)
 
  -- Andrés Roldán <aroldan@fluidsignal.com>  Wed, 20 Aug 2003 16:42:37 +0000
 
@@ -1030,7 +1036,7 @@ valgrind (1.9.5-2) unstable; urgency=low
 valgrind (1.9.5-1) unstable; urgency=low
 
   * New maintainer.
-  * Began to use the devel branch of valgrind as the default version. 
+  * Began to use the devel branch of valgrind as the default version.
     See README.Debian.
     (closes: #166514, #179248, #186924, #179114)
   * Bumped up Standard-Version according to latest Debian Policy.
@@ -1063,16 +1069,16 @@ valgrind (1.0.4-2.1) unstable; urgency=low
 
 valgrind (1.0.4-2) unstable; urgency=low
 
-  * removed the conflicts: against libc6 2.3 -- upstream 1.0.4 is happy with 
+  * removed the conflicts: against libc6 2.3 -- upstream 1.0.4 is happy with
   that libc now (Closes: #165361)
-  
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Wed, 23 Oct 2002 08:46:04 +0200
 
 valgrind (1.0.4-1) unstable; urgency=low
 
   * New upstream release
   * Added a conflicts: against libc6 2.3 until I can investigate more. If
-    things go well, -2 should lift this restriction.  
+    things go well, -2 should lift this restriction.
   * Includes the Call Tree patch-0.2b-valgrind-1.0.4.gz from Josef Weindorfer
   * Includes the ValGui support patch vg104-after-ct0.2b.diff from Eric
     Estievenart.
@@ -1082,7 +1088,7 @@ valgrind (1.0.4-1) unstable; urgency=low
 
 valgrind (1.0.3-2) unstable; urgency=low
 
-  * added an experimental patch from upstream, 
+  * added an experimental patch from upstream,
     valgrind-1.0.3-gcc3.1-and-above-patch1.txt. This should help reducing
     the amount of noise when compiling with gcc3.1 and above.
 
@@ -1092,15 +1098,15 @@ valgrind (1.0.3-1) unstable; urgency=low
 
   * New upstream release (Closes: #160469)
   * added a "suggests" on kcachegrind
-  * Includes the Call Tree patch-0.2a-valgrind-1.0.2.gz from Josef Weindorfer, 
+  * Includes the Call Tree patch-0.2a-valgrind-1.0.2.gz from Josef Weindorfer,
   to improve compatibility with kcachegrind (Closes: #161208)
-  
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Thu, 19 Sep 2002 07:20:50 +0200
 
 valgrind (1.0.1-2) unstable; urgency=low
 
   * Add forgotten upstream ChangeLog (Closes: #159333)
-  
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Mon,  2 Sep 2002 18:52:25 +0200
 
 valgrind (1.0.1-1) unstable; urgency=low
@@ -1134,7 +1140,7 @@ valgrind (1.0pre2-2) unstable; urgency=low
 valgrind (1.0pre2-1) unstable; urgency=low
 
   * New upstream release. Should hopefully close #150588.
-  
+
   * installs file valgrind.h into /usr/include  (Closes: #147718). In
     fact, install now uses 'make install' which has been available for a
     while.
@@ -1161,21 +1167,21 @@ valgrind (0.0.20020503b-1) unstable; urgency=low
     snapshot packages (20020428 and 20020502).
 
   * added forgotten new binary libpthead.so (Closes: #145738)
-  
+
   * Added a note in README.Debian about problems with running kernel 2.2
     with a binary built using kernel 2.4 (see #145554, which is not fixed yet).
-  
+
   * Added a suppression for "ls -l" (Closes: 145727) and added a
     "debian.supp" temporary suppressions file. These suppressions should
     all be temporary, until upstream merges them.
-  
+
   * Added a file, /etc/default/valgrind, which allows you to tweak
     default options for valgrind and cachegrind; in particular, the
     default suppressions file. (Closes: #145691)
-  
+
   * Updated the control file to reflect the new features (libpthread,
     cachegrind)
-  
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Sun,  5 May 2002 20:26:20 +0200
 
 valgrind (0.0.20020502-1) unstable; urgency=low
@@ -1183,11 +1189,11 @@ valgrind (0.0.20020502-1) unstable; urgency=low
   * New upstream release
 
   * Fixed description grammar/typography (Closes: #145311)
-  
+
   * Fixed suppressions file generation. Now the package ships with "woody"
     and "potato" suppressions files (unconditionally uses "woody.supp" by
     default). (Closes: #145445)
-  
+
   * Added a hint in README.Debian about the possibility to use the
     debugging libc6.
 
@@ -1196,8 +1202,8 @@ valgrind (0.0.20020502-1) unstable; urgency=low
 valgrind (0.0.20020428-1) unstable; urgency=low
 
   * New upstream release
-  
-  * This package now works only with glibc-2.2 (upstream also supports 
+
+  * This package now works only with glibc-2.2 (upstream also supports
   glibc-2.1)
 
  -- Cyrille Chepelov <cyrille@chepelov.org>  Tue, 30 Apr 2002 07:30:04 +0200
@@ -1209,8 +1215,8 @@ valgrind (0.0.20020329-3) unstable; urgency=low
     IPC_64 in linux/ipc.h). This again suggested by Cristian Ionescu-Idbohrn.
 
   * Reviewed the upgrading checklist, and bumped up the Standards-Version
-    accordingly. 
-  
+    accordingly.
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Sat,  6 Apr 2002 21:44:53 +0200
 
 valgrind (0.0.20020329-2) unstable; urgency=low
@@ -1219,10 +1225,10 @@ valgrind (0.0.20020329-2) unstable; urgency=low
     distclean rather than clean).
   * valgrind.1: removed a small inconsistency in the parameter
     documentation.
-  
+
   Both these issues were reported by Cristian Ionescu-Idbohrn
-    <cristian.ionescu-idbohrn@axis.com> 
-  
+    <cristian.ionescu-idbohrn@axis.com>
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Sat,  6 Apr 2002 18:44:07 +0200
 
 valgrind (0.0.20020329-1) unstable; urgency=low
@@ -1234,17 +1240,17 @@ valgrind (0.0.20020329-1) unstable; urgency=low
 
 valgrind (0.0.20020320-1) unstable; urgency=low
 
-  * New upstream version. 
+  * New upstream version.
   * Fixed copyright file, which was lacking a mention of the GPL (oops).
   * added the README_MISSING_SYSCALL_OR_IOCTL docfile.
-  
+
  -- Cyrille Chepelov <cyrille@chepelov.org>  Thu, 21 Mar 2002 19:05:21 +0100
 
 valgrind (0.0.20020226-2) unstable; urgency=low
 
   * Updated description to reflect the fact that funky instruction and
     clone() are still unsupported. (Closes a comment from Joe Buck
-    <Joe.Buck@synopsys.com>) 
+    <Joe.Buck@synopsys.com>)
 
  -- Cyrille Chepelov <cyrille@chepelov.org>  Wed, 27 Feb 2002 00:53:50 +0100
 
