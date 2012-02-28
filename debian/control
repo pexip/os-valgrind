@@ -10,7 +10,7 @@ Vcs-Browser: http://git.debian.org/?p=collab-maint/valgrind.git;a=summary
 Vcs-Git: git://git.debian.org/git/collab-maint/valgrind.git
 
 Package: valgrind
-Architecture: i386 amd64 s390 s390x powerpc armel armhf
+Architecture: i386 amd64 s390x powerpc armel armhf
 Depends: ${misc:Depends}, ${shlibs:Depends}, libc6-dbg
 Conflicts: valgrind-callgrind
 Provides: valgrind-callgrind
