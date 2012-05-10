@@ -45,3 +45,6 @@ override_dh_install:
 	chown root.root $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
 	chmod 755 $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
 	install -p -m644 debian.supp $(target)/usr/lib/valgrind
+
+override_dh_installchangelogs:
+	dh_installchangelogs NEWS
