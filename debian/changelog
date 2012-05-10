@@ -1,3 +1,18 @@
+valgrind (1:3.7.0-4) UNRELEASED; urgency=low
+
+  * Remove versioned build depends already satisfied in stable
+  * Bump Standards-Version to 3.9.3
+  * Add debian/watch
+  * Pass CPPFLAGS and LDFLAGS from dpkg-buildflags too
+  * No need to pass --host configure option (dh_auto_configure takes care of it)
+  * Replace UNRELEASED with unstable in debian/{changelog,NEWS} entry for
+    3.6.1-5 (fixes debian-news-entry-has-strange-distribution)
+  * Add 0007-fix-spelling-in-binary.patch
+  * Add 0008-fix-spelling-in-manpage.patch
+  * Add more DEP3 headers to the patches
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Thu, 10 May 2012 20:10:30 +0200
+
 valgrind (1:3.7.0-3) unstable; urgency=low
 
   * Set myself as maintainer of valgrind, removing Andrés on his request.
