@@ -47,7 +47,6 @@ override_dh_install:
 	chmod 755 $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
 	install -p -m644 debian.supp $(target)/usr/lib/valgrind
 	install -p -d -m755 $(target)/usr/share/doc/valgrind/html
-	install -p -m644 debian/valgrind.bash $(target)/etc/bash_completion.d/valgrind
 
 %:
-	dh $@ --parallel --with autotools-dev
+	dh $@ --parallel --with=autotools-dev,bash-completion
