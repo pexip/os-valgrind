@@ -12,7 +12,9 @@ endif
 # configuration
 check_asm = $(shell echo 'void foo(void) { __asm__ volatile("$(1)"); }' | $(CROSS)gcc -x c -c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
 
-CFLAGS := $(shell dpkg-buildflags --get CFLAGS)
+CFLAGS   = $(shell dpkg-buildflags --get CFLAGS)
+CFLAGS  += $(shell dpkg-buildflags --get CPPFLAGS)
+LDFLAGS  = $(shell dpkg-buildflags --get LDFLAGS)
 
 ifeq ($(DEB_HOST_ARCH_CPU),arm)
     # whether the toolchain *default* configuration enables ARMv7
@@ -23,11 +25,11 @@ ifneq ($(has_v7),1)
     CFLAGS += -march=armv7-a
 endif
 endif
-export CFLAGS
 
 override_dh_auto_configure:
 	cat xfree-4.supp debian/debian.supp > debian.supp
-	dh_auto_configure -- --host="$(DEB_HOST_GNU_TYPE)" --enable-tls
+	dh_auto_configure -- --host="$(DEB_HOST_GNU_TYPE)" --enable-tls \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 override_dh_auto_test:
 	: # do nothing for now
