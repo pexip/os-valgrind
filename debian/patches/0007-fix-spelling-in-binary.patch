@@ -1,3 +1,9 @@
+Description: Fix spelling-error-in-binary found by lintian
+Origin: vendor
+Author: Alessandro Ghedini <ghedo@debian.org>
+Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
+Last-Update: 2012-05-10
+
 --- a/coregrind/m_commandline.c
 +++ b/coregrind/m_commandline.c
 @@ -66,7 +66,7 @@

@@ -1,12 +1,10 @@
-From e21747291015a44e4a4c514248b82b691d49f4e6 Mon Sep 17 00:00:00 2001
-From: Pierre Habouzit <madcoder@debian.org>
-Date: Tue, 10 May 2011 19:46:24 +0200
-Subject: [PATCH] allow ' or " quoting of strings in ~/.valgrindrc
-
-Signed-off-by: Pierre Habouzit <madcoder@debian.org>
----
- coregrind/m_commandline.c |   15 ++++++++++++++-
- 1 files changed, 14 insertions(+), 1 deletions(-)
+Description: Allow ' or " quoting of strings in ~/.valgrindrc
+ Signed-off-by: Pierre Habouzit <madcoder@debian.org>
+Origin: vendor
+Debian-Bug: http://bugs.debian.org/507236
+Author: Pierre Habouzit <madcoder@debian.org>
+Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
+Last-Update: 2012-05-10
 
 diff --git a/coregrind/m_commandline.c b/coregrind/m_commandline.c
 index 161e571..3aff3cd 100644
@@ -42,6 +40,3 @@ index 161e571..3aff3cd 100644
        if ( *cp != 0 ) *cp++ = '\0';       // terminate if not the last
        add_string( VG_(args_for_valgrind), tmp );
     }
--- 
-1.7.5.1.290.g2095dc
-

@@ -1,3 +1,9 @@
+Description: Fix spelling-error-in-manpage found by lintian
+Origin: vendor
+Author: Alessandro Ghedini <ghedo@debian.org>
+Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
+Last-Update: 2012-05-10
+
 --- a/docs/valgrind.1
 +++ b/docs/valgrind.1
 @@ -1174,7 +1174,7 @@

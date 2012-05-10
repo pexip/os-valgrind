@@ -1,4 +1,9 @@
-Increases VG_N_THREADS
+Description: Increases VG_N_THREADS
+Origin: vendor
+Debian-Bug: http://bugs.debian.org/491195
+Author: Andrés Roldán <aroldan@debian.org>
+Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
+Last-Update: 2012-05-10
 
 diff --git a/coregrind/m_aspacemgr/aspacemgr-linux.c b/coregrind/m_aspacemgr/aspacemgr-linux.c
 index 8ed8b84..90679da 100644

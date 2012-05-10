@@ -1,4 +1,9 @@
-Bump version and bug reporting address
+Description: Bump version and bug reporting address
+Origin: vendor
+Forwarded: not-needed
+Author: Andrés Roldán <aroldan@debian.org>
+Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
+Last-Update: 2012-05-10
 
 --- valgrind.orig/configure
 +++ valgrind/configure

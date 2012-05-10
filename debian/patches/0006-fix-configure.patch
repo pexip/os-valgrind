@@ -1,3 +1,9 @@
+Description: Make valgrind believe it's cross compiled so that it builds on armel
+Origin: vendor
+Author: Pierre Habouzit <madcoder@debian.org>
+Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
+Last-Update: 2012-05-10
+
 --- valgrind.orig/configure
 +++ valgrind/configure
 @@ -5133,7 +5133,7 @@
