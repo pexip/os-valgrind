@@ -4,3 +4,4 @@
 0004-workaround-SIGSEGV-on-PPC.patch
 0005-fix-callgrind_control.patch
 0006-fix-configure.patch
+0007-fix-spelling-in-binary.patch
