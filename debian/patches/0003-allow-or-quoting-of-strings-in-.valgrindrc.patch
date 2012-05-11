@@ -1,7 +1,7 @@
 Description: Allow ' or " quoting of strings in ~/.valgrindrc
  Signed-off-by: Pierre Habouzit <madcoder@debian.org>
 Origin: vendor
-Debian-Bug: http://bugs.debian.org/507236
+Bug-Debian: http://bugs.debian.org/507236
 Author: Pierre Habouzit <madcoder@debian.org>
 Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
 Last-Update: 2012-05-10

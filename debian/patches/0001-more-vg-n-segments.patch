@@ -1,6 +1,6 @@
 Description: Increases VG_N_THREADS
 Origin: vendor
-Debian-Bug: http://bugs.debian.org/491195
+Bug-Debian: http://bugs.debian.org/491195
 Author: Andrés Roldán <aroldan@debian.org>
 Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
 Last-Update: 2012-05-10
