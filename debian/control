@@ -16,6 +16,7 @@ Build-Depends: debhelper (>= 7.0.50~),
 Standards-Version: 3.9.3
 Vcs-Browser: http://git.debian.org/?p=collab-maint/valgrind.git;a=summary
 Vcs-Git: git://git.debian.org/git/collab-maint/valgrind.git
+Homepage: http://www.valgrind.org/
 
 Package: valgrind
 Architecture: i386 amd64 s390x powerpc ppc64 armel armhf
@@ -24,20 +25,20 @@ Conflicts: valgrind-callgrind
 Provides: valgrind-callgrind
 Suggests: kcachegrind, alleyoop, valkyrie (>> 1.3.0)
 Recommends: gdb
-Description: memory debugger and profiler
- Valgrind is a GPL'd tool to help you find memory-management problems in your
- programs. When a program is run under Valgrind's supervision, all reads and
- writes of memory are checked, and calls to malloc/new/free/delete are
- intercepted.
+Description: instrumentation framework for building dynamic analysis tools
+ Valgrind is a system for debugging and profiling Linux programs. With its tool
+ suite you can automatically detect many memory management and threading bugs,
+ avoiding hours of frustrating bug-hunting and making your programs more stable.
+ You can also perform detailed profiling to help speed up your programs and use
+ Valgrind to build new tools.
  .
- Valgrind can debug more or less any dynamically-linked ELF x86/Linux,
- amd64/Linux and ppc/Linux executables, without modification, recompilation,
- or anything.
- .
- Valgrind provides a generic infrastructure for supervising the execution of
- programs called "tools". This is done by providing a way to instrument
- programs in very precise ways, making it relatively easy to support
- activities such as dynamic error detection and profiling. The Valgrind
- distribution currently includes three tools: a memory error detector, a
- cache (time) profiler and a heap (space) profiler.
-Homepage: http://www.valgrind.org/
+ The Valgrind distribution currently includes six production-quality tools:
+  * a memory error detector (Memcheck)
+  * two thread error detectors (Helgrind and DRD)
+  * a cache and branch-prediction profiler (Cachegrind)
+  * a call-graph generating cache and branch-prediction profiler (Callgrind)
+  * a heap profiler (Massif)
+ It also includes three experimental tools:
+  * a stack/global array overrun detector (SGCheck)
+  * a second heap profiler that examines how heap blocks are used (DHAT)
+  * a SimPoint basic block vector generator (BBV)
