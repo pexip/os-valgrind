@@ -44,17 +44,11 @@ override_dh_auto_build:
 
 target=$(CURDIR)/debian/valgrind
 override_dh_install:
-	$(MAKE) install prefix=$(CURDIR)/debian/valgrind/usr
-	# Debian stuff
-	cp -f debian/debian-libc6-dbg.supp $(target)/usr/lib/valgrind
+	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
+	dh_install -pvalgrind -Xlibmpiwrap
 	mv -f $(target)/usr/bin/valgrind $(target)/usr/bin/valgrind.bin
-	cp -f debian/valgrind.sh $(target)/usr/bin/valgrind
-	chown root.root $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
-	chmod 755 $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
-	install -p -m644 debian/debian.supp $(target)/usr/lib/valgrind
-	# install the mpiwrap module in the valgrind-mpi package
-	dh_install -pvalgrind-mpi --autodest usr/lib/valgrind/libmpiwrap*
-	dh_install -Xlibmpiwrap --autodest --remaining-packages
+	mv -f ${target}/usr/bin/valgrind.sh $(target)/usr/bin/valgrind
+	dh_install --remaining-packages
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS
