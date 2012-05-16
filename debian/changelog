@@ -1,3 +1,20 @@
+valgrind (1:3.7.0-5) UNRELEASED; urgency=low
+
+  * Build on ppc64 too (Closes: #672481)
+  * Update short and long descriptions
+  * Remove not-needed Provides/Conflicts on valgrind-callgrind
+  * No need to merge xfree-4.supp into debian.supp: it is already provided
+    by default.supp
+  * Enable mpiwrap module (Closes: #565139)
+    - Add new valgrind-mpi package
+    - valgrind Suggests valgrind-mpi
+  * Clean-up rules' dh_install override
+  * Add valgrind-dbg package (cf. #475562)
+    - valgrind Recommends valgrind-dbg
+  * Remove unused lintian overrides
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 16 May 2012 21:39:27 +0200
+
 valgrind (1:3.7.0-4) unstable; urgency=low
 
   [ Pierre Habouzit ]
