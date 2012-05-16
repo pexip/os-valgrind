@@ -31,7 +31,6 @@ endif
 	dh $@ --parallel --with=autotools-dev,bash-completion
 
 override_dh_auto_configure:
-	cat xfree-4.supp debian/debian.supp > debian.supp
 	dh_auto_configure -- --host="$(DEB_HOST_GNU_TYPE)" --enable-tls \
 		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
@@ -52,7 +51,7 @@ override_dh_install:
 	cp -f debian/valgrind.sh $(target)/usr/bin/valgrind
 	chown root.root $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
 	chmod 755 $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
-	install -p -m644 debian.supp $(target)/usr/lib/valgrind
+	install -p -m644 debian/debian.supp $(target)/usr/lib/valgrind
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS
