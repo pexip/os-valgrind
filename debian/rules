@@ -52,6 +52,9 @@ override_dh_install:
 	chown root.root $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
 	chmod 755 $(target)/usr/bin/valgrind.bin $(target)/usr/bin/valgrind
 	install -p -m644 debian/debian.supp $(target)/usr/lib/valgrind
+	# install the mpiwrap module in the valgrind-mpi package
+	dh_install -pvalgrind-mpi --autodest usr/lib/valgrind/libmpiwrap*
+	dh_install -Xlibmpiwrap --autodest --remaining-packages
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS
