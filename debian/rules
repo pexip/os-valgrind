@@ -15,6 +15,7 @@ check_asm = $(shell echo 'void foo(void) { __asm__ volatile("$(1)"); }' |   \
 
 CFLAGS   = $(shell dpkg-buildflags --get CFLAGS)
 CFLAGS  += $(shell dpkg-buildflags --get CPPFLAGS)
+CFLAGS  += "-I/usr/include/$(DEB_HOST_GNU_TYPE)"   # fixes #676029
 LDFLAGS  = $(shell dpkg-buildflags --get LDFLAGS)
 
 ifeq ($(DEB_HOST_ARCH_CPU),arm)
