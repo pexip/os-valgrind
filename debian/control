@@ -46,7 +46,7 @@ Package: valgrind-dbg
 Priority: extra
 Section: debug
 Architecture: i386 amd64 s390x powerpc ppc64 armel armhf
-Depends: ${misc:Depends}, ${shlibs:Depends}, valgrind (= ${binary:Version})
+Depends: ${misc:Depends}, valgrind (= ${binary:Version})
 Description: instrumentation framework for building dynamic analysis tools (debug)
  Valgrind is a system for debugging and profiling Linux programs. With its tool
  suite you can automatically detect many memory management and threading bugs,
