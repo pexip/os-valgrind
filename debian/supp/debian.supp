@@ -1,21 +1,19 @@
 ##
-## Debian-specific suppressions
+## Debian suppressions
 ##
 
 {
-   Debian_dlopen1
+   dlopen
    Memcheck:Leak
-   fun:_dl_relocate_object
    ...
    fun:_dl_catch_error
 }
 
 {
-   Debian_dlopen2
+   rpmatch bug#350347
    Memcheck:Leak
-   fun:_dl_map_object
    ...
-   fun:_dl_catch_error
+   fun:rpmatch
 }
 
 {
@@ -28,36 +26,9 @@
 }
 
 {
-   Debian zlib1g suppression
-   Memcheck:Cond
-   obj:/usr/lib/libz.so.1.2.2
-   obj:/usr/lib/libz.so.1.2.2
-   fun:deflate
-   fun:main
-}
-
-# Glib stores pointers in an integral type. Bug#231989
-{
-  glib type registry
+  glib type registry bug#231989
   Memcheck:Leak
   fun:calloc
   fun:g_malloc0
   fun:type_node_any_new_W
-}
-
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-
-{
-   Debian libc6 getpw* leaks glibc-bug-2314, debian-bug-598870
-   Memcheck:Leak
-   fun:malloc
-   fun:nss_parse_service_list
-   fun:__nss_database_lookup
 }
