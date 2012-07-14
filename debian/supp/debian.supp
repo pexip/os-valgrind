@@ -3,57 +3,8 @@
 ##
 
 {
-   Debian libc6 (2.3.x) stripped dynamic linker
-   Memcheck:Cond
-   obj:/lib/ld-2.3.*.so
-   obj:/lib/ld-2.3.*.so
-   obj:/lib/ld-2.3.*.so
-   obj:/lib/ld-2.3.*.so
-   obj:/lib/ld-2.3.*.so
-}
-
-{
-   Debian libc6 (2.4.x) stripped dynamic linker 
-   Memcheck:Cond
-   obj:/lib/ld-2.4.so
-   obj:/lib/ld-2.4.so
-   obj:/lib/ld-2.4.so
-   obj:/lib/ld-2.4.so
-   obj:/lib/ld-2.4.so
-}
-
-{
-   Debian libc6 (2.5.x) stripped dynamic linker 
-   Memcheck:Cond
-   obj:/lib/ld-2.5.so
-   obj:/lib/ld-2.5.so
-   obj:/lib/ld-2.5.so
-   obj:/lib/ld-2.5.so
-   obj:/lib/ld-2.5.so
-}
-
-{
-   strchr/libc-2.3.2.so/_dl_catch_error(Cond)
-   Memcheck:Cond
-   fun:strchr
-   obj:*libc-2.3.2.so
-   fun:_dl_catch_error
-   obj:*libc-2.3.2.so
-}
-
-{
-    "Xlib does not zero out unused bytes in the protocol stream"; see http://keithp.com/~keithp/talks/usenix2003/html/net.html
-    Memcheck:Param
-    writev(vector[...])
-    fun:vgAllRoadsLeadToRome_writev
-    fun:__writev
-    obj:/usr/X11R6/lib/libX11.so.6.2
-    fun:_X11TransWritev
-}
-
-{
-   Debian_dlopen 
-   Memcheck:Cond
+   Debian_dlopen1
+   Memcheck:Leak
    fun:_dl_relocate_object
    fun:dl_open_worker
    fun:_dl_catch_error
@@ -69,22 +20,6 @@
    fun:_dl_catch_error
 }
 
-{
-   Debian_dlopen3
-   Memcheck:Addr1
-   obj:/lib/ld-2.3.2.so
-   fun:_dl_map_object
-   obj:/lib/ld-2.3.2.so
-   fun:_dl_catch_error
-}
-{
-   Debian_dlopen4
-   Memcheck:Addr1
-   obj:/lib/ld-2.3.2.so
-   fun:_dl_check_map_versions
-   fun:dl_open_worker
-   fun:_dl_catch_error
-}
 {
    Debian_gcc_supp
    Memcheck:Addr4
@@ -116,146 +51,9 @@
    Debian rpmatch (malloc) static allocations
    Memcheck:Leak
    fun:malloc
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
    fun:regcomp
    fun:rpmatch
    fun:main
-}
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-
-{
-   Debian rpmatch (calloc) static allocations
-   Memcheck:Leak
-   fun:calloc
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (calloc) static allocations
-   Memcheck:Leak
-   fun:calloc
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (calloc) static allocations
-   Memcheck:Leak
-   fun:calloc
-   obj:/lib/tls/libc-2.3.6.so
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (malloc - realloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   fun:realloc
-   obj:/lib/tls/libc-2.3.6.so
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-{
-   Debian rpmatch (malloc) static allocations
-   Memcheck:Leak
-   fun:malloc
-   fun:regcomp
-   fun:rpmatch
-   fun:main
-}
-
-{
-   Debian libc6 (2.9.x) stripped dynamic linker
-   Memcheck:Cond
-   obj:/lib/ld-2.9.so
-   obj:/lib/ld-2.9.so
-   obj:/lib/ld-2.9.so
-   obj:/lib/ld-2.9.so
-   obj:/lib/ld-2.9.so
-
-}
-{
-   Debian libc6 (2.10.x) stripped dynamic linker 
-   Memcheck:Cond
-   fun:index
-   fun:expand_dynamic_string_token
-   fun:_dl_map_object
-   fun:map_doit
-   fun:_dl_catch_error
-   fun:do_preload
-   fun:dl_main
-   fun:_dl_sysdep_start
-   fun:_dl_start
-   obj:/lib/ld-2.10.1.so
-}
-{
-   Debian libc6 (2.10.x) stripped dynamic linker
-   Memcheck:Cond
-   fun:_dl_relocate_object
-   fun:dl_main
-   fun:_dl_sysdep_start
-   fun:_dl_start
-   obj:/lib/ld-2.10.1.so
 }
 
 {
