@@ -17,15 +17,6 @@
 }
 
 {
-   Debian_gcc_supp
-   Memcheck:Addr4
-   obj:/lib/libgcc_s.so.1
-   fun:__dl_iterate_phdr
-   fun:_Unwind_Find_FDE
-   obj:/lib/libgcc_s.so.1
-}
-
-{
   glib type registry bug#231989
   Memcheck:Leak
   fun:calloc
