@@ -1,3 +1,15 @@
+valgrind (1:3.7.0-7) UNRELEASED; urgency=low
+
+  * Fix debian.supp madness (Closes: #661523):
+    - Remove python suppressions from debian.supp
+      (already provided by the python package)
+    - Remove outdated suppressions from debian.supp
+      (i.e. those matching old libraries)
+    - Update dlopen related suppressions
+    - Remove useless suppressions and clean-up remaining
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sat, 14 Jul 2012 19:54:32 +0200
+
 valgrind (1:3.7.0-6) unstable; urgency=low
 
   * Explicitly pass -I/usr/include/$(DEB_HOST_GNU_TYPE) compiler flag
