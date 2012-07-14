@@ -6,17 +6,15 @@
    Debian_dlopen1
    Memcheck:Leak
    fun:_dl_relocate_object
-   fun:dl_open_worker
+   ...
    fun:_dl_catch_error
-   fun:__GI__dl_open
 }
 
 {
    Debian_dlopen2
-   Memcheck:Addr1
-   obj:/lib/ld-2.3.2.so
+   Memcheck:Leak
    fun:_dl_map_object
-   fun:dl_open_worker
+   ...
    fun:_dl_catch_error
 }
 
