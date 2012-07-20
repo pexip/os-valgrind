@@ -3,13 +3,6 @@
 ##
 
 {
-   dlopen
-   Memcheck:Leak
-   ...
-   fun:_dl_catch_error
-}
-
-{
    rpmatch bug#350347
    Memcheck:Leak
    ...
