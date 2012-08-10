@@ -26,7 +26,7 @@ Last-Update: 2012-05-10
        VG_(close)(sr_Res(fd));
 --- a/coregrind/m_gdbserver/server.c
 +++ b/coregrind/m_gdbserver/server.c
-@@ -176,7 +176,7 @@
+@@ -179,7 +179,7 @@
  "  v.set debuglog <level>  : set valgrind debug log level to <level>\n"
  "  v.translate <addr> [<traceflags>]  : debug translation of <addr> with <traceflags>\n"
  "    (default traceflags 0b00100000 : show after instrumentation)\n"
@@ -37,7 +37,7 @@ Last-Update: 2012-05-10
     case  1: /* v.set */
 --- a/VEX/priv/ir_defs.c
 +++ b/VEX/priv/ir_defs.c
-@@ -3454,7 +3454,7 @@
+@@ -3747,7 +3747,7 @@
     if (bb->stmts_used < 0 || bb->stmts_size < 8
         || bb->stmts_used > bb->stmts_size)
        /* this BB is so strange we can't even print it */

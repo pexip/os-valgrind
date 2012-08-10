@@ -113,7 +113,7 @@ Last-Update: 2012-05-11
 +
 --- a/docs/Makefile.am
 +++ b/docs/Makefile.am
-@@ -72,6 +72,7 @@
+@@ -75,6 +75,7 @@
  	xml/quick-start-guide.xml \
  	xml/tech-docs.xml \
  	xml/valgrind-manpage.xml \

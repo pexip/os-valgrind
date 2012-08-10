@@ -5,8 +5,8 @@ Author: Andrés Roldán <aroldan@debian.org>
 Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
 Last-Update: 2012-05-10
 
---- valgrind.orig/configure
-+++ valgrind/configure
+--- a/configure
++++ b/configure
 @@ -552,9 +552,9 @@
  # Identity of this package.
  PACKAGE_NAME='Valgrind'
@@ -20,7 +20,7 @@ Last-Update: 2012-05-10
  PACKAGE_URL=''
  
  ac_unique_file="coregrind/m_main.c"
-@@ -5279,7 +5279,7 @@
+@@ -5322,7 +5322,7 @@
          ARCH_MAX="s390x"
          ;;
  
