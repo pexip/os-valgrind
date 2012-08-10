@@ -1,12 +1,21 @@
 valgrind (1:3.8.0-1) UNRELEASED; urgency=low
 
   * New upstream release
+    - Increase maximum allowed alignment for memalign (Closes: #489297)
+    - Support for Intel AVX instructions (Closes: #655468)
+    - Fix some C++ template symbols demangling (Closes: #493284)
   * Fix debian.supp madness (Closes: #661523):
     - Remove python suppressions from debian.supp
       (already provided by the python package)
     - Remove outdated suppressions from debian.supp
       (i.e. those matching old libraries)
     - Remove useless suppressions and clean-up remaining
+  * Update upstream copyright
+  * Enable support for mips
+  * Refresh 02_version.patch
+  * Drop 06_fix-configure.patch (fixed upstream)
+  * Refresh patches
+  * Update 07_fix-spelling-in-binary.patch
 
  -- Alessandro Ghedini <ghedo@debian.org>  Fri, 10 Aug 2012 12:20:39 +0200
 
