@@ -330,7 +330,7 @@ specifying either <code class="option">--vgdb=yes</code>
 or <code class="option">--vgdb=full</code>.  A secondary command line option,
 <code class="option">--vgdb-error=number</code>, can be used to tell the gdbserver
 only to become active once the specified number of errors have been
-reported.  A value of zero will therefore cause
+shown.  A value of zero will therefore cause
 the gdbserver to become active at startup, which allows you to
 insert breakpoints before starting the run.  For example:
 </p>
@@ -428,7 +428,7 @@ to the vgdb running on the Android system using the Android NDK
 <p> Example: on the Android system, execute the following:
     </p>
 <pre class="screen">
-valgrind --vgdb-error=0 prog
+valgrind --vgdb-error=0 --vgdb=yes prog
 # and then in another shell, run:
 vgdb --port=1234
 </pre>
@@ -451,7 +451,7 @@ Note that the local port nr (used by GDB) must not necessarily be equal
 to the port number used by vgdb: adb can forward tcp/ip between different
 port numbers.
 </p>
-<p>In the 3.7.0 release, the GDB server is not enabled by default
+<p>In the current release, the GDB server is not enabled by default
 for Android, due to problems in establishing a suitable directory in
 which Valgrind can create the necessary FIFOs (named pipes) for
 communication purposes.  You can stil try to use the GDB server, but
@@ -475,7 +475,10 @@ of success.</p>
 <p>You can specify the temporary directory to use either via
 the <code class="computeroutput">--with-tmpdir=</code> configure time
 flag, or by setting environment variable TMPDIR when running Valgrind
-(on the device, not the Android device).
+(on the Android device, not on the Android NDK development host).
+Another alternative is to specify the directory for the FIFOs using
+the <code class="computeroutput">--vgdb-prefix=</code> Valgrind command
+line option.
 </p>
 <p>We hope to have a better story for temporary directory handling
 on Android in the future.  The difficulty is that, unlike in standard
@@ -487,13 +490,22 @@ works across all devices and scenarios.
 <div class="titlepage"><div><div><h3 class="title">
 <a name="manual-core-adv.gdbserver-commandhandling"></a>3.2.5. Monitor command handling by the Valgrind gdbserver</h3></div></div></div>
 <p> The Valgrind gdbserver provides additional Valgrind-specific
-functionality via "monitor commands".  Such monitor commands can
-be sent from the GDB command line or from the shell command line.  See
-<a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.10. Valgrind monitor commands">Valgrind monitor commands</a> for the list
-of the Valgrind core monitor commands.
+functionality via "monitor commands".  Such monitor commands can be
+sent from the GDB command line or from the shell command line.  See
+<a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.10. Valgrind monitor commands">Valgrind monitor commands</a> for the
+list of the Valgrind core monitor commands available regardless of
+the Valgrind tool selected.
 </p>
-<p>Each tool can also provide tool-specific monitor commands.
-An example of a tool specific monitor command is the Memcheck monitor
+<p>The following tools provide tool-specific monitor commands:
+  </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem"><p><a class="xref" href="mc-manual.html#mc-manual.monitor-commands" title="4.6. Memcheck Monitor Commands">Memcheck Monitor Commands</a></p></li>
+<li class="listitem"><p><a class="xref" href="cl-manual.html#cl-manual.monitor-commands" title="6.4. Callgrind Monitor Commands">Callgrind Monitor Commands</a></p></li>
+<li class="listitem"><p><a class="xref" href="ms-manual.html#ms-manual.monitor-commands" title="9.4. Massif Monitor Commands">Massif Monitor Commands</a></p></li>
+</ul></div>
+<p>
+</p>
+<p>An example of a tool specific monitor command is the Memcheck monitor
 command <code class="computeroutput">leak_check full
 reachable any</code>.  This requests a full reporting of the
 allocated memory blocks.  To have this leak check executed, use the GDB
@@ -549,7 +561,7 @@ argument values) that can match:
 (gdb) mo v. n
 v. can match v.set v.info v.wait v.kill v.translate
 (gdb) mo v.i n
-n_errs_found 0 (vgdb-error 0)
+n_errs_found 0 n_errs_shown 0 (vgdb-error 0)
 (gdb) 
 </pre>
 <p>
@@ -593,7 +605,7 @@ the Valgrind scheduler thread state:</p>
 <p> When the option <code class="option">--vgdb-shadow-registers=yes</code> is
 given, the Valgrind gdbserver will let GDB examine and/or modify
 Valgrind's shadow registers.  GDB version 7.1 or later is needed for this
-to work.</p>
+to work. For x86 and amd64, GDB version 7.2 or later is needed.</p>
 <p>For each CPU register, the Valgrind core maintains two
 shadow register sets.  These shadow registers can be accessed from
 GDB by giving a postfix <code class="computeroutput">s1</code>
@@ -610,6 +622,28 @@ $2 = 0
 $3 = 0
 (gdb) 
 </pre>
+<p>Float shadow registers are shown by GDB as unsigned integer
+values instead of float values, as it is expected that these
+shadow values are mostly used for memcheck validity bits. </p>
+<p>Intel/amd64 AVX registers <code class="computeroutput">ymm0</code>
+to <code class="computeroutput">ymm15</code> have also their shadow
+registers. However, GDB presents the shadow values using two
+"half" registers. For example, the half shadow registers for 
+<code class="computeroutput">ymm9</code> are
+<code class="computeroutput">xmm9s1</code> (lower half for set 1),
+<code class="computeroutput">ymm9hs1</code> (upper half for set 1),
+<code class="computeroutput">xmm9s2</code> (lower half for set 2),
+<code class="computeroutput">ymm9hs2</code> (upper half for set 2).
+Note the inconsistent notation for the names of the half registers:
+the lower part starts with an <code class="computeroutput">x</code>,
+the upper part starts with an <code class="computeroutput">y</code>
+and has an <code class="computeroutput">h</code> before the shadow postfix.
+</p>
+<p>The special presentation of the AVX shadow registers is due to
+the fact that GDB independently retrieves the lower and upper half of
+the <code class="computeroutput">ymm</code> registers.  GDB does not
+however know that the shadow half registers have to be shown combined.
+</p>
 </div>
 <div class="sect2" title="3.2.8. Limitations of the Valgrind gdbserver">
 <div class="titlepage"><div><div><h3 class="title">
@@ -650,10 +684,41 @@ are however some limitations and peculiarities:</p>
        "stop-at" commands will be obeyed precisely.  The
        downside is that this requires each instruction to be
        instrumented with an additional call to a gdbserver helper
-       function, which gives considerable overhead compared to
-       <code class="option">--vgdb=no</code>.  Option <code class="option">--vgdb=yes</code>
-       has neglectible overhead compared
+       function, which gives considerable overhead (+500% for memcheck)
+       compared to  <code class="option">--vgdb=no</code>.
+       Option <code class="option">--vgdb=yes</code> has neglectible overhead compared
        to <code class="option">--vgdb=no</code>.
+     </p>
+</li>
+<li class="listitem">
+<p>Processor registers and flags values.</p>
+<p>When Valgrind gdbserver stops on an error, on a breakpoint
+     or when single stepping, registers and flags values might not be always
+     up to date due to the optimisations done by the Valgrind core.
+     The default value 
+     <code class="option">--vex-iropt-register-updates=unwindregs-at-mem-access</code>
+     ensures that the registers needed to make a stack trace (typically
+     PC/SP/FP) are up to date at each memory access (i.e. memory exception
+     points).
+     Disabling some optimisations using the following values will increase
+     the precision of registers and flags values (a typical performance 
+     impact for memcheck is given for each option).
+       </p>
+<div class="itemizedlist"><ul class="itemizedlist" type="circle">
+<li class="listitem">
+<code class="option">--vex-iropt-register-updates=allregs-at-mem-access</code> (+10%)
+           ensures that all registers and flags are up to date at each memory
+           access.
+         </li>
+<li class="listitem">
+<code class="option">--vex-iropt-register-updates=allregs-at-each-insn</code> (+25%)
+           ensures that all registers and flags are up to date at each instruction.
+         </li>
+</ul></div>
+<p>
+       Note that <code class="option">--vgdb=full</code> (+500%, see above
+       Precision of "stop-at" commands) automatically
+       activates <code class="option">--vex-iropt-register-updates=allregs-at-each-insn</code>.
      </p>
 </li>
 <li class="listitem">
@@ -746,7 +811,8 @@ Reading symbols from /lib/libc.so.6...(no debugging symbols found)...done.
 <p>On PPC32/PPC64, stack unwinding for leaf functions
      (functions that do not call any other functions) works properly
      only when you give the option
-     <code class="option">--vex-iropt-precise-memory-exns=yes</code>.
+     <code class="option">--vex-iropt-register-updates=allregs-at-mem-access</code>
+     or <code class="option">--vex-iropt-register-updates=allregs-at-each-insn</code>.
      You must also pass this option in order to get a precise stack when
      a signal is trapped by GDB.
      </p>
@@ -1025,10 +1091,14 @@ vgdb v.set log_output -c leak_check any
 <div class="sect2" title="3.2.10. Valgrind monitor commands">
 <div class="titlepage"><div><div><h3 class="title">
 <a name="manual-core-adv.valgrind-monitor-commands"></a>3.2.10. Valgrind monitor commands</h3></div></div></div>
-<p>The Valgrind monitor commands are available regardless of the
-Valgrind tool selected.  They can be sent either from a shell command
-line, by using a standalone vgdb, or from GDB, by using GDB's
-"monitor" command.</p>
+<p>This section describes the Valgrind monitor commands, available
+regardless of the Valgrind tool selected. For the tool specific
+commands, refer to <a class="xref" href="mc-manual.html#mc-manual.monitor-commands" title="4.6. Memcheck Monitor Commands">Memcheck Monitor Commands</a>,
+<a class="xref" href="cl-manual.html#cl-manual.monitor-commands" title="6.4. Callgrind Monitor Commands">Callgrind Monitor Commands</a> and
+<a class="xref" href="ms-manual.html#ms-manual.monitor-commands" title="9.4. Massif Monitor Commands">Massif Monitor Commands</a>. </p>
+<p> The monitor commands can be sent either from a shell command line, by using a
+standalone vgdb, or from GDB, by using GDB's "monitor"
+command (see <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-commandhandling" title="3.2.5. Monitor command handling by the Valgrind gdbserver">Monitor command handling by the Valgrind gdbserver</a>). </p>
 <div class="itemizedlist"><ul class="itemizedlist" type="disc">
 <li class="listitem"><p><code class="varname">help [debug]</code> instructs Valgrind's gdbserver
     to give the list of all monitor commands of the Valgrind core and
@@ -1040,9 +1110,8 @@ line, by using a standalone vgdb, or from GDB, by using GDB's
 <li class="listitem"><p><code class="varname">v.info last_error</code> shows the last error
     found.</p></li>
 <li class="listitem"><p><code class="varname">v.info n_errs_found</code> shows the number of
-    errors found so far and the current value of the 
-    <code class="option">--vgdb-error</code>
-    argument.</p></li>
+    errors found so far, the nr of errors shown so far and the current
+    value of the <code class="option">--vgdb-error</code> argument.</p></li>
 <li class="listitem">
 <p><code class="varname">v.set {gdb_output | log_output |
     mixed_output}</code> allows redirection of the Valgrind output
@@ -1095,10 +1164,13 @@ problems or bugs.</p>
     change this GDB behaviour by using the GDB command
     <code class="computeroutput">set breakpoint always-inserted on</code>.
     </p></li>
-<li class="listitem"><p><code class="varname">v.info memory</code> shows the statistics of
+<li class="listitem"><p><code class="varname">v.info memory [aspacemgr]</code> shows the statistics of
     Valgrind's internal heap management. If
     option <code class="option">--profile-heap=yes</code> was given, detailed
-    statistics will be output.
+    statistics will be output. With the optional argument
+    <code class="computeroutput">aspacemgr</code>. the segment list maintained
+    by valgrind address space manager will be output. Note that
+    this list of segments is always output on the Valgrind log.
     </p></li>
 <li class="listitem"><p><code class="varname">v.info scheduler</code> shows the state and
     stack trace for all threads, as known by Valgrind.  This allows to
@@ -1403,7 +1475,8 @@ functions and merely replaced functions
 (eg <code class="function">malloc</code>), so you can call
 <code class="function">malloc</code> etc safely from within wrappers.
 </p>
-<p>The above comments are true for {x86,amd64,ppc32,arm}-linux.  On
+<p>The above comments are true for {x86,amd64,ppc32,arm,mips32,s390}-linux.
+On
 ppc64-linux function wrapping is more fragile due to the (arguably
 poorly designed) ppc64-linux ABI.  This mandates the use of a shadow
 stack which tracks entries/exits of both wrapper and replacement
@@ -1413,7 +1486,8 @@ not get correctly cleared.  Secondly, since the shadow stack has
 finite size, recursion between wrapper/replacement functions is only
 possible to a limited depth, beyond which Valgrind has to abort the
 run.  This depth is currently 16 calls.</p>
-<p>For all platforms ({x86,amd64,ppc32,ppc64,arm}-linux) all the above
+<p>For all platforms ({x86,amd64,ppc32,ppc64,arm,mips32,s390}-linux)
+all the above
 comments apply on a per-thread basis.  In other words, wrapping is
 thread-safe: each thread must individually observe the above
 restrictions, but there is no need for any kind of inter-thread

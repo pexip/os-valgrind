@@ -49,26 +49,37 @@ DIST_COMMON = $(dist_noinst_SCRIPTS) $(noinst_HEADERS) \
 	$(top_srcdir)/Makefile.all.am \
 	$(top_srcdir)/Makefile.tool-tests.am
 
+# The Android toolchain includes all kinds of stdlib helpers present in
+# bionic which is bad because we are not linking with it and the Android
+# linker will panic.
+@VGCONF_PLATVARIANT_IS_ANDROID_TRUE@am__append_1 = -nostdlib
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@am__append_2 = -DVGA_SEC_@VGCONF_ARCH_SEC@=1  \
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@		-DVGP_SEC_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1
+
+
 # Arch-specific tests.
-@VGCONF_ARCHS_INCLUDE_X86_TRUE@am__append_1 = x86
-@VGCONF_ARCHS_INCLUDE_AMD64_TRUE@am__append_2 = amd64
-@VGCONF_ARCHS_INCLUDE_PPC32_TRUE@am__append_3 = ppc32
-@VGCONF_ARCHS_INCLUDE_PPC64_TRUE@am__append_4 = ppc64
+@VGCONF_ARCHS_INCLUDE_X86_TRUE@am__append_3 = x86
+@VGCONF_ARCHS_INCLUDE_AMD64_TRUE@am__append_4 = amd64
+@VGCONF_ARCHS_INCLUDE_PPC32_TRUE@am__append_5 = ppc32
+@VGCONF_ARCHS_INCLUDE_PPC64_TRUE@am__append_6 = ppc64
+@VGCONF_ARCHS_INCLUDE_S390X_TRUE@am__append_7 = s390x
 
 # OS-specific tests
-@VGCONF_OS_IS_LINUX_TRUE@am__append_5 = linux
-@VGCONF_OS_IS_DARWIN_TRUE@am__append_6 = darwin
+@VGCONF_OS_IS_LINUX_TRUE@am__append_8 = linux
+@VGCONF_OS_IS_DARWIN_TRUE@am__append_9 = darwin
 
 # Platform-specific tests
-@VGCONF_PLATFORMS_INCLUDE_X86_LINUX_TRUE@am__append_7 = x86-linux
-@VGCONF_PLATFORMS_INCLUDE_AMD64_LINUX_TRUE@am__append_8 = amd64-linux
-check_PROGRAMS = addressable$(EXEEXT) atomic_incs$(EXEEXT) \
-	badaddrvalue$(EXEEXT) badfree$(EXEEXT) badjump$(EXEEXT) \
-	badjump2$(EXEEXT) badloop$(EXEEXT) badpoll$(EXEEXT) \
-	badrw$(EXEEXT) big_blocks_freed_list$(EXEEXT) brk2$(EXEEXT) \
-	buflen_check$(EXEEXT) calloc-overflow$(EXEEXT) \
-	clientperm$(EXEEXT) custom_alloc$(EXEEXT) \
-	custom-overlap$(EXEEXT) deep_templates$(EXEEXT) \
+@VGCONF_PLATFORMS_INCLUDE_X86_LINUX_TRUE@am__append_10 = x86-linux
+@VGCONF_PLATFORMS_INCLUDE_AMD64_LINUX_TRUE@am__append_11 = amd64-linux
+check_PROGRAMS = accounting$(EXEEXT) addressable$(EXEEXT) \
+	atomic_incs$(EXEEXT) badaddrvalue$(EXEEXT) badfree$(EXEEXT) \
+	badjump$(EXEEXT) badjump2$(EXEEXT) badloop$(EXEEXT) \
+	badpoll$(EXEEXT) badrw$(EXEEXT) big_blocks_freed_list$(EXEEXT) \
+	brk2$(EXEEXT) buflen_check$(EXEEXT) bug287260$(EXEEXT) \
+	calloc-overflow$(EXEEXT) clientperm$(EXEEXT) \
+	clireq_nofill$(EXEEXT) clo_redzone$(EXEEXT) \
+	custom_alloc$(EXEEXT) custom-overlap$(EXEEXT) \
+	deep-backtrace$(EXEEXT) deep_templates$(EXEEXT) \
 	describe-block$(EXEEXT) doublefree$(EXEEXT) \
 	error_counts$(EXEEXT) errs1$(EXEEXT) exitprog$(EXEEXT) \
 	execve1$(EXEEXT) execve2$(EXEEXT) erringfds$(EXEEXT) \
@@ -96,18 +107,18 @@ check_PROGRAMS = addressable$(EXEEXT) atomic_incs$(EXEEXT) \
 	post-syscall$(EXEEXT) realloc1$(EXEEXT) realloc2$(EXEEXT) \
 	realloc3$(EXEEXT) sbfragment$(EXEEXT) sh-mem$(EXEEXT) \
 	sh-mem-random$(EXEEXT) sigaltstack$(EXEEXT) signal2$(EXEEXT) \
-	sigprocmask$(EXEEXT) sigkill$(EXEEXT) strchr$(EXEEXT) \
-	str_tester$(EXEEXT) supp_unknown$(EXEEXT) supp1$(EXEEXT) \
-	supp2$(EXEEXT) suppfree$(EXEEXT) trivialleak$(EXEEXT) \
-	unit_libcbase$(EXEEXT) unit_oset$(EXEEXT) varinfo1$(EXEEXT) \
-	varinfo2$(EXEEXT) varinfo3$(EXEEXT) varinfo4$(EXEEXT) \
-	varinfo5$(EXEEXT) varinfo5so.so$(EXEEXT) varinfo6$(EXEEXT) \
-	vcpu_fbench$(EXEEXT) vcpu_fnfns$(EXEEXT) xml1$(EXEEXT) \
-	wrap1$(EXEEXT) wrap2$(EXEEXT) wrap3$(EXEEXT) wrap4$(EXEEXT) \
-	wrap5$(EXEEXT) wrap6$(EXEEXT) wrap7$(EXEEXT) \
-	wrap7so.so$(EXEEXT) wrap8$(EXEEXT) writev1$(EXEEXT)
-@VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@am__append_9 = -mfloat-abi=softfp
-@VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@am__append_10 = -mfloat-abi=softfp
+	sigprocmask$(EXEEXT) static_malloc$(EXEEXT) sigkill$(EXEEXT) \
+	strchr$(EXEEXT) str_tester$(EXEEXT) supp_unknown$(EXEEXT) \
+	supp1$(EXEEXT) supp2$(EXEEXT) suppfree$(EXEEXT) \
+	test-plo$(EXEEXT) trivialleak$(EXEEXT) unit_libcbase$(EXEEXT) \
+	unit_oset$(EXEEXT) varinfo1$(EXEEXT) varinfo2$(EXEEXT) \
+	varinfo3$(EXEEXT) varinfo4$(EXEEXT) varinfo5$(EXEEXT) \
+	varinfo5so.so$(EXEEXT) varinfo6$(EXEEXT) vcpu_fbench$(EXEEXT) \
+	vcpu_fnfns$(EXEEXT) xml1$(EXEEXT) wrap1$(EXEEXT) \
+	wrap2$(EXEEXT) wrap3$(EXEEXT) wrap4$(EXEEXT) wrap5$(EXEEXT) \
+	wrap6$(EXEEXT) wrap7$(EXEEXT) wrap7so.so$(EXEEXT) \
+	wrap8$(EXEEXT) writev1$(EXEEXT) $(am__EXEEXT_1)
+@DWARF4_TRUE@am__append_12 = dw4
 subdir = memcheck/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -117,6 +128,10 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@DWARF4_TRUE@am__EXEEXT_1 = dw4$(EXEEXT)
+accounting_SOURCES = accounting.c
+accounting_OBJECTS = accounting.$(OBJEXT)
+accounting_LDADD = $(LDADD)
 addressable_SOURCES = addressable.c
 addressable_OBJECTS = addressable.$(OBJEXT)
 addressable_LDADD = $(LDADD)
@@ -155,18 +170,30 @@ brk2_LDADD = $(LDADD)
 buflen_check_SOURCES = buflen_check.c
 buflen_check_OBJECTS = buflen_check.$(OBJEXT)
 buflen_check_LDADD = $(LDADD)
+bug287260_SOURCES = bug287260.c
+bug287260_OBJECTS = bug287260.$(OBJEXT)
+bug287260_LDADD = $(LDADD)
 calloc_overflow_SOURCES = calloc-overflow.c
 calloc_overflow_OBJECTS = calloc-overflow.$(OBJEXT)
 calloc_overflow_LDADD = $(LDADD)
 clientperm_SOURCES = clientperm.c
 clientperm_OBJECTS = clientperm.$(OBJEXT)
 clientperm_LDADD = $(LDADD)
+clireq_nofill_SOURCES = clireq_nofill.c
+clireq_nofill_OBJECTS = clireq_nofill.$(OBJEXT)
+clireq_nofill_LDADD = $(LDADD)
+clo_redzone_SOURCES = clo_redzone.c
+clo_redzone_OBJECTS = clo_redzone.$(OBJEXT)
+clo_redzone_LDADD = $(LDADD)
 custom_overlap_SOURCES = custom-overlap.c
 custom_overlap_OBJECTS = custom-overlap.$(OBJEXT)
 custom_overlap_LDADD = $(LDADD)
 custom_alloc_SOURCES = custom_alloc.c
 custom_alloc_OBJECTS = custom_alloc.$(OBJEXT)
 custom_alloc_LDADD = $(LDADD)
+deep_backtrace_SOURCES = deep-backtrace.c
+deep_backtrace_OBJECTS = deep-backtrace.$(OBJEXT)
+deep_backtrace_LDADD = $(LDADD)
 am_deep_templates_OBJECTS = deep_templates-deep_templates.$(OBJEXT)
 deep_templates_OBJECTS = $(am_deep_templates_OBJECTS)
 deep_templates_LDADD = $(LDADD)
@@ -178,6 +205,11 @@ describe_block_LDADD = $(LDADD)
 doublefree_SOURCES = doublefree.c
 doublefree_OBJECTS = doublefree.$(OBJEXT)
 doublefree_LDADD = $(LDADD)
+dw4_SOURCES = dw4.c
+dw4_OBJECTS = dw4-dw4.$(OBJEXT)
+dw4_LDADD = $(LDADD)
+dw4_LINK = $(CCLD) $(dw4_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
+	$@
 err_disable1_SOURCES = err_disable1.c
 err_disable1_OBJECTS = err_disable1.$(OBJEXT)
 err_disable1_LDADD = $(LDADD)
@@ -419,6 +451,9 @@ signal2_LDADD = $(LDADD)
 sigprocmask_SOURCES = sigprocmask.c
 sigprocmask_OBJECTS = sigprocmask.$(OBJEXT)
 sigprocmask_LDADD = $(LDADD)
+static_malloc_SOURCES = static_malloc.c
+static_malloc_OBJECTS = static_malloc.$(OBJEXT)
+static_malloc_LDADD = $(LDADD)
 str_tester_SOURCES = str_tester.c
 str_tester_OBJECTS = str_tester-str_tester.$(OBJEXT)
 str_tester_LDADD = $(LDADD)
@@ -439,6 +474,9 @@ supp_unknown_LDADD = $(LDADD)
 suppfree_SOURCES = suppfree.c
 suppfree_OBJECTS = suppfree.$(OBJEXT)
 suppfree_LDADD = $(LDADD)
+test_plo_SOURCES = test-plo.c
+test_plo_OBJECTS = test-plo.$(OBJEXT)
+test_plo_LDADD = $(LDADD)
 trivialleak_SOURCES = trivialleak.c
 trivialleak_OBJECTS = trivialleak.$(OBJEXT)
 trivialleak_LDADD = $(LDADD)
@@ -544,11 +582,12 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
-	badjump.c badjump2.c badloop.c badpoll.c badrw.c \
-	big_blocks_freed_list.c brk2.c buflen_check.c \
-	calloc-overflow.c clientperm.c custom-overlap.c custom_alloc.c \
-	$(deep_templates_SOURCES) describe-block.c doublefree.c \
+SOURCES = accounting.c addressable.c atomic_incs.c badaddrvalue.c \
+	badfree.c badjump.c badjump2.c badloop.c badpoll.c badrw.c \
+	big_blocks_freed_list.c brk2.c buflen_check.c bug287260.c \
+	calloc-overflow.c clientperm.c clireq_nofill.c clo_redzone.c \
+	custom-overlap.c custom_alloc.c deep-backtrace.c \
+	$(deep_templates_SOURCES) describe-block.c doublefree.c dw4.c \
 	err_disable1.c err_disable2.c err_disable3.c err_disable4.c \
 	erringfds.c error_counts.c errs1.c execve1.c execve2.c \
 	exitprog.c file_locking.c fprw.c fwrite.c \
@@ -566,19 +605,20 @@ SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
 	pdb-realloc2.c pipe.c pointer-trace.c post-syscall.c \
 	realloc1.c realloc2.c realloc3.c sbfragment.c sh-mem.c \
 	sh-mem-random.c sigaltstack.c sigkill.c signal2.c \
-	sigprocmask.c str_tester.c strchr.c $(supp1_SOURCES) \
-	$(supp2_SOURCES) $(supp_unknown_SOURCES) suppfree.c \
-	trivialleak.c unit_libcbase.c unit_oset.c varinfo1.c \
-	varinfo2.c varinfo3.c varinfo4.c $(varinfo5_SOURCES) \
-	$(varinfo5so_so_SOURCES) varinfo6.c vcpu_fbench.c vcpu_fnfns.c \
-	wrap1.c wrap2.c wrap3.c wrap4.c wrap5.c wrap6.c \
-	$(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c writev1.c \
-	xml1.c
-DIST_SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
-	badjump.c badjump2.c badloop.c badpoll.c badrw.c \
-	big_blocks_freed_list.c brk2.c buflen_check.c \
-	calloc-overflow.c clientperm.c custom-overlap.c custom_alloc.c \
-	$(deep_templates_SOURCES) describe-block.c doublefree.c \
+	sigprocmask.c static_malloc.c str_tester.c strchr.c \
+	$(supp1_SOURCES) $(supp2_SOURCES) $(supp_unknown_SOURCES) \
+	suppfree.c test-plo.c trivialleak.c unit_libcbase.c \
+	unit_oset.c varinfo1.c varinfo2.c varinfo3.c varinfo4.c \
+	$(varinfo5_SOURCES) $(varinfo5so_so_SOURCES) varinfo6.c \
+	vcpu_fbench.c vcpu_fnfns.c wrap1.c wrap2.c wrap3.c wrap4.c \
+	wrap5.c wrap6.c $(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c \
+	writev1.c xml1.c
+DIST_SOURCES = accounting.c addressable.c atomic_incs.c badaddrvalue.c \
+	badfree.c badjump.c badjump2.c badloop.c badpoll.c badrw.c \
+	big_blocks_freed_list.c brk2.c buflen_check.c bug287260.c \
+	calloc-overflow.c clientperm.c clireq_nofill.c clo_redzone.c \
+	custom-overlap.c custom_alloc.c deep-backtrace.c \
+	$(deep_templates_SOURCES) describe-block.c doublefree.c dw4.c \
 	err_disable1.c err_disable2.c err_disable3.c err_disable4.c \
 	erringfds.c error_counts.c errs1.c execve1.c execve2.c \
 	exitprog.c file_locking.c fprw.c fwrite.c \
@@ -596,14 +636,14 @@ DIST_SOURCES = addressable.c atomic_incs.c badaddrvalue.c badfree.c \
 	pdb-realloc2.c pipe.c pointer-trace.c post-syscall.c \
 	realloc1.c realloc2.c realloc3.c sbfragment.c sh-mem.c \
 	sh-mem-random.c sigaltstack.c sigkill.c signal2.c \
-	sigprocmask.c str_tester.c strchr.c $(supp1_SOURCES) \
-	$(supp2_SOURCES) $(supp_unknown_SOURCES) suppfree.c \
-	trivialleak.c unit_libcbase.c unit_oset.c varinfo1.c \
-	varinfo2.c varinfo3.c varinfo4.c $(varinfo5_SOURCES) \
-	$(varinfo5so_so_SOURCES) varinfo6.c vcpu_fbench.c vcpu_fnfns.c \
-	wrap1.c wrap2.c wrap3.c wrap4.c wrap5.c wrap6.c \
-	$(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c writev1.c \
-	xml1.c
+	sigprocmask.c static_malloc.c str_tester.c strchr.c \
+	$(supp1_SOURCES) $(supp2_SOURCES) $(supp_unknown_SOURCES) \
+	suppfree.c test-plo.c trivialleak.c unit_libcbase.c \
+	unit_oset.c varinfo1.c varinfo2.c varinfo3.c varinfo4.c \
+	$(varinfo5_SOURCES) $(varinfo5so_so_SOURCES) varinfo6.c \
+	vcpu_fbench.c vcpu_fnfns.c wrap1.c wrap2.c wrap3.c wrap4.c \
+	wrap5.c wrap6.c $(wrap7_SOURCES) $(wrap7so_so_SOURCES) wrap8.c \
+	writev1.c xml1.c
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -660,6 +700,7 @@ CCASDEPMODE = @CCASDEPMODE@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CFLAGS_MPI = @CFLAGS_MPI@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -697,6 +738,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LDFLAGS_MPI = @LDFLAGS_MPI@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LN_S = @LN_S@
@@ -820,14 +862,6 @@ AM_CFLAGS_BASE = \
 #
 # Nb: the AM_CPPFLAGS_* values are suitable for building tools and auxprogs.
 # For building the core, coregrind/Makefile.am files add some extra things.
-#
-# Also: in newer versions of automake (1.10 onwards?) asm files ending with
-# '.S' are considered "pre-processed" (as opposed to those ending in '.s')
-# and so the CPPFLAGS are passed to the assembler.  But this is not true for
-# older automakes (e.g. 1.8.5, 1.9.6), sigh.  So we include
-# AM_CPPFLAGS_<PLATFORM> in each AM_CCASFLAGS_<PLATFORM> variable.  This
-# means some of the flags are duplicated on systems with newer versions of
-# automake, but this does not really matter and seems hard to avoid.
 AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
@@ -847,26 +881,26 @@ AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ = \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGPV_@VGCONF_ARCH_SEC@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
 
 AM_FLAG_M3264_X86_LINUX = @FLAG_M32@
-AM_CFLAGS_X86_LINUX = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY@ \
-			 	$(AM_CFLAGS_BASE)
+AM_CFLAGS_X86_LINUX = @FLAG_M32@  @PREFERRED_STACK_BOUNDARY@ \
+				$(AM_CFLAGS_BASE) -fomit-frame-pointer
 
-AM_CCASFLAGS_X86_LINUX = $(AM_CPPFLAGS_X86_LINUX) @FLAG_M32@ -g
+AM_CCASFLAGS_X86_LINUX = @FLAG_M32@ -g
 AM_FLAG_M3264_AMD64_LINUX = @FLAG_M64@
-AM_CFLAGS_AMD64_LINUX = @FLAG_M64@ -fomit-frame-pointer \
-				@PREFERRED_STACK_BOUNDARY@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_AMD64_LINUX = @FLAG_M64@ @PREFERRED_STACK_BOUNDARY@ \
+				$(AM_CFLAGS_BASE) -fomit-frame-pointer
 
-AM_CCASFLAGS_AMD64_LINUX = $(AM_CPPFLAGS_AMD64_LINUX) @FLAG_M64@ -g
+AM_CCASFLAGS_AMD64_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_PPC32_LINUX = @FLAG_M32@
 AM_CFLAGS_PPC32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_PPC32_LINUX = $(AM_CPPFLAGS_PPC32_LINUX) @FLAG_M32@ -g
+AM_CCASFLAGS_PPC32_LINUX = @FLAG_M32@ -g
 AM_FLAG_M3264_PPC64_LINUX = @FLAG_M64@
 AM_CFLAGS_PPC64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_PPC64_LINUX = $(AM_CPPFLAGS_PPC64_LINUX) @FLAG_M64@ -g
+AM_CCASFLAGS_PPC64_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
 AM_CFLAGS_ARM_LINUX = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY@ \
 			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
 
-AM_CCASFLAGS_ARM_LINUX = $(AM_CPPFLAGS_ARM_LINUX) @FLAG_M32@ \
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
 				-marm -mcpu=cortex-a8 -g
 
 AM_FLAG_M3264_X86_DARWIN = -arch i386
@@ -874,17 +908,18 @@ AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.5 \
 				-fno-stack-protector -fno-pic -fno-PIC
 
-AM_CCASFLAGS_X86_DARWIN = $(AM_CPPFLAGS_X86_DARWIN) -arch i386 -g
+AM_CCASFLAGS_X86_DARWIN = -arch i386 -g
 AM_FLAG_M3264_AMD64_DARWIN = -arch x86_64
 AM_CFLAGS_AMD64_DARWIN = $(WERROR) -arch x86_64 $(AM_CFLAGS_BASE) \
 			    -mmacosx-version-min=10.5 -fno-stack-protector
 
-AM_CCASFLAGS_AMD64_DARWIN = $(AM_CPPFLAGS_AMD64_DARWIN) -arch x86_64 -g
+AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
-AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_S390X_LINUX = $(AM_CPPFLAGS_S390X_LINUX) -mzarch -march=z900 \
-                            @FLAG_M64@ -g
-
+AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
+AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) -mips32
+AM_CCASFLAGS_MIPS32_LINUX = @FLAG_M32@ -mips32 -g
 
 # Flags for the primary target.  These must be used to build the
 # regtests and performance tests.  In fact, these must be used to
@@ -899,7 +934,8 @@ AM_CCASFLAGS_PRI = $(AM_CCASFLAGS_@VGCONF_PLATFORM_PRI_CAPS@)
 
 # Baseline link flags for making vgpreload shared objects.
 #
-PRELOAD_LDFLAGS_COMMON_LINUX = -nodefaultlibs -shared -Wl,-z,interpose,-z,initfirst
+PRELOAD_LDFLAGS_COMMON_LINUX = -nodefaultlibs -shared \
+	-Wl,-z,interpose,-z,initfirst $(am__append_1)
 PRELOAD_LDFLAGS_COMMON_DARWIN = -dynamic -dynamiclib -all_load
 PRELOAD_LDFLAGS_X86_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -909,28 +945,26 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
+PRELOAD_LDFLAGS_MIPS32_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include \
-		-I$(top_srcdir)/coregrind -I$(top_builddir)/include \
-		-I$(top_srcdir)/VEX/pub \
-		-DVGA_@VGCONF_ARCH_PRI@=1 \
-		-DVGO_@VGCONF_OS@=1 \
-		-DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1 \
-		-DVGPV_@VGCONF_ARCH_PRI@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
+	-I$(top_srcdir)/coregrind -I$(top_builddir)/include \
+	-I$(top_srcdir)/VEX/pub -DVGA_@VGCONF_ARCH_PRI@=1 \
+	-DVGO_@VGCONF_OS@=1 -DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1 \
+	-DVGPV_@VGCONF_ARCH_PRI@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1 \
+	$(am__append_2)
 
 # Nb: Tools need to augment these flags with an arch-selection option, such
 # as $(AM_FLAG_M3264_PRI).
-AM_CFLAGS = -Winline -Wall -Wshadow -g $(AM_FLAG_M3264_PRI) \
-	$(am__append_9)
-AM_CXXFLAGS = -Winline -Wall -Wshadow -g $(AM_FLAG_M3264_PRI) \
-	$(am__append_10)
+AM_CFLAGS = -Winline -Wall -Wshadow -g $(AM_FLAG_M3264_PRI)
+AM_CXXFLAGS = -Winline -Wall -Wshadow -g $(AM_FLAG_M3264_PRI)
 # Include AM_CPPFLAGS in AM_CCASFLAGS to allow for older versions of
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-SUBDIRS = . $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7) $(am__append_8)
-DIST_SUBDIRS = x86 amd64 ppc32 ppc64 linux darwin x86-linux amd64-linux .
+SUBDIRS = . $(am__append_3) $(am__append_4) $(am__append_5) \
+	$(am__append_6) $(am__append_7) $(am__append_8) \
+	$(am__append_9) $(am__append_10) $(am__append_11)
+DIST_SUBDIRS = x86 amd64 ppc32 ppc64 s390x linux darwin x86-linux amd64-linux .
 dist_noinst_SCRIPTS = \
 	filter_addressable \
 	filter_allocs \
@@ -941,6 +975,7 @@ dist_noinst_SCRIPTS = \
 
 noinst_HEADERS = leak.h
 EXTRA_DIST = \
+	accounting.stderr.exp accounting.vgtest \
 	addressable.stderr.exp addressable.stdout.exp addressable.vgtest \
 	atomic_incs.stderr.exp atomic_incs.vgtest \
 	atomic_incs.stdout.exp-32bit atomic_incs.stdout.exp-64bit \
@@ -959,15 +994,22 @@ EXTRA_DIST = \
 	big_blocks_freed_list.stderr.exp big_blocks_freed_list.vgtest \
 	brk2.stderr.exp brk2.vgtest \
 	buflen_check.stderr.exp buflen_check.vgtest buflen_check.stderr.exp-kfail \
+	bug287260.stderr.exp bug287260.vgtest \
 	calloc-overflow.stderr.exp calloc-overflow.vgtest\
 	clientperm.stderr.exp \
 	clientperm.stdout.exp clientperm.vgtest \
+	clireq_nofill.stderr.exp \
+	clireq_nofill.stdout.exp clireq_nofill.vgtest \
+	clo_redzone_default.vgtest clo_redzone_128.vgtest \
+	clo_redzone_default.stderr.exp clo_redzone_128.stderr.exp \
 	custom_alloc.stderr.exp custom_alloc.vgtest custom_alloc.stderr.exp-s390x-mvc \
 	custom-overlap.stderr.exp custom-overlap.vgtest \
+	deep-backtrace.vgtest deep-backtrace.stderr.exp \
 	deep_templates.vgtest \
 	deep_templates.stdout.exp deep_templates.stderr.exp \
 	describe-block.stderr.exp describe-block.vgtest \
 	doublefree.stderr.exp doublefree.vgtest \
+	dw4.vgtest dw4.stderr.exp dw4.stdout.exp \
 	err_disable1.vgtest err_disable1.stderr.exp \
 	err_disable2.vgtest err_disable2.stderr.exp \
 	err_disable3.vgtest err_disable3.stderr.exp \
@@ -1066,11 +1108,13 @@ EXTRA_DIST = \
 	sh-mem-random.stderr.exp sh-mem-random.stdout.exp64 \
 	sh-mem-random.stdout.exp sh-mem-random.vgtest \
 	sigaltstack.stderr.exp sigaltstack.vgtest \
-	sigkill.stderr.exp sigkill.stderr.exp-darwin sigkill.vgtest \
+	sigkill.stderr.exp sigkill.stderr.exp-darwin sigkill.stderr.exp-mips32 \
+	sigkill.vgtest \
 	signal2.stderr.exp signal2.stdout.exp signal2.vgtest \
 	sigprocmask.stderr.exp sigprocmask.stderr.exp2 sigprocmask.vgtest \
+	static_malloc.stderr.exp static_malloc.vgtest \
 	strchr.stderr.exp strchr.stderr.exp2 strchr.stderr.exp-darwin \
-	    strchr.vgtest \
+	    strchr.stderr.exp3 strchr.vgtest \
 	str_tester.stderr.exp str_tester.vgtest \
 	supp-dir.vgtest supp-dir.stderr.exp \
 	supp_unknown.stderr.exp supp_unknown.vgtest supp_unknown.supp \
@@ -1078,16 +1122,21 @@ EXTRA_DIST = \
 	supp1.stderr.exp supp1.vgtest \
 	supp2.stderr.exp supp2.vgtest \
 	supp.supp \
-	suppfree.stderr.exp suppfree.vgtest \
+	suppfree.stderr.exp suppfree.supp suppfree.vgtest \
+	test-plo-no.vgtest test-plo-no.stdout.exp \
+	    test-plo-no.stderr.exp-le64 test-plo-no.stderr.exp-le32 \
+	test-plo-yes.vgtest test-plo-yes.stdout.exp \
+	    test-plo-yes.stderr.exp-le64 test-plo-yes.stderr.exp-le32 \
+	    test-plo-no.stderr.exp-s390x-mvc \
 	trivialleak.stderr.exp trivialleak.vgtest trivialleak.stderr.exp2 \
 	unit_libcbase.stderr.exp unit_libcbase.vgtest \
 	unit_oset.stderr.exp unit_oset.stdout.exp unit_oset.vgtest \
-	varinfo1.vgtest varinfo1.stdout.exp varinfo1.stderr.exp varinfo1.stderr.exp-ppc64\
-	varinfo2.vgtest varinfo2.stdout.exp varinfo2.stderr.exp varinfo2.stderr.exp-ppc64\
-	varinfo3.vgtest varinfo3.stdout.exp varinfo3.stderr.exp varinfo3.stderr.exp-ppc64\
-	varinfo4.vgtest varinfo4.stdout.exp varinfo4.stderr.exp varinfo4.stderr.exp-ppc64\
-	varinfo5.vgtest varinfo5.stdout.exp varinfo5.stderr.exp varinfo5.stderr.exp-ppc64\
-	varinfo6.vgtest varinfo6.stdout.exp varinfo6.stderr.exp varinfo6.stderr.exp-ppc64\
+	varinfo1.vgtest varinfo1.stdout.exp varinfo1.stderr.exp varinfo1.stderr.exp-ppc64 \
+	varinfo2.vgtest varinfo2.stdout.exp varinfo2.stderr.exp varinfo2.stderr.exp-ppc64 \
+	varinfo3.vgtest varinfo3.stdout.exp varinfo3.stderr.exp varinfo3.stderr.exp-ppc64 \
+	varinfo4.vgtest varinfo4.stdout.exp varinfo4.stderr.exp varinfo4.stderr.exp-ppc64 \
+	varinfo5.vgtest varinfo5.stdout.exp varinfo5.stderr.exp varinfo5.stderr.exp-ppc64 \
+	varinfo6.vgtest varinfo6.stdout.exp varinfo6.stderr.exp varinfo6.stderr.exp-ppc64 \
 	vcpu_bz2.stdout.exp vcpu_bz2.stderr.exp vcpu_bz2.vgtest \
 	vcpu_fbench.stdout.exp vcpu_fbench.stderr.exp vcpu_fbench.vgtest \
 	vcpu_fnfns.stdout.exp vcpu_fnfns.stdout.exp-glibc28-amd64 \
@@ -1105,9 +1154,13 @@ EXTRA_DIST = \
 	xml1.stderr.exp xml1.stdout.exp xml1.vgtest xml1.stderr.exp-s390x-mvc
 
 @VGCONF_OS_IS_DARWIN_FALSE@atomic_incs_CFLAGS = $(AM_CFLAGS)
+
+#AM_CFLAGS   += -mfloat-abi=softfp
+#AM_CXXFLAGS += -mfloat-abi=softfp
 @VGCONF_OS_IS_DARWIN_TRUE@atomic_incs_CFLAGS = $(AM_CFLAGS) -mdynamic-no-pic
 deep_templates_SOURCES = deep_templates.cpp
 deep_templates_CXXFLAGS = $(AM_CFLAGS) -O -gstabs
+dw4_CFLAGS = $(AM_CFLAGS) -gdwarf-4 -fdebug-types-section
 err_disable3_LDADD = -lpthread
 err_disable4_LDADD = -lpthread
 error_counts_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
@@ -1224,6 +1277,9 @@ $(am__aclocal_m4_deps):
 
 clean-checkPROGRAMS:
 	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
+accounting$(EXEEXT): $(accounting_OBJECTS) $(accounting_DEPENDENCIES) 
+	@rm -f accounting$(EXEEXT)
+	$(LINK) $(accounting_OBJECTS) $(accounting_LDADD) $(LIBS)
 addressable$(EXEEXT): $(addressable_OBJECTS) $(addressable_DEPENDENCIES) 
 	@rm -f addressable$(EXEEXT)
 	$(LINK) $(addressable_OBJECTS) $(addressable_LDADD) $(LIBS)
@@ -1260,18 +1316,30 @@ brk2$(EXEEXT): $(brk2_OBJECTS) $(brk2_DEPENDENCIES)
 buflen_check$(EXEEXT): $(buflen_check_OBJECTS) $(buflen_check_DEPENDENCIES) 
 	@rm -f buflen_check$(EXEEXT)
 	$(LINK) $(buflen_check_OBJECTS) $(buflen_check_LDADD) $(LIBS)
+bug287260$(EXEEXT): $(bug287260_OBJECTS) $(bug287260_DEPENDENCIES) 
+	@rm -f bug287260$(EXEEXT)
+	$(LINK) $(bug287260_OBJECTS) $(bug287260_LDADD) $(LIBS)
 calloc-overflow$(EXEEXT): $(calloc_overflow_OBJECTS) $(calloc_overflow_DEPENDENCIES) 
 	@rm -f calloc-overflow$(EXEEXT)
 	$(LINK) $(calloc_overflow_OBJECTS) $(calloc_overflow_LDADD) $(LIBS)
 clientperm$(EXEEXT): $(clientperm_OBJECTS) $(clientperm_DEPENDENCIES) 
 	@rm -f clientperm$(EXEEXT)
 	$(LINK) $(clientperm_OBJECTS) $(clientperm_LDADD) $(LIBS)
+clireq_nofill$(EXEEXT): $(clireq_nofill_OBJECTS) $(clireq_nofill_DEPENDENCIES) 
+	@rm -f clireq_nofill$(EXEEXT)
+	$(LINK) $(clireq_nofill_OBJECTS) $(clireq_nofill_LDADD) $(LIBS)
+clo_redzone$(EXEEXT): $(clo_redzone_OBJECTS) $(clo_redzone_DEPENDENCIES) 
+	@rm -f clo_redzone$(EXEEXT)
+	$(LINK) $(clo_redzone_OBJECTS) $(clo_redzone_LDADD) $(LIBS)
 custom-overlap$(EXEEXT): $(custom_overlap_OBJECTS) $(custom_overlap_DEPENDENCIES) 
 	@rm -f custom-overlap$(EXEEXT)
 	$(LINK) $(custom_overlap_OBJECTS) $(custom_overlap_LDADD) $(LIBS)
 custom_alloc$(EXEEXT): $(custom_alloc_OBJECTS) $(custom_alloc_DEPENDENCIES) 
 	@rm -f custom_alloc$(EXEEXT)
 	$(LINK) $(custom_alloc_OBJECTS) $(custom_alloc_LDADD) $(LIBS)
+deep-backtrace$(EXEEXT): $(deep_backtrace_OBJECTS) $(deep_backtrace_DEPENDENCIES) 
+	@rm -f deep-backtrace$(EXEEXT)
+	$(LINK) $(deep_backtrace_OBJECTS) $(deep_backtrace_LDADD) $(LIBS)
 deep_templates$(EXEEXT): $(deep_templates_OBJECTS) $(deep_templates_DEPENDENCIES) 
 	@rm -f deep_templates$(EXEEXT)
 	$(deep_templates_LINK) $(deep_templates_OBJECTS) $(deep_templates_LDADD) $(LIBS)
@@ -1281,6 +1349,9 @@ describe-block$(EXEEXT): $(describe_block_OBJECTS) $(describe_block_DEPENDENCIES
 doublefree$(EXEEXT): $(doublefree_OBJECTS) $(doublefree_DEPENDENCIES) 
 	@rm -f doublefree$(EXEEXT)
 	$(LINK) $(doublefree_OBJECTS) $(doublefree_LDADD) $(LIBS)
+dw4$(EXEEXT): $(dw4_OBJECTS) $(dw4_DEPENDENCIES) 
+	@rm -f dw4$(EXEEXT)
+	$(dw4_LINK) $(dw4_OBJECTS) $(dw4_LDADD) $(LIBS)
 err_disable1$(EXEEXT): $(err_disable1_OBJECTS) $(err_disable1_DEPENDENCIES) 
 	@rm -f err_disable1$(EXEEXT)
 	$(LINK) $(err_disable1_OBJECTS) $(err_disable1_LDADD) $(LIBS)
@@ -1497,6 +1568,9 @@ signal2$(EXEEXT): $(signal2_OBJECTS) $(signal2_DEPENDENCIES)
 sigprocmask$(EXEEXT): $(sigprocmask_OBJECTS) $(sigprocmask_DEPENDENCIES) 
 	@rm -f sigprocmask$(EXEEXT)
 	$(LINK) $(sigprocmask_OBJECTS) $(sigprocmask_LDADD) $(LIBS)
+static_malloc$(EXEEXT): $(static_malloc_OBJECTS) $(static_malloc_DEPENDENCIES) 
+	@rm -f static_malloc$(EXEEXT)
+	$(LINK) $(static_malloc_OBJECTS) $(static_malloc_LDADD) $(LIBS)
 str_tester$(EXEEXT): $(str_tester_OBJECTS) $(str_tester_DEPENDENCIES) 
 	@rm -f str_tester$(EXEEXT)
 	$(str_tester_LINK) $(str_tester_OBJECTS) $(str_tester_LDADD) $(LIBS)
@@ -1515,6 +1589,9 @@ supp_unknown$(EXEEXT): $(supp_unknown_OBJECTS) $(supp_unknown_DEPENDENCIES)
 suppfree$(EXEEXT): $(suppfree_OBJECTS) $(suppfree_DEPENDENCIES) 
 	@rm -f suppfree$(EXEEXT)
 	$(LINK) $(suppfree_OBJECTS) $(suppfree_LDADD) $(LIBS)
+test-plo$(EXEEXT): $(test_plo_OBJECTS) $(test_plo_DEPENDENCIES) 
+	@rm -f test-plo$(EXEEXT)
+	$(LINK) $(test_plo_OBJECTS) $(test_plo_LDADD) $(LIBS)
 trivialleak$(EXEEXT): $(trivialleak_OBJECTS) $(trivialleak_DEPENDENCIES) 
 	@rm -f trivialleak$(EXEEXT)
 	$(LINK) $(trivialleak_OBJECTS) $(trivialleak_LDADD) $(LIBS)
@@ -1591,6 +1668,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/accounting.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/addressable.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atomic_incs-atomic_incs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/badaddrvalue.Po@am__quote@
@@ -1603,13 +1681,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/big_blocks_freed_list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/brk2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buflen_check.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug287260.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/calloc-overflow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientperm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clireq_nofill.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clo_redzone.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/custom-overlap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/custom_alloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deep-backtrace.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deep_templates-deep_templates.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/describe-block.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/doublefree.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dw4-dw4.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/err_disable1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/err_disable2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/err_disable3.Po@am__quote@
@@ -1682,10 +1765,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigkill.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signal2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigprocmask.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/static_malloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/str_tester-str_tester.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strchr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/supp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/suppfree.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-plo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trivialleak.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unit_libcbase.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unit_oset.Po@am__quote@
@@ -1737,6 +1822,20 @@ atomic_incs-atomic_incs.obj: atomic_incs.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='atomic_incs.c' object='atomic_incs-atomic_incs.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(atomic_incs_CFLAGS) $(CFLAGS) -c -o atomic_incs-atomic_incs.obj `if test -f 'atomic_incs.c'; then $(CYGPATH_W) 'atomic_incs.c'; else $(CYGPATH_W) '$(srcdir)/atomic_incs.c'; fi`
+
+dw4-dw4.o: dw4.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dw4_CFLAGS) $(CFLAGS) -MT dw4-dw4.o -MD -MP -MF $(DEPDIR)/dw4-dw4.Tpo -c -o dw4-dw4.o `test -f 'dw4.c' || echo '$(srcdir)/'`dw4.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dw4-dw4.Tpo $(DEPDIR)/dw4-dw4.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dw4.c' object='dw4-dw4.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dw4_CFLAGS) $(CFLAGS) -c -o dw4-dw4.o `test -f 'dw4.c' || echo '$(srcdir)/'`dw4.c
+
+dw4-dw4.obj: dw4.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dw4_CFLAGS) $(CFLAGS) -MT dw4-dw4.obj -MD -MP -MF $(DEPDIR)/dw4-dw4.Tpo -c -o dw4-dw4.obj `if test -f 'dw4.c'; then $(CYGPATH_W) 'dw4.c'; else $(CYGPATH_W) '$(srcdir)/dw4.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dw4-dw4.Tpo $(DEPDIR)/dw4-dw4.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dw4.c' object='dw4-dw4.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dw4_CFLAGS) $(CFLAGS) -c -o dw4-dw4.obj `if test -f 'dw4.c'; then $(CYGPATH_W) 'dw4.c'; else $(CYGPATH_W) '$(srcdir)/dw4.c'; fi`
 
 error_counts-error_counts.o: error_counts.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(error_counts_CFLAGS) $(CFLAGS) -MT error_counts-error_counts.o -MD -MP -MF $(DEPDIR)/error_counts-error_counts.Tpo -c -o error_counts-error_counts.o `test -f 'error_counts.c' || echo '$(srcdir)/'`error_counts.c

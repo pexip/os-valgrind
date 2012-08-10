@@ -46,8 +46,15 @@ host_triplet = @host@
 DIST_COMMON = $(dist_noinst_SCRIPTS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.all.am \
 	$(top_srcdir)/Makefile.tool-tests.am
-check_PROGRAMS = $(am__EXEEXT_1) ex_sig$(EXEEXT) ex_clone$(EXEEXT) \
-	op00$(EXEEXT)
+
+# The Android toolchain includes all kinds of stdlib helpers present in
+# bionic which is bad because we are not linking with it and the Android
+# linker will panic.
+@VGCONF_PLATVARIANT_IS_ANDROID_TRUE@am__append_1 = -nostdlib
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@am__append_2 = -DVGA_SEC_@VGCONF_ARCH_SEC@=1  \
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@		-DVGP_SEC_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1
+
+check_PROGRAMS = $(am__EXEEXT_1) allexec$(EXEEXT) op00$(EXEEXT)
 subdir = none/tests/s390x
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -67,7 +74,15 @@ am__EXEEXT_1 = clc$(EXEEXT) clcle$(EXEEXT) cvb$(EXEEXT) cvd$(EXEEXT) \
 	mul_GE$(EXEEXT) add_GE$(EXEEXT) condloadstore$(EXEEXT) \
 	op_exception$(EXEEXT) fgx$(EXEEXT) stck$(EXEEXT) \
 	stckf$(EXEEXT) stcke$(EXEEXT) stfle$(EXEEXT) cksm$(EXEEXT) \
-	mvcl$(EXEEXT) clcl$(EXEEXT)
+	mvcl$(EXEEXT) clcl$(EXEEXT) troo$(EXEEXT) trto$(EXEEXT) \
+	trot$(EXEEXT) trtt$(EXEEXT) tr$(EXEEXT) tre$(EXEEXT) \
+	cij$(EXEEXT) cgij$(EXEEXT) clij$(EXEEXT) clgij$(EXEEXT) \
+	crj$(EXEEXT) cgrj$(EXEEXT) clrj$(EXEEXT) clgrj$(EXEEXT) \
+	cs$(EXEEXT) csg$(EXEEXT) cds$(EXEEXT) cdsg$(EXEEXT) \
+	cu21$(EXEEXT) cu21_1$(EXEEXT) cu24$(EXEEXT) cu24_1$(EXEEXT) \
+	cu42$(EXEEXT) cu12$(EXEEXT) cu12_1$(EXEEXT) ex_sig$(EXEEXT) \
+	ex_clone$(EXEEXT) cu14$(EXEEXT) cu14_1$(EXEEXT) cu41$(EXEEXT) \
+	fpconv$(EXEEXT)
 add_SOURCES = add.c
 add_OBJECTS = add.$(OBJEXT)
 add_LDADD = $(LDADD)
@@ -77,12 +92,32 @@ add_EI_LDADD = $(LDADD)
 add_GE_SOURCES = add_GE.c
 add_GE_OBJECTS = add_GE.$(OBJEXT)
 add_GE_LDADD = $(LDADD)
+allexec_SOURCES = allexec.c
+allexec_OBJECTS = allexec-allexec.$(OBJEXT)
+allexec_LDADD = $(LDADD)
+allexec_LINK = $(CCLD) $(allexec_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 and_SOURCES = and.c
 and_OBJECTS = and.$(OBJEXT)
 and_LDADD = $(LDADD)
 and_EI_SOURCES = and_EI.c
 and_EI_OBJECTS = and_EI.$(OBJEXT)
 and_EI_LDADD = $(LDADD)
+cds_SOURCES = cds.c
+cds_OBJECTS = cds.$(OBJEXT)
+cds_LDADD = $(LDADD)
+cdsg_SOURCES = cdsg.c
+cdsg_OBJECTS = cdsg.$(OBJEXT)
+cdsg_LDADD = $(LDADD)
+cgij_SOURCES = cgij.c
+cgij_OBJECTS = cgij.$(OBJEXT)
+cgij_LDADD = $(LDADD)
+cgrj_SOURCES = cgrj.c
+cgrj_OBJECTS = cgrj.$(OBJEXT)
+cgrj_LDADD = $(LDADD)
+cij_SOURCES = cij.c
+cij_OBJECTS = cij.$(OBJEXT)
+cij_LDADD = $(LDADD)
 cksm_SOURCES = cksm.c
 cksm_OBJECTS = cksm.$(OBJEXT)
 cksm_LDADD = $(LDADD)
@@ -95,9 +130,68 @@ clcl_LDADD = $(LDADD)
 clcle_SOURCES = clcle.c
 clcle_OBJECTS = clcle.$(OBJEXT)
 clcle_LDADD = $(LDADD)
+clgij_SOURCES = clgij.c
+clgij_OBJECTS = clgij.$(OBJEXT)
+clgij_LDADD = $(LDADD)
+clgrj_SOURCES = clgrj.c
+clgrj_OBJECTS = clgrj.$(OBJEXT)
+clgrj_LDADD = $(LDADD)
+clij_SOURCES = clij.c
+clij_OBJECTS = clij.$(OBJEXT)
+clij_LDADD = $(LDADD)
+clrj_SOURCES = clrj.c
+clrj_OBJECTS = clrj.$(OBJEXT)
+clrj_LDADD = $(LDADD)
 condloadstore_SOURCES = condloadstore.c
 condloadstore_OBJECTS = condloadstore.$(OBJEXT)
 condloadstore_LDADD = $(LDADD)
+crj_SOURCES = crj.c
+crj_OBJECTS = crj.$(OBJEXT)
+crj_LDADD = $(LDADD)
+cs_SOURCES = cs.c
+cs_OBJECTS = cs.$(OBJEXT)
+cs_LDADD = $(LDADD)
+csg_SOURCES = csg.c
+csg_OBJECTS = csg.$(OBJEXT)
+csg_LDADD = $(LDADD)
+cu12_SOURCES = cu12.c
+cu12_OBJECTS = cu12.$(OBJEXT)
+cu12_LDADD = $(LDADD)
+cu12_1_SOURCES = cu12_1.c
+cu12_1_OBJECTS = cu12_1-cu12_1.$(OBJEXT)
+cu12_1_LDADD = $(LDADD)
+cu12_1_LINK = $(CCLD) $(cu12_1_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+cu14_SOURCES = cu14.c
+cu14_OBJECTS = cu14.$(OBJEXT)
+cu14_LDADD = $(LDADD)
+cu14_1_SOURCES = cu14_1.c
+cu14_1_OBJECTS = cu14_1-cu14_1.$(OBJEXT)
+cu14_1_LDADD = $(LDADD)
+cu14_1_LINK = $(CCLD) $(cu14_1_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+cu21_SOURCES = cu21.c
+cu21_OBJECTS = cu21.$(OBJEXT)
+cu21_LDADD = $(LDADD)
+cu21_1_SOURCES = cu21_1.c
+cu21_1_OBJECTS = cu21_1-cu21_1.$(OBJEXT)
+cu21_1_LDADD = $(LDADD)
+cu21_1_LINK = $(CCLD) $(cu21_1_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+cu24_SOURCES = cu24.c
+cu24_OBJECTS = cu24.$(OBJEXT)
+cu24_LDADD = $(LDADD)
+cu24_1_SOURCES = cu24_1.c
+cu24_1_OBJECTS = cu24_1-cu24_1.$(OBJEXT)
+cu24_1_LDADD = $(LDADD)
+cu24_1_LINK = $(CCLD) $(cu24_1_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+cu41_SOURCES = cu41.c
+cu41_OBJECTS = cu41.$(OBJEXT)
+cu41_LDADD = $(LDADD)
+cu42_SOURCES = cu42.c
+cu42_OBJECTS = cu42.$(OBJEXT)
+cu42_LDADD = $(LDADD)
 cvb_SOURCES = cvb.c
 cvb_OBJECTS = cvb.$(OBJEXT)
 cvb_LDADD = $(LDADD)
@@ -124,6 +218,9 @@ flogr_LDADD = $(LDADD)
 fold_And16_SOURCES = fold_And16.c
 fold_And16_OBJECTS = fold_And16.$(OBJEXT)
 fold_And16_LDADD = $(LDADD)
+fpconv_SOURCES = fpconv.c
+fpconv_OBJECTS = fpconv.$(OBJEXT)
+fpconv_LDADD = $(LDADD)
 icm_SOURCES = icm.c
 icm_OBJECTS = icm.$(OBJEXT)
 icm_LDADD = $(LDADD)
@@ -189,6 +286,24 @@ tcxb_OBJECTS = tcxb-tcxb.$(OBJEXT)
 tcxb_LDADD = $(LDADD)
 tcxb_LINK = $(CCLD) $(tcxb_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+tr_SOURCES = tr.c
+tr_OBJECTS = tr.$(OBJEXT)
+tr_LDADD = $(LDADD)
+tre_SOURCES = tre.c
+tre_OBJECTS = tre.$(OBJEXT)
+tre_LDADD = $(LDADD)
+troo_SOURCES = troo.c
+troo_OBJECTS = troo.$(OBJEXT)
+troo_LDADD = $(LDADD)
+trot_SOURCES = trot.c
+trot_OBJECTS = trot.$(OBJEXT)
+trot_LDADD = $(LDADD)
+trto_SOURCES = trto.c
+trto_OBJECTS = trto.$(OBJEXT)
+trto_LDADD = $(LDADD)
+trtt_SOURCES = trtt.c
+trtt_OBJECTS = trtt.$(OBJEXT)
+trtt_LDADD = $(LDADD)
 xc_SOURCES = xc.c
 xc_OBJECTS = xc.$(OBJEXT)
 xc_LDADD = $(LDADD)
@@ -207,18 +322,26 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = add.c add_EI.c add_GE.c and.c and_EI.c cksm.c clc.c clcl.c \
-	clcle.c condloadstore.c cvb.c cvd.c div.c ex_clone.c ex_sig.c \
-	fgx.c flogr.c fold_And16.c icm.c insert.c insert_EI.c \
+SOURCES = add.c add_EI.c add_GE.c allexec.c and.c and_EI.c cds.c \
+	cdsg.c cgij.c cgrj.c cij.c cksm.c clc.c clcl.c clcle.c clgij.c \
+	clgrj.c clij.c clrj.c condloadstore.c crj.c cs.c csg.c cu12.c \
+	cu12_1.c cu14.c cu14_1.c cu21.c cu21_1.c cu24.c cu24_1.c \
+	cu41.c cu42.c cvb.c cvd.c div.c ex_clone.c ex_sig.c fgx.c \
+	flogr.c fold_And16.c fpconv.c icm.c insert.c insert_EI.c \
 	lam_stam.c lpr.c mul.c mul_GE.c mvcl.c mvst.c op00.c \
 	op_exception.c or.c or_EI.c srst.c stck.c stcke.c stckf.c \
-	stfle.c sub.c sub_EI.c tcxb.c xc.c xor.c xor_EI.c
-DIST_SOURCES = add.c add_EI.c add_GE.c and.c and_EI.c cksm.c clc.c \
-	clcl.c clcle.c condloadstore.c cvb.c cvd.c div.c ex_clone.c \
-	ex_sig.c fgx.c flogr.c fold_And16.c icm.c insert.c insert_EI.c \
+	stfle.c sub.c sub_EI.c tcxb.c tr.c tre.c troo.c trot.c trto.c \
+	trtt.c xc.c xor.c xor_EI.c
+DIST_SOURCES = add.c add_EI.c add_GE.c allexec.c and.c and_EI.c cds.c \
+	cdsg.c cgij.c cgrj.c cij.c cksm.c clc.c clcl.c clcle.c clgij.c \
+	clgrj.c clij.c clrj.c condloadstore.c crj.c cs.c csg.c cu12.c \
+	cu12_1.c cu14.c cu14_1.c cu21.c cu21_1.c cu24.c cu24_1.c \
+	cu41.c cu42.c cvb.c cvd.c div.c ex_clone.c ex_sig.c fgx.c \
+	flogr.c fold_And16.c fpconv.c icm.c insert.c insert_EI.c \
 	lam_stam.c lpr.c mul.c mul_GE.c mvcl.c mvst.c op00.c \
 	op_exception.c or.c or_EI.c srst.c stck.c stcke.c stckf.c \
-	stfle.c sub.c sub_EI.c tcxb.c xc.c xor.c xor_EI.c
+	stfle.c sub.c sub_EI.c tcxb.c tr.c tre.c troo.c trot.c trto.c \
+	trtt.c xc.c xor.c xor_EI.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -237,6 +360,7 @@ CCASDEPMODE = @CCASDEPMODE@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CFLAGS_MPI = @CFLAGS_MPI@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -274,6 +398,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LDFLAGS_MPI = @LDFLAGS_MPI@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LN_S = @LN_S@
@@ -397,14 +522,6 @@ AM_CFLAGS_BASE = \
 #
 # Nb: the AM_CPPFLAGS_* values are suitable for building tools and auxprogs.
 # For building the core, coregrind/Makefile.am files add some extra things.
-#
-# Also: in newer versions of automake (1.10 onwards?) asm files ending with
-# '.S' are considered "pre-processed" (as opposed to those ending in '.s')
-# and so the CPPFLAGS are passed to the assembler.  But this is not true for
-# older automakes (e.g. 1.8.5, 1.9.6), sigh.  So we include
-# AM_CPPFLAGS_<PLATFORM> in each AM_CCASFLAGS_<PLATFORM> variable.  This
-# means some of the flags are duplicated on systems with newer versions of
-# automake, but this does not really matter and seems hard to avoid.
 AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
@@ -424,26 +541,26 @@ AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ = \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	-DVGPV_@VGCONF_ARCH_SEC@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
 
 AM_FLAG_M3264_X86_LINUX = @FLAG_M32@
-AM_CFLAGS_X86_LINUX = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY@ \
-			 	$(AM_CFLAGS_BASE)
+AM_CFLAGS_X86_LINUX = @FLAG_M32@  @PREFERRED_STACK_BOUNDARY@ \
+				$(AM_CFLAGS_BASE) -fomit-frame-pointer
 
-AM_CCASFLAGS_X86_LINUX = $(AM_CPPFLAGS_X86_LINUX) @FLAG_M32@ -g
+AM_CCASFLAGS_X86_LINUX = @FLAG_M32@ -g
 AM_FLAG_M3264_AMD64_LINUX = @FLAG_M64@
-AM_CFLAGS_AMD64_LINUX = @FLAG_M64@ -fomit-frame-pointer \
-				@PREFERRED_STACK_BOUNDARY@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_AMD64_LINUX = @FLAG_M64@ @PREFERRED_STACK_BOUNDARY@ \
+				$(AM_CFLAGS_BASE) -fomit-frame-pointer
 
-AM_CCASFLAGS_AMD64_LINUX = $(AM_CPPFLAGS_AMD64_LINUX) @FLAG_M64@ -g
+AM_CCASFLAGS_AMD64_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_PPC32_LINUX = @FLAG_M32@
 AM_CFLAGS_PPC32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_PPC32_LINUX = $(AM_CPPFLAGS_PPC32_LINUX) @FLAG_M32@ -g
+AM_CCASFLAGS_PPC32_LINUX = @FLAG_M32@ -g
 AM_FLAG_M3264_PPC64_LINUX = @FLAG_M64@
 AM_CFLAGS_PPC64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_PPC64_LINUX = $(AM_CPPFLAGS_PPC64_LINUX) @FLAG_M64@ -g
+AM_CCASFLAGS_PPC64_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
 AM_CFLAGS_ARM_LINUX = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY@ \
 			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
 
-AM_CCASFLAGS_ARM_LINUX = $(AM_CPPFLAGS_ARM_LINUX) @FLAG_M32@ \
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
 				-marm -mcpu=cortex-a8 -g
 
 AM_FLAG_M3264_X86_DARWIN = -arch i386
@@ -451,17 +568,18 @@ AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.5 \
 				-fno-stack-protector -fno-pic -fno-PIC
 
-AM_CCASFLAGS_X86_DARWIN = $(AM_CPPFLAGS_X86_DARWIN) -arch i386 -g
+AM_CCASFLAGS_X86_DARWIN = -arch i386 -g
 AM_FLAG_M3264_AMD64_DARWIN = -arch x86_64
 AM_CFLAGS_AMD64_DARWIN = $(WERROR) -arch x86_64 $(AM_CFLAGS_BASE) \
 			    -mmacosx-version-min=10.5 -fno-stack-protector
 
-AM_CCASFLAGS_AMD64_DARWIN = $(AM_CPPFLAGS_AMD64_DARWIN) -arch x86_64 -g
+AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
-AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
-AM_CCASFLAGS_S390X_LINUX = $(AM_CPPFLAGS_S390X_LINUX) -mzarch -march=z900 \
-                            @FLAG_M64@ -g
-
+AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
+AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) -mips32
+AM_CCASFLAGS_MIPS32_LINUX = @FLAG_M32@ -mips32 -g
 
 # Flags for the primary target.  These must be used to build the
 # regtests and performance tests.  In fact, these must be used to
@@ -476,7 +594,8 @@ AM_CCASFLAGS_PRI = $(AM_CCASFLAGS_@VGCONF_PLATFORM_PRI_CAPS@)
 
 # Baseline link flags for making vgpreload shared objects.
 #
-PRELOAD_LDFLAGS_COMMON_LINUX = -nodefaultlibs -shared -Wl,-z,interpose,-z,initfirst
+PRELOAD_LDFLAGS_COMMON_LINUX = -nodefaultlibs -shared \
+	-Wl,-z,interpose,-z,initfirst $(am__append_1)
 PRELOAD_LDFLAGS_COMMON_DARWIN = -dynamic -dynamiclib -all_load
 PRELOAD_LDFLAGS_X86_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -486,13 +605,13 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
+PRELOAD_LDFLAGS_MIPS32_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include \
-		-I$(top_srcdir)/coregrind -I$(top_builddir)/include \
-		-I$(top_srcdir)/VEX/pub \
-		-DVGA_@VGCONF_ARCH_PRI@=1 \
-		-DVGO_@VGCONF_OS@=1 \
-		-DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1 \
-		-DVGPV_@VGCONF_ARCH_PRI@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1
+	-I$(top_srcdir)/coregrind -I$(top_builddir)/include \
+	-I$(top_srcdir)/VEX/pub -DVGA_@VGCONF_ARCH_PRI@=1 \
+	-DVGO_@VGCONF_OS@=1 -DVGP_@VGCONF_ARCH_PRI@_@VGCONF_OS@=1 \
+	-DVGPV_@VGCONF_ARCH_PRI@_@VGCONF_OS@_@VGCONF_PLATVARIANT@=1 \
+	$(am__append_2)
 
 # Nb: Tools need to augment these flags with an arch-selection option, such
 # as $(AM_FLAG_M3264_PRI).
@@ -506,20 +625,26 @@ dist_noinst_SCRIPTS = filter_stderr
 INSN_TESTS = clc clcle cvb cvd icm lpr tcxb lam_stam xc mvst add sub mul \
              and or xor insert div srst fold_And16 flogr sub_EI add_EI \
              and_EI or_EI xor_EI insert_EI mul_GE add_GE condloadstore \
-             op_exception fgx stck stckf stcke stfle cksm mvcl clcl
+             op_exception fgx stck stckf stcke stfle cksm mvcl clcl troo \
+             trto trot trtt tr tre cij cgij clij clgij crj cgrj clrj clgrj \
+             cs csg cds cdsg cu21 cu21_1 cu24 cu24_1 cu42 cu12 cu12_1 \
+             ex_sig ex_clone cu14 cu14_1 cu41 fpconv
 
 EXTRA_DIST = \
 	$(addsuffix .stderr.exp,$(INSN_TESTS)) \
 	$(addsuffix .stdout.exp,$(INSN_TESTS)) \
 	$(addsuffix .vgtest,$(INSN_TESTS)) \
-	ex_sig.stdout.exp ex_sig.stderr.exp ex_sig.vgtest \
-	ex_clone.stdout.exp ex_clone.stderr.exp ex_clone.vgtest \
 	op00.stderr.exp1 op00.stderr.exp2 op00.vgtest \
 	test.h opcodes.h add.h  and.h  div.h  insert.h \
-	mul.h  or.h  sub.h  test.h  xor.h
+	mul.h  or.h  sub.h  test.h  xor.h table.h
 
-ex_clone_LDFLAGS = -lpthread
+allexec_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
 tcxb_CFLAGS = $(AM_CFLAGS) -std=gnu99
+cu12_1_CFLAGS = $(AM_CFLAGS) -DM3=1
+cu14_1_CFLAGS = $(AM_CFLAGS) -DM3=1
+cu21_1_CFLAGS = $(AM_CFLAGS) -DM3=1
+cu24_1_CFLAGS = $(AM_CFLAGS) -DM3=1
+ex_clone_LDFLAGS = -lpthread
 all: all-am
 
 .SUFFIXES:
@@ -566,12 +691,30 @@ add_EI$(EXEEXT): $(add_EI_OBJECTS) $(add_EI_DEPENDENCIES)
 add_GE$(EXEEXT): $(add_GE_OBJECTS) $(add_GE_DEPENDENCIES) 
 	@rm -f add_GE$(EXEEXT)
 	$(LINK) $(add_GE_OBJECTS) $(add_GE_LDADD) $(LIBS)
+allexec$(EXEEXT): $(allexec_OBJECTS) $(allexec_DEPENDENCIES) 
+	@rm -f allexec$(EXEEXT)
+	$(allexec_LINK) $(allexec_OBJECTS) $(allexec_LDADD) $(LIBS)
 and$(EXEEXT): $(and_OBJECTS) $(and_DEPENDENCIES) 
 	@rm -f and$(EXEEXT)
 	$(LINK) $(and_OBJECTS) $(and_LDADD) $(LIBS)
 and_EI$(EXEEXT): $(and_EI_OBJECTS) $(and_EI_DEPENDENCIES) 
 	@rm -f and_EI$(EXEEXT)
 	$(LINK) $(and_EI_OBJECTS) $(and_EI_LDADD) $(LIBS)
+cds$(EXEEXT): $(cds_OBJECTS) $(cds_DEPENDENCIES) 
+	@rm -f cds$(EXEEXT)
+	$(LINK) $(cds_OBJECTS) $(cds_LDADD) $(LIBS)
+cdsg$(EXEEXT): $(cdsg_OBJECTS) $(cdsg_DEPENDENCIES) 
+	@rm -f cdsg$(EXEEXT)
+	$(LINK) $(cdsg_OBJECTS) $(cdsg_LDADD) $(LIBS)
+cgij$(EXEEXT): $(cgij_OBJECTS) $(cgij_DEPENDENCIES) 
+	@rm -f cgij$(EXEEXT)
+	$(LINK) $(cgij_OBJECTS) $(cgij_LDADD) $(LIBS)
+cgrj$(EXEEXT): $(cgrj_OBJECTS) $(cgrj_DEPENDENCIES) 
+	@rm -f cgrj$(EXEEXT)
+	$(LINK) $(cgrj_OBJECTS) $(cgrj_LDADD) $(LIBS)
+cij$(EXEEXT): $(cij_OBJECTS) $(cij_DEPENDENCIES) 
+	@rm -f cij$(EXEEXT)
+	$(LINK) $(cij_OBJECTS) $(cij_LDADD) $(LIBS)
 cksm$(EXEEXT): $(cksm_OBJECTS) $(cksm_DEPENDENCIES) 
 	@rm -f cksm$(EXEEXT)
 	$(LINK) $(cksm_OBJECTS) $(cksm_LDADD) $(LIBS)
@@ -584,9 +727,60 @@ clcl$(EXEEXT): $(clcl_OBJECTS) $(clcl_DEPENDENCIES)
 clcle$(EXEEXT): $(clcle_OBJECTS) $(clcle_DEPENDENCIES) 
 	@rm -f clcle$(EXEEXT)
 	$(LINK) $(clcle_OBJECTS) $(clcle_LDADD) $(LIBS)
+clgij$(EXEEXT): $(clgij_OBJECTS) $(clgij_DEPENDENCIES) 
+	@rm -f clgij$(EXEEXT)
+	$(LINK) $(clgij_OBJECTS) $(clgij_LDADD) $(LIBS)
+clgrj$(EXEEXT): $(clgrj_OBJECTS) $(clgrj_DEPENDENCIES) 
+	@rm -f clgrj$(EXEEXT)
+	$(LINK) $(clgrj_OBJECTS) $(clgrj_LDADD) $(LIBS)
+clij$(EXEEXT): $(clij_OBJECTS) $(clij_DEPENDENCIES) 
+	@rm -f clij$(EXEEXT)
+	$(LINK) $(clij_OBJECTS) $(clij_LDADD) $(LIBS)
+clrj$(EXEEXT): $(clrj_OBJECTS) $(clrj_DEPENDENCIES) 
+	@rm -f clrj$(EXEEXT)
+	$(LINK) $(clrj_OBJECTS) $(clrj_LDADD) $(LIBS)
 condloadstore$(EXEEXT): $(condloadstore_OBJECTS) $(condloadstore_DEPENDENCIES) 
 	@rm -f condloadstore$(EXEEXT)
 	$(LINK) $(condloadstore_OBJECTS) $(condloadstore_LDADD) $(LIBS)
+crj$(EXEEXT): $(crj_OBJECTS) $(crj_DEPENDENCIES) 
+	@rm -f crj$(EXEEXT)
+	$(LINK) $(crj_OBJECTS) $(crj_LDADD) $(LIBS)
+cs$(EXEEXT): $(cs_OBJECTS) $(cs_DEPENDENCIES) 
+	@rm -f cs$(EXEEXT)
+	$(LINK) $(cs_OBJECTS) $(cs_LDADD) $(LIBS)
+csg$(EXEEXT): $(csg_OBJECTS) $(csg_DEPENDENCIES) 
+	@rm -f csg$(EXEEXT)
+	$(LINK) $(csg_OBJECTS) $(csg_LDADD) $(LIBS)
+cu12$(EXEEXT): $(cu12_OBJECTS) $(cu12_DEPENDENCIES) 
+	@rm -f cu12$(EXEEXT)
+	$(LINK) $(cu12_OBJECTS) $(cu12_LDADD) $(LIBS)
+cu12_1$(EXEEXT): $(cu12_1_OBJECTS) $(cu12_1_DEPENDENCIES) 
+	@rm -f cu12_1$(EXEEXT)
+	$(cu12_1_LINK) $(cu12_1_OBJECTS) $(cu12_1_LDADD) $(LIBS)
+cu14$(EXEEXT): $(cu14_OBJECTS) $(cu14_DEPENDENCIES) 
+	@rm -f cu14$(EXEEXT)
+	$(LINK) $(cu14_OBJECTS) $(cu14_LDADD) $(LIBS)
+cu14_1$(EXEEXT): $(cu14_1_OBJECTS) $(cu14_1_DEPENDENCIES) 
+	@rm -f cu14_1$(EXEEXT)
+	$(cu14_1_LINK) $(cu14_1_OBJECTS) $(cu14_1_LDADD) $(LIBS)
+cu21$(EXEEXT): $(cu21_OBJECTS) $(cu21_DEPENDENCIES) 
+	@rm -f cu21$(EXEEXT)
+	$(LINK) $(cu21_OBJECTS) $(cu21_LDADD) $(LIBS)
+cu21_1$(EXEEXT): $(cu21_1_OBJECTS) $(cu21_1_DEPENDENCIES) 
+	@rm -f cu21_1$(EXEEXT)
+	$(cu21_1_LINK) $(cu21_1_OBJECTS) $(cu21_1_LDADD) $(LIBS)
+cu24$(EXEEXT): $(cu24_OBJECTS) $(cu24_DEPENDENCIES) 
+	@rm -f cu24$(EXEEXT)
+	$(LINK) $(cu24_OBJECTS) $(cu24_LDADD) $(LIBS)
+cu24_1$(EXEEXT): $(cu24_1_OBJECTS) $(cu24_1_DEPENDENCIES) 
+	@rm -f cu24_1$(EXEEXT)
+	$(cu24_1_LINK) $(cu24_1_OBJECTS) $(cu24_1_LDADD) $(LIBS)
+cu41$(EXEEXT): $(cu41_OBJECTS) $(cu41_DEPENDENCIES) 
+	@rm -f cu41$(EXEEXT)
+	$(LINK) $(cu41_OBJECTS) $(cu41_LDADD) $(LIBS)
+cu42$(EXEEXT): $(cu42_OBJECTS) $(cu42_DEPENDENCIES) 
+	@rm -f cu42$(EXEEXT)
+	$(LINK) $(cu42_OBJECTS) $(cu42_LDADD) $(LIBS)
 cvb$(EXEEXT): $(cvb_OBJECTS) $(cvb_DEPENDENCIES) 
 	@rm -f cvb$(EXEEXT)
 	$(LINK) $(cvb_OBJECTS) $(cvb_LDADD) $(LIBS)
@@ -611,6 +805,9 @@ flogr$(EXEEXT): $(flogr_OBJECTS) $(flogr_DEPENDENCIES)
 fold_And16$(EXEEXT): $(fold_And16_OBJECTS) $(fold_And16_DEPENDENCIES) 
 	@rm -f fold_And16$(EXEEXT)
 	$(LINK) $(fold_And16_OBJECTS) $(fold_And16_LDADD) $(LIBS)
+fpconv$(EXEEXT): $(fpconv_OBJECTS) $(fpconv_DEPENDENCIES) 
+	@rm -f fpconv$(EXEEXT)
+	$(LINK) $(fpconv_OBJECTS) $(fpconv_LDADD) $(LIBS)
 icm$(EXEEXT): $(icm_OBJECTS) $(icm_DEPENDENCIES) 
 	@rm -f icm$(EXEEXT)
 	$(LINK) $(icm_OBJECTS) $(icm_LDADD) $(LIBS)
@@ -674,6 +871,24 @@ sub_EI$(EXEEXT): $(sub_EI_OBJECTS) $(sub_EI_DEPENDENCIES)
 tcxb$(EXEEXT): $(tcxb_OBJECTS) $(tcxb_DEPENDENCIES) 
 	@rm -f tcxb$(EXEEXT)
 	$(tcxb_LINK) $(tcxb_OBJECTS) $(tcxb_LDADD) $(LIBS)
+tr$(EXEEXT): $(tr_OBJECTS) $(tr_DEPENDENCIES) 
+	@rm -f tr$(EXEEXT)
+	$(LINK) $(tr_OBJECTS) $(tr_LDADD) $(LIBS)
+tre$(EXEEXT): $(tre_OBJECTS) $(tre_DEPENDENCIES) 
+	@rm -f tre$(EXEEXT)
+	$(LINK) $(tre_OBJECTS) $(tre_LDADD) $(LIBS)
+troo$(EXEEXT): $(troo_OBJECTS) $(troo_DEPENDENCIES) 
+	@rm -f troo$(EXEEXT)
+	$(LINK) $(troo_OBJECTS) $(troo_LDADD) $(LIBS)
+trot$(EXEEXT): $(trot_OBJECTS) $(trot_DEPENDENCIES) 
+	@rm -f trot$(EXEEXT)
+	$(LINK) $(trot_OBJECTS) $(trot_LDADD) $(LIBS)
+trto$(EXEEXT): $(trto_OBJECTS) $(trto_DEPENDENCIES) 
+	@rm -f trto$(EXEEXT)
+	$(LINK) $(trto_OBJECTS) $(trto_LDADD) $(LIBS)
+trtt$(EXEEXT): $(trtt_OBJECTS) $(trtt_DEPENDENCIES) 
+	@rm -f trtt$(EXEEXT)
+	$(LINK) $(trtt_OBJECTS) $(trtt_LDADD) $(LIBS)
 xc$(EXEEXT): $(xc_OBJECTS) $(xc_DEPENDENCIES) 
 	@rm -f xc$(EXEEXT)
 	$(LINK) $(xc_OBJECTS) $(xc_LDADD) $(LIBS)
@@ -693,13 +908,36 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/add.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/add_EI.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/add_GE.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allexec-allexec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/and.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/and_EI.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cds.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cdsg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgij.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cgrj.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cij.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cksm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clcl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clcle.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clgij.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clgrj.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clij.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clrj.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/condloadstore.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crj.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/csg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu12.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu12_1-cu12_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu14.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu14_1-cu14_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu21.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu21_1-cu21_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu24.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu24_1-cu24_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu41.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cu42.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/div.Po@am__quote@
@@ -708,6 +946,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fgx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/flogr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fold_And16.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpconv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insert_EI.Po@am__quote@
@@ -729,6 +968,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sub.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sub_EI.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcxb-tcxb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tre.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/troo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trot.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trto.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trtt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xor_EI.Po@am__quote@
@@ -746,6 +991,76 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+allexec-allexec.o: allexec.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(allexec_CFLAGS) $(CFLAGS) -MT allexec-allexec.o -MD -MP -MF $(DEPDIR)/allexec-allexec.Tpo -c -o allexec-allexec.o `test -f 'allexec.c' || echo '$(srcdir)/'`allexec.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/allexec-allexec.Tpo $(DEPDIR)/allexec-allexec.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='allexec.c' object='allexec-allexec.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(allexec_CFLAGS) $(CFLAGS) -c -o allexec-allexec.o `test -f 'allexec.c' || echo '$(srcdir)/'`allexec.c
+
+allexec-allexec.obj: allexec.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(allexec_CFLAGS) $(CFLAGS) -MT allexec-allexec.obj -MD -MP -MF $(DEPDIR)/allexec-allexec.Tpo -c -o allexec-allexec.obj `if test -f 'allexec.c'; then $(CYGPATH_W) 'allexec.c'; else $(CYGPATH_W) '$(srcdir)/allexec.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/allexec-allexec.Tpo $(DEPDIR)/allexec-allexec.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='allexec.c' object='allexec-allexec.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(allexec_CFLAGS) $(CFLAGS) -c -o allexec-allexec.obj `if test -f 'allexec.c'; then $(CYGPATH_W) 'allexec.c'; else $(CYGPATH_W) '$(srcdir)/allexec.c'; fi`
+
+cu12_1-cu12_1.o: cu12_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu12_1_CFLAGS) $(CFLAGS) -MT cu12_1-cu12_1.o -MD -MP -MF $(DEPDIR)/cu12_1-cu12_1.Tpo -c -o cu12_1-cu12_1.o `test -f 'cu12_1.c' || echo '$(srcdir)/'`cu12_1.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu12_1-cu12_1.Tpo $(DEPDIR)/cu12_1-cu12_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu12_1.c' object='cu12_1-cu12_1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu12_1_CFLAGS) $(CFLAGS) -c -o cu12_1-cu12_1.o `test -f 'cu12_1.c' || echo '$(srcdir)/'`cu12_1.c
+
+cu12_1-cu12_1.obj: cu12_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu12_1_CFLAGS) $(CFLAGS) -MT cu12_1-cu12_1.obj -MD -MP -MF $(DEPDIR)/cu12_1-cu12_1.Tpo -c -o cu12_1-cu12_1.obj `if test -f 'cu12_1.c'; then $(CYGPATH_W) 'cu12_1.c'; else $(CYGPATH_W) '$(srcdir)/cu12_1.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu12_1-cu12_1.Tpo $(DEPDIR)/cu12_1-cu12_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu12_1.c' object='cu12_1-cu12_1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu12_1_CFLAGS) $(CFLAGS) -c -o cu12_1-cu12_1.obj `if test -f 'cu12_1.c'; then $(CYGPATH_W) 'cu12_1.c'; else $(CYGPATH_W) '$(srcdir)/cu12_1.c'; fi`
+
+cu14_1-cu14_1.o: cu14_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu14_1_CFLAGS) $(CFLAGS) -MT cu14_1-cu14_1.o -MD -MP -MF $(DEPDIR)/cu14_1-cu14_1.Tpo -c -o cu14_1-cu14_1.o `test -f 'cu14_1.c' || echo '$(srcdir)/'`cu14_1.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu14_1-cu14_1.Tpo $(DEPDIR)/cu14_1-cu14_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu14_1.c' object='cu14_1-cu14_1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu14_1_CFLAGS) $(CFLAGS) -c -o cu14_1-cu14_1.o `test -f 'cu14_1.c' || echo '$(srcdir)/'`cu14_1.c
+
+cu14_1-cu14_1.obj: cu14_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu14_1_CFLAGS) $(CFLAGS) -MT cu14_1-cu14_1.obj -MD -MP -MF $(DEPDIR)/cu14_1-cu14_1.Tpo -c -o cu14_1-cu14_1.obj `if test -f 'cu14_1.c'; then $(CYGPATH_W) 'cu14_1.c'; else $(CYGPATH_W) '$(srcdir)/cu14_1.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu14_1-cu14_1.Tpo $(DEPDIR)/cu14_1-cu14_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu14_1.c' object='cu14_1-cu14_1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu14_1_CFLAGS) $(CFLAGS) -c -o cu14_1-cu14_1.obj `if test -f 'cu14_1.c'; then $(CYGPATH_W) 'cu14_1.c'; else $(CYGPATH_W) '$(srcdir)/cu14_1.c'; fi`
+
+cu21_1-cu21_1.o: cu21_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu21_1_CFLAGS) $(CFLAGS) -MT cu21_1-cu21_1.o -MD -MP -MF $(DEPDIR)/cu21_1-cu21_1.Tpo -c -o cu21_1-cu21_1.o `test -f 'cu21_1.c' || echo '$(srcdir)/'`cu21_1.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu21_1-cu21_1.Tpo $(DEPDIR)/cu21_1-cu21_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu21_1.c' object='cu21_1-cu21_1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu21_1_CFLAGS) $(CFLAGS) -c -o cu21_1-cu21_1.o `test -f 'cu21_1.c' || echo '$(srcdir)/'`cu21_1.c
+
+cu21_1-cu21_1.obj: cu21_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu21_1_CFLAGS) $(CFLAGS) -MT cu21_1-cu21_1.obj -MD -MP -MF $(DEPDIR)/cu21_1-cu21_1.Tpo -c -o cu21_1-cu21_1.obj `if test -f 'cu21_1.c'; then $(CYGPATH_W) 'cu21_1.c'; else $(CYGPATH_W) '$(srcdir)/cu21_1.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu21_1-cu21_1.Tpo $(DEPDIR)/cu21_1-cu21_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu21_1.c' object='cu21_1-cu21_1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu21_1_CFLAGS) $(CFLAGS) -c -o cu21_1-cu21_1.obj `if test -f 'cu21_1.c'; then $(CYGPATH_W) 'cu21_1.c'; else $(CYGPATH_W) '$(srcdir)/cu21_1.c'; fi`
+
+cu24_1-cu24_1.o: cu24_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu24_1_CFLAGS) $(CFLAGS) -MT cu24_1-cu24_1.o -MD -MP -MF $(DEPDIR)/cu24_1-cu24_1.Tpo -c -o cu24_1-cu24_1.o `test -f 'cu24_1.c' || echo '$(srcdir)/'`cu24_1.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu24_1-cu24_1.Tpo $(DEPDIR)/cu24_1-cu24_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu24_1.c' object='cu24_1-cu24_1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu24_1_CFLAGS) $(CFLAGS) -c -o cu24_1-cu24_1.o `test -f 'cu24_1.c' || echo '$(srcdir)/'`cu24_1.c
+
+cu24_1-cu24_1.obj: cu24_1.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu24_1_CFLAGS) $(CFLAGS) -MT cu24_1-cu24_1.obj -MD -MP -MF $(DEPDIR)/cu24_1-cu24_1.Tpo -c -o cu24_1-cu24_1.obj `if test -f 'cu24_1.c'; then $(CYGPATH_W) 'cu24_1.c'; else $(CYGPATH_W) '$(srcdir)/cu24_1.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/cu24_1-cu24_1.Tpo $(DEPDIR)/cu24_1-cu24_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cu24_1.c' object='cu24_1-cu24_1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu24_1_CFLAGS) $(CFLAGS) -c -o cu24_1-cu24_1.obj `if test -f 'cu24_1.c'; then $(CYGPATH_W) 'cu24_1.c'; else $(CYGPATH_W) '$(srcdir)/cu24_1.c'; fi`
 
 tcxb-tcxb.o: tcxb.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcxb_CFLAGS) $(CFLAGS) -MT tcxb-tcxb.o -MD -MP -MF $(DEPDIR)/tcxb-tcxb.Tpo -c -o tcxb-tcxb.o `test -f 'tcxb.c' || echo '$(srcdir)/'`tcxb.c

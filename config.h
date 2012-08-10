@@ -13,6 +13,9 @@
 /* DARWIN_VERS value for Mac OS X 10.7 */
 /* #undef DARWIN_10_7 */
 
+/* DARWIN_VERS value for Mac OS X 10.8 */
+/* #undef DARWIN_10_8 */
+
 /* Define to 1 if you're using Darwin */
 /* #undef DARWIN_LIBC */
 
@@ -39,6 +42,12 @@
 
 /* Define to 1 if you're using glibc 2.14.x */
 /* #undef GLIBC_2_14 */
+
+/* Define to 1 if you're using glibc 2.15.x */
+/* #undef GLIBC_2_15 */
+
+/* Define to 1 if you're using glibc 2.16.x */
+/* #undef GLIBC_2_16 */
 
 /* Define to 1 if you're using glibc 2.2.x */
 /* #undef GLIBC_2_2 */
@@ -74,7 +83,7 @@
 /* #undef HAVE_AS_PPC_MFTOCRF */
 
 /* Define to 1 if gcc supports __sync_bool_compare_and_swap() and
-   __sync_add_and_fetch() */
+   __sync_add_and_fetch() for the primary target */
 #define HAVE_BUILTIN_ATOMIC 1
 
 /* Define to 1 if g++ supports __sync_bool_compare_and_swap() and
@@ -144,6 +153,12 @@
 /* Define to 1 if you have the `ppoll' function. */
 #define HAVE_PPOLL 1
 
+/* Define to 1 if you have the `process_vm_readv' function. */
+/* #undef HAVE_PROCESS_VM_READV */
+
+/* Define to 1 if you have the `process_vm_writev' function. */
+/* #undef HAVE_PROCESS_VM_WRITEV */
+
 /* Define to 1 if you have the `pthread_barrier_init' function. */
 #define HAVE_PTHREAD_BARRIER_INIT 1
 
@@ -195,6 +210,9 @@
 
 /* Define to 1 if you have the `semtimedop' function. */
 #define HAVE_SEMTIMEDOP 1
+
+/* Define to 1 if libstd++ supports annotating shared pointers */
+/* #undef HAVE_SHARED_POINTER_ANNOTATION */
 
 /* Define to 1 if you have the `signalfd' function. */
 #define HAVE_SIGNALFD 1
@@ -286,6 +304,9 @@
 /* Define to 1 if you're using Linux 2.6.x or Linux 3.x */
 #define KERNEL_2_6 1
 
+/* configured default page size 4k */
+#define MIPS_PAGE_SHIFT 12
+
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 /* #undef NO_MINUS_C_MINUS_O */
 
@@ -299,7 +320,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.7.0"
+#define PACKAGE_STRING "Valgrind 3.8.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -308,7 +329,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.7.0"
+#define PACKAGE_VERSION "3.8.0"
+
+/* configured memory alignment 2*PAGE_SIZE */
+#define SHM_ALIGNMENT 2*(1UL << MIPS_PAGE_SHIFT)
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -317,7 +341,7 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "3.7.0"
+#define VERSION "3.8.0"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"

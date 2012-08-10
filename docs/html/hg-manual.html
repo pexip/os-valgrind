@@ -583,7 +583,9 @@ the point it was detected.</p>
 "<code class="computeroutput">This conflicts with a previous
 write</code>".  This shows a previous access which also
 accessed the stated address, and which is believed to be racing
-against the access in the first call stack.</p>
+against the access in the first call stack. Note that this second
+call stack is limited to a maximum of 8 entries to limit the
+memory usage.</p>
 <p>Finally, Helgrind may attempt to give a description of the
 raced-on address in source level terms.  In this example, it
 identifies it as a local variable, shows its name, declaration point,
@@ -961,7 +963,9 @@ unlock(mx)                             unlock(mx)
         Helgrind collects enough information about "old" accesses that
         it can produce two stack traces in a race report -- both the
         stack trace for the current access, and the trace for the
-        older, conflicting access.</p>
+        older, conflicting access. To limit memory usage, "old" accesses
+        stack traces are limited to a maximum of 8 entries, even if
+        <code class="option">--num-callers</code> value is bigger.</p>
 <p>Collecting such information is expensive in both speed and
         memory, particularly for programs that do many inter-thread
         synchronisation events (locks, unlocks, etc).  Without such
