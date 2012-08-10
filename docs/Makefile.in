@@ -61,6 +61,7 @@ CCASDEPMODE = @CCASDEPMODE@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CFLAGS_MPI = @CFLAGS_MPI@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -98,6 +99,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LDFLAGS_MPI = @LDFLAGS_MPI@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LN_S = @LN_S@
@@ -199,7 +201,9 @@ EXTRA_DIST = \
 	internals/3_3_BUGSTATUS.txt \
 	internals/3_4_BUGSTATUS.txt \
 	internals/3_5_BUGSTATUS.txt \
+	internals/3_7_BUGSTATUS.txt \
 	internals/arm_thumb_notes_gdbserver.txt \
+	internals/avx-notes.txt \
 	internals/BIG_APP_NOTES.txt \
 	internals/Darwin-notes.txt \
 	internals/SPEC-notes.txt \
@@ -218,6 +222,7 @@ EXTRA_DIST = \
 	internals/register-uses.txt \
 	internals/release-HOWTO.txt \
 	internals/segments-seginfos.txt \
+	internals/t-chaining-notes.txt \
 	internals/threads-syscalls-signals.txt \
 	internals/tm-mutexstates.dot \
 	internals/tm-threadstates.dot \

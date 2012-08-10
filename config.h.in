@@ -12,6 +12,9 @@
 /* DARWIN_VERS value for Mac OS X 10.7 */
 #undef DARWIN_10_7
 
+/* DARWIN_VERS value for Mac OS X 10.8 */
+#undef DARWIN_10_8
+
 /* Define to 1 if you're using Darwin */
 #undef DARWIN_LIBC
 
@@ -38,6 +41,12 @@
 
 /* Define to 1 if you're using glibc 2.14.x */
 #undef GLIBC_2_14
+
+/* Define to 1 if you're using glibc 2.15.x */
+#undef GLIBC_2_15
+
+/* Define to 1 if you're using glibc 2.16.x */
+#undef GLIBC_2_16
 
 /* Define to 1 if you're using glibc 2.2.x */
 #undef GLIBC_2_2
@@ -73,7 +82,7 @@
 #undef HAVE_AS_PPC_MFTOCRF
 
 /* Define to 1 if gcc supports __sync_bool_compare_and_swap() and
-   __sync_add_and_fetch() */
+   __sync_add_and_fetch() for the primary target */
 #undef HAVE_BUILTIN_ATOMIC
 
 /* Define to 1 if g++ supports __sync_bool_compare_and_swap() and
@@ -143,6 +152,12 @@
 /* Define to 1 if you have the `ppoll' function. */
 #undef HAVE_PPOLL
 
+/* Define to 1 if you have the `process_vm_readv' function. */
+#undef HAVE_PROCESS_VM_READV
+
+/* Define to 1 if you have the `process_vm_writev' function. */
+#undef HAVE_PROCESS_VM_WRITEV
+
 /* Define to 1 if you have the `pthread_barrier_init' function. */
 #undef HAVE_PTHREAD_BARRIER_INIT
 
@@ -194,6 +209,9 @@
 
 /* Define to 1 if you have the `semtimedop' function. */
 #undef HAVE_SEMTIMEDOP
+
+/* Define to 1 if libstd++ supports annotating shared pointers */
+#undef HAVE_SHARED_POINTER_ANNOTATION
 
 /* Define to 1 if you have the `signalfd' function. */
 #undef HAVE_SIGNALFD
@@ -285,6 +303,9 @@
 /* Define to 1 if you're using Linux 2.6.x or Linux 3.x */
 #undef KERNEL_2_6
 
+/* configured default page size 4k */
+#undef MIPS_PAGE_SHIFT
+
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
 
@@ -308,6 +329,9 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* configured memory alignment 2*PAGE_SIZE */
+#undef SHM_ALIGNMENT
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

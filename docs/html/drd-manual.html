@@ -470,6 +470,14 @@ client program:
         address. This option may be specified more than once.
       </p></dd>
 <dt><span class="term">
+      <code class="option">--ptrace-addr=&lt;address&gt; [default: none]</code>
+    </span></dt>
+<dd><p>
+        Trace all load and store activity for the specified address and keep
+        doing that even after the memory at that address has been freed and
+        reallocated.
+      </p></dd>
+<dt><span class="term">
       <code class="option">--trace-alloc=&lt;yes|no&gt; [default: no]</code>
     </span></dt>
 <dd><p>
@@ -837,6 +845,12 @@ available macros and client requests are:
       race on a specified variable, and it's not immediately clear which
       source code statements triggered the conflicting accesses, it can be
       very helpful to trace all activity on the offending memory location.
+    </p></li>
+<li class="listitem"><p>
+      The macro <code class="literal">DRD_STOP_TRACING_VAR(x)</code>. Stop tracing load
+      and store activity for the address range starting
+      at <code class="literal">&amp;x</code> and occupying <code class="literal">sizeof(x)</code>
+      bytes.
     </p></li>
 <li class="listitem"><p>
       The macro <code class="literal">ANNOTATE_TRACE_MEMORY(&amp;x)</code>. Trace all
@@ -1419,10 +1433,6 @@ example.
       a know <code class="literal">libstdc++</code> issue -- see also GCC bug
       <a class="ulink" href="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40518" target="_top">40518</a>
       for more information.
-    </p></li>
-<li class="listitem"><p>
-      When address tracing is enabled, no information on atomic stores
-      will be displayed.
     </p></li>
 <li class="listitem"><p>
       If you compile the DRD source code yourself, you need GCC 3.0 or
