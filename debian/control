@@ -20,7 +20,7 @@ Vcs-Git: git://git.debian.org/git/collab-maint/valgrind.git
 Homepage: http://www.valgrind.org/
 
 Package: valgrind
-Architecture: i386 amd64 s390x powerpc ppc64 armel armhf
+Architecture: amd64 armel armhf i386 powerpc ppc64 s390x
 Depends: ${misc:Depends}, ${shlibs:Depends}, libc6-dbg
 Suggests: valgrind-mpi, kcachegrind, alleyoop, valkyrie (>> 1.3.0)
 Recommends: valgrind-dbg, gdb
@@ -45,7 +45,7 @@ Description: instrumentation framework for building dynamic analysis tools
 Package: valgrind-dbg
 Priority: extra
 Section: debug
-Architecture: i386 amd64 s390x powerpc ppc64 armel armhf
+Architecture: amd64 armel armhf i386 powerpc ppc64 s390x
 Depends: ${misc:Depends}, valgrind (= ${binary:Version})
 Description: instrumentation framework for building dynamic analysis tools (debug)
  Valgrind is a system for debugging and profiling Linux programs. With its tool
@@ -57,7 +57,7 @@ Description: instrumentation framework for building dynamic analysis tools (debu
  This package provides the debug symbols for valgrind's tools and libraries.
 
 Package: valgrind-mpi
-Architecture: i386 amd64 s390x powerpc ppc64 armel armhf
+Architecture: amd64 armel armhf i386 powerpc ppc64 s390x
 Depends: ${misc:Depends}, ${shlibs:Depends}, valgrind (= ${binary:Version})
 Recommends: gdb
 Description: instrumentation framework for building dynamic analysis tools (MPI module)
