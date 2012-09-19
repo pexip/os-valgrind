@@ -22,6 +22,66 @@
 <a name="dist.news"></a>2. NEWS</h2></div></div></div>
 <div class="literallayout"><p><br>
       <br>
+Release 3.8.1 (19 September 2012)<br>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
+3.8.1 is a bug fix release.  It fixes some assertion failures in 3.8.0<br>
+that occur moderately frequently in real use cases, adds support for<br>
+some missing instructions on ARM, and fixes a deadlock condition on<br>
+MacOSX.  If you package or deliver 3.8.0 for others to use, you might<br>
+want to consider upgrading to 3.8.1 instead.<br>
+<br>
+The following bugs have been fixed or resolved.  Note that "n-i-bz"<br>
+stands for "not in bugzilla" -- that is, a bug that was reported to us<br>
+but never got a bugzilla entry.  We encourage you to file bugs in<br>
+bugzilla (https://bugs.kde.org/enter_bug.cgi?product=valgrind) rather<br>
+than mailing the developers (or mailing lists) directly -- bugs that<br>
+are not entered into bugzilla tend to get forgotten about or ignored.<br>
+<br>
+To see details of a given bug, visit<br>
+  https://bugs.kde.org/show_bug.cgi?id=XXXXXX<br>
+where XXXXXX is the bug number as listed below.<br>
+<br>
+284004  == 301281<br>
+289584  Unhandled instruction: 0xF 0x29 0xE5 (MOVAPS)<br>
+295808  amd64-&gt;IR: 0xF3 0xF 0xBC 0xC0 (TZCNT)<br>
+298281  wcslen causes false(?) uninitialised value warnings<br>
+301281  valgrind hangs on OS X when the process calls system()<br>
+304035  disInstr(arm): unhandled instruction 0xE1023053<br>
+304867  implement MOVBE instruction in x86 mode<br>
+304980  Assertion 'lo &lt;= hi' failed in vgModuleLocal_find_rx_mapping<br>
+305042  amd64: implement 0F 7F encoding of movq between two registers<br>
+305199  ARM: implement QDADD and QDSUB<br>
+305321  amd64-&gt;IR: 0xF 0xD 0xC (prefetchw)<br>
+305513  killed by fatal signal: SIGSEGV<br>
+305690  DRD reporting invalid semaphore when sem_trywait fails<br>
+305926  Invalid alignment checks for some AVX instructions<br>
+306297  disInstr(thumb): unhandled instruction 0xE883 0x000C<br>
+306310  3.8.0 release tarball missing some files<br>
+306612  RHEL 6 glibc-2.X default suppressions need /lib*/libc-*patterns<br>
+306664  vex amd64-&gt;IR: 0x66 0xF 0x3A 0x62 0xD1 0x46 0x66 0xF<br>
+n-i-bz  shmat of a segment &gt; 4Gb does not work <br>
+n-i-bz  simulate_control_c script wrong USR1 signal number on mips<br>
+n-i-bz  vgdb ptrace calls wrong on mips [...]<br>
+n-i-bz  Fixes for more MPI false positives<br>
+n-i-bz  exp-sgcheck's memcpy causes programs to segfault<br>
+n-i-bz  OSX build w/ clang: asserts at startup<br>
+n-i-bz  Incorrect undef'dness prop for Iop_DPBtoBCD and Iop_BCDtoDPB<br>
+n-i-bz  fix a couple of union tag-vs-field mixups<br>
+n-i-bz  OSX: use __NR_poll_nocancel rather than __NR_poll<br>
+<br>
+The following bugs were fixed in 3.8.0 but not listed in this NEWS<br>
+file at the time:<br>
+<br>
+254088  Valgrind should know about UD2 instruction<br>
+301280  == 254088<br>
+301902  == 254088<br>
+304754  NEWS blows TeX's little mind<br>
+<br>
+(3.8.1.TEST2: 18 September 2012, vex r2537, valgrind r12994)<br>
+(3.8.1:       18 September 2012, vex r2537, valgrind r12996)<br>
+<br>
+<br>
+<br>
 Release 3.8.0 (10 August 2012)<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
 3.8.0 is a feature release with many improvements and the usual<br>
