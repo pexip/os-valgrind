@@ -320,7 +320,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.8.0"
+#define PACKAGE_STRING "Valgrind 3.8.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -329,7 +329,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.8.0"
+#define PACKAGE_VERSION "3.8.1"
 
 /* configured memory alignment 2*PAGE_SIZE */
 #define SHM_ALIGNMENT 2*(1UL << MIPS_PAGE_SHIFT)
@@ -341,7 +341,7 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "3.8.0"
+#define VERSION "3.8.1"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"
