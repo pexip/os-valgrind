@@ -2,28 +2,8 @@ Description: Fix spelling-error-in-manpage found by lintian
 Origin: vendor
 Author: Alessandro Ghedini <ghedo@debian.org>
 Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
-Last-Update: 2012-05-10
+Last-Update: 2013-01-06
 
---- a/docs/valgrind.1
-+++ b/docs/valgrind.1
-@@ -1313,7 +1313,7 @@
- .PP
- \fB\-\-join\-list\-vol=<n> [default: 10]\fR
- .RS 4
--Data races that occur between a statement at the end of one thread and another thread can be missed if memory access information is discarded immediately after a thread has been joined\&. This option allows to specify for how many joined threads memory access information should be retained\&.
-+Data races that occur between a statement at the end of one thread and another thread can be missed if memory access information is discarded immediately after a thread has been joined\&. This option allows one to specify for how many joined threads memory access information should be retained\&.
- .RE
- .PP
- \fB \-\-first\-race\-only=<yes|no> [default: no] \fR
-@@ -1376,7 +1376,7 @@
- .PP
- \fB\-\-segment\-merging\-interval=<n> [default: 10]\fR
- .RS 4
--Perform segment merging only after the specified number of new segments have been created\&. This is an advanced configuration option that allows to choose whether to minimize DRD\*(Aqs memory usage by choosing a low value or to let DRD run faster by choosing a slightly higher value\&. The optimal value for this parameter depends on the program being analyzed\&. The default value works well for most programs\&.
-+Perform segment merging only after the specified number of new segments have been created\&. This is an advanced configuration option that allows one to choose whether to minimize DRD\*(Aqs memory usage by choosing a low value or to let DRD run faster by choosing a slightly higher value\&. The optimal value for this parameter depends on the program being analyzed\&. The default value works well for most programs\&.
- .RE
- .PP
- \fB\-\-shared\-threshold=<n> [default: off]\fR
 --- a/drd/docs/drd-manual.xml
 +++ b/drd/docs/drd-manual.xml
 @@ -356,7 +356,7 @@
