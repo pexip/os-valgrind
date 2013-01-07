@@ -31,6 +31,10 @@ endif
 %:
 	dh $@ --parallel --with=autotools-dev,bash-completion
 
+override_dh_clean:
+	rm -f docs/FAQ.txt
+	dh_clean
+
 override_dh_auto_configure:
 	dh_auto_configure -- --host="$(DEB_HOST_GNU_TYPE)" --enable-tls \
 		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
@@ -40,6 +44,7 @@ override_dh_auto_test:
 
 override_dh_auto_build:
 	dh_auto_build --parallel
+	$(MAKE) -C docs FAQ.txt
 	$(MAKE) -C docs html-docs
 	$(MAKE) -C docs man-pages
 
