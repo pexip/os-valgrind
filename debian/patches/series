@@ -6,3 +6,4 @@
 07_fix-spelling-in-binary.patch
 08_fix-spelling-in-manpage.patch
 09_valgrind-listener-manpage.patch
+10_unbreak-xinclude-in-manpage.patch
