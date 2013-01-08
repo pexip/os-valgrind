@@ -1,9 +1,18 @@
 valgrind (1:3.8.1-2) UNRELEASED; urgency=low
 
+  [ Alessandro Ghedini ]
   * Bump Standards-Version to 3.9.4 (no changes needed)
   * Quote LD_LIBRARY_PATH in the wrapper script to avoid errors with spaced
     paths (LP: #880685)
   * Enable support for mipsel too (Closes: #696850)
+
+  [ Samuel Bronson ]
+  * Allow building more than once from the same tree
+    - Build and ship FAQ.txt from sources, since the bundled copy is deleted
+      on "make clean"
+  * Drop docs/valgrind.1 changes from 08_fix-spelling-in-manpage.patch
+  * Add 10_unbreak-xinclude-in-manpage.patch to fix a broken XInclude
+    (Closes: #696694)
 
  -- Alessandro Ghedini <ghedo@debian.org>  Sun, 23 Sep 2012 19:00:59 +0200
 
