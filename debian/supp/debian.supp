@@ -16,3 +16,11 @@
   fun:g_malloc0
   fun:type_node_any_new_W
 }
+
+{
+  dlopen() with -lpthread bug#700899
+  Memcheck:Leak
+  fun:calloc
+  fun:_dlerror_run
+  fun:dlopen@@GLIBC_2.2.5
+}
