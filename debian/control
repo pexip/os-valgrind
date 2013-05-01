@@ -1,8 +1,9 @@
 Source: valgrind
 Section: devel
 Priority: optional
-Maintainer: Alessandro Ghedini <ghedo@debian.org>
-Uploaders: Roland Stigge <stigge@debian.org>
+Maintainer: Pexip AS <packaging@pexip.com>
+XBCS-Original-Maintainer: Alessandro Ghedini <ghedo@debian.org>
+XBCS-Original-Uploaders: Roland Stigge <stigge@debian.org>
 Build-Depends: debhelper (>= 7.0.50~),
  autotools-dev,
  bash-completion,
