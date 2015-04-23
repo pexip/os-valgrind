@@ -19,6 +19,7 @@ Standards-Version: 3.9.4
 Vcs-Browser: http://git.debian.org/?p=collab-maint/valgrind.git;a=summary
 Vcs-Git: git://git.debian.org/git/collab-maint/valgrind.git
 Homepage: http://www.valgrind.org/
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ jessie
 
 Package: valgrind
 Architecture: amd64 armel armhf i386 mips mipsel powerpc ppc64 s390x
