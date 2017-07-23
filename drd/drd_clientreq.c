@@ -1,7 +1,7 @@
 /*
   This file is part of drd, a thread error detector.
 
-  Copyright (C) 2006-2013 Bart Van Assche <bvanassche@acm.org>.
+  Copyright (C) 2006-2017 Bart Van Assche <bvanassche@acm.org>.
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License as
@@ -35,7 +35,6 @@
 #include "drd_suppression.h"      // drd_start_suppression()
 #include "drd_thread.h"
 #include "pub_tool_basics.h"      // Bool
-#include "pub_tool_debuginfo.h"   // VG_(describe_IP)()
 #include "pub_tool_libcassert.h"
 #include "pub_tool_libcassert.h"  // tl_assert()
 #include "pub_tool_libcprint.h"   // VG_(message)()
@@ -80,12 +79,12 @@ static Bool handle_client_request(ThreadId vg_tid, UWord* arg, UWord* ret)
    UWord result = 0;
    const DrdThreadId drd_tid = DRD_(thread_get_running_tid)();
 
-   tl_assert(vg_tid == VG_(get_running_tid()));
+   tl_assert(vg_tid == VG_(get_running_tid)());
    tl_assert(DRD_(VgThreadIdToDrdThreadId)(vg_tid) == drd_tid
              || (VG_USERREQ__GDB_MONITOR_COMMAND == arg[0]
                  && vg_tid == VG_INVALID_THREADID));
    /* Check the consistency of vg_tid and drd_tid, unless
-      vgdb has forced the invokation of a gdb monitor cmd
+      vgdb has forced the invocation of a gdb monitor cmd
       when no threads was running (i.e. all threads blocked
       in a syscall. In such a case, vg_tid is invalid,
       its conversion to a drd thread id gives also an invalid
@@ -614,6 +613,16 @@ static Bool handle_client_request(ThreadId vg_tid, UWord* arg, UWord* ret)
                                  &UICR);
       }
       break;
+
+#if defined(VGO_solaris)
+   case VG_USERREQ__RTLD_BIND_GUARD:
+      DRD_(thread_entering_rtld_bind_guard)(drd_tid, arg[1]);
+      break;
+
+   case VG_USERREQ__RTLD_BIND_CLEAR:
+      DRD_(thread_leaving_rtld_bind_clear)(drd_tid, arg[1]);
+      break;
+#endif /* VGO_solaris */
 
    default:
 #if 0

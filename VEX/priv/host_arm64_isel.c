@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2013-2013 OpenWorks
+   Copyright (C) 2013-2017 OpenWorks
       info@open-works.net
 
    This program is free software; you can redistribute it and/or
@@ -38,23 +38,6 @@
 #include "host_generic_regs.h"
 #include "host_generic_simd64.h"  // for 32-bit SIMD helpers
 #include "host_arm64_defs.h"
-
-
-//ZZ /*---------------------------------------------------------*/
-//ZZ /*--- ARMvfp control word stuff                         ---*/
-//ZZ /*---------------------------------------------------------*/
-//ZZ 
-//ZZ /* Vex-generated code expects to run with the FPU set as follows: all
-//ZZ    exceptions masked, round-to-nearest, non-vector mode, with the NZCV
-//ZZ    flags cleared, and FZ (flush to zero) disabled.  Curiously enough,
-//ZZ    this corresponds to a FPSCR value of zero.
-//ZZ 
-//ZZ    fpscr should therefore be zero on entry to Vex-generated code, and
-//ZZ    should be unchanged at exit.  (Or at least the bottom 28 bits
-//ZZ    should be zero).
-//ZZ */
-//ZZ 
-//ZZ #define DEFAULT_FPSCR 0
 
 
 /*---------------------------------------------------------*/
@@ -157,21 +140,21 @@ static void addInstr ( ISelEnv* env, ARM64Instr* instr )
 
 static HReg newVRegI ( ISelEnv* env )
 {
-   HReg reg = mkHReg(env->vreg_ctr, HRcInt64, True/*virtual reg*/);
+   HReg reg = mkHReg(True/*virtual reg*/, HRcInt64, 0, env->vreg_ctr);
    env->vreg_ctr++;
    return reg;
 }
 
 static HReg newVRegD ( ISelEnv* env )
 {
-   HReg reg = mkHReg(env->vreg_ctr, HRcFlt64, True/*virtual reg*/);
+   HReg reg = mkHReg(True/*virtual reg*/, HRcFlt64, 0, env->vreg_ctr);
    env->vreg_ctr++;
    return reg;
 }
 
 static HReg newVRegV ( ISelEnv* env )
 {
-   HReg reg = mkHReg(env->vreg_ctr, HRcVec128, True/*virtual reg*/);
+   HReg reg = mkHReg(True/*virtual reg*/, HRcVec128, 0, env->vreg_ctr);
    env->vreg_ctr++;
    return reg;
 }
@@ -222,6 +205,9 @@ static HReg        iselDblExpr            ( ISelEnv* env, IRExpr* e );
 
 static HReg        iselFltExpr_wrk        ( ISelEnv* env, IRExpr* e );
 static HReg        iselFltExpr            ( ISelEnv* env, IRExpr* e );
+
+static HReg        iselF16Expr_wrk        ( ISelEnv* env, IRExpr* e );
+static HReg        iselF16Expr            ( ISelEnv* env, IRExpr* e );
 
 static HReg        iselV128Expr_wrk       ( ISelEnv* env, IRExpr* e );
 static HReg        iselV128Expr           ( ISelEnv* env, IRExpr* e );
@@ -312,10 +298,9 @@ static HReg widen_s_16_to_64 ( ISelEnv* env, HReg src )
    a new register, and return the new register. */
 static HReg widen_z_16_to_64 ( ISelEnv* env, HReg src )
 {
-   HReg      dst = newVRegI(env);
-   ARM64RI6* n48 = ARM64RI6_I6(48);
-   addInstr(env, ARM64Instr_Shift(dst, src, n48, ARM64sh_SHL));
-   addInstr(env, ARM64Instr_Shift(dst, dst, n48, ARM64sh_SHR));
+   HReg      dst  = newVRegI(env);
+   ARM64RIL* mask = ARM64RIL_I13(1, 0, 15); /* encodes 0xFFFF */
+   addInstr(env, ARM64Instr_Logic(dst, src, mask, ARM64lo_AND));
    return dst;
 }
 
@@ -343,10 +328,9 @@ static HReg widen_s_8_to_64 ( ISelEnv* env, HReg src )
 
 static HReg widen_z_8_to_64 ( ISelEnv* env, HReg src )
 {
-   HReg      dst = newVRegI(env);
-   ARM64RI6* n56 = ARM64RI6_I6(56);
-   addInstr(env, ARM64Instr_Shift(dst, src, n56, ARM64sh_SHL));
-   addInstr(env, ARM64Instr_Shift(dst, dst, n56, ARM64sh_SHR));
+   HReg      dst  = newVRegI(env);
+   ARM64RIL* mask = ARM64RIL_I13(1, 0, 7); /* encodes 0xFF */
+   addInstr(env, ARM64Instr_Logic(dst, src, mask, ARM64lo_AND));
    return dst;
 }
 
@@ -366,7 +350,7 @@ static Bool isZeroU64 ( IRExpr* e ) {
 /* Set the FP rounding mode: 'mode' is an I32-typed expression
    denoting a value in the range 0 .. 3, indicating a round mode
    encoded as per type IRRoundingMode -- the first four values only
-   (Irrm_NEAREST, Irrm_NegINF, Irrm_PosINF, Irrm_ZERO).  Set the PPC
+   (Irrm_NEAREST, Irrm_NegINF, Irrm_PosINF, Irrm_ZERO).  Set the ARM64
    FSCR to have the same rounding.
 
    For speed & simplicity, we're setting the *entire* FPCR here.
@@ -463,7 +447,7 @@ void set_FPCR_rounding_mode ( ISelEnv* env, IRExpr* mode )
 static
 Bool mightRequireFixedRegs ( IRExpr* e )
 {
-   if (UNLIKELY(is_IRExpr_VECRET_or_BBPTR(e))) {
+   if (UNLIKELY(is_IRExpr_VECRET_or_GSPTR(e))) {
       // These are always "safe" -- either a copy of SP in some
       // arbitrary vreg, or a copy of x21, respectively.
       return False;
@@ -498,7 +482,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
    HReg          tmpregs[ARM64_N_ARGREGS];
    Bool          go_fast;
    Int           n_args, i, nextArgReg;
-   ULong         target;
+   Addr64        target;
 
    vassert(ARM64_N_ARGREGS == 8);
 
@@ -507,9 +491,9 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
    *retloc               = mk_RetLoc_INVALID();
 
    /* These are used for cross-checking that IR-level constraints on
-      the use of IRExpr_VECRET() and IRExpr_BBPTR() are observed. */
+      the use of IRExpr_VECRET() and IRExpr_GSPTR() are observed. */
    UInt nVECRETs = 0;
-   UInt nBBPTRs  = 0;
+   UInt nGSPTRs  = 0;
 
    /* Marshal args for a call and do the call.
 
@@ -527,7 +511,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
       preallocate the return space before marshalling any arguments,
       in this case.
 
-      |args| may also contain IRExpr_BBPTR(), in which case the
+      |args| may also contain IRExpr_GSPTR(), in which case the
       value in x21 is passed as the corresponding argument.
 
       Generating code which is both efficient and correct when
@@ -574,14 +558,14 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
       IRExpr* arg = args[i];
       if (UNLIKELY(arg->tag == Iex_VECRET)) {
          nVECRETs++;
-      } else if (UNLIKELY(arg->tag == Iex_BBPTR)) {
-         nBBPTRs++;
+      } else if (UNLIKELY(arg->tag == Iex_GSPTR)) {
+         nGSPTRs++;
       }
       n_args++;
    }
 
    /* If this fails, the IR is ill-formed */
-   vassert(nBBPTRs == 0 || nBBPTRs == 1);
+   vassert(nGSPTRs == 0 || nGSPTRs == 1);
 
    /* If we have a VECRET, allocate space on the stack for the return
       value, and record the stack pointer after that. */
@@ -654,7 +638,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
          IRExpr* arg = args[i];
 
          IRType  aTy = Ity_INVALID;
-         if (LIKELY(!is_IRExpr_VECRET_or_BBPTR(arg)))
+         if (LIKELY(!is_IRExpr_VECRET_or_GSPTR(arg)))
             aTy = typeOfIRExpr(env->type_env, args[i]);
 
          if (nextArgReg >= ARM64_N_ARGREGS)
@@ -665,7 +649,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
                                            iselIntExpr_R(env, args[i]) ));
             nextArgReg++;
          }
-         else if (arg->tag == Iex_BBPTR) {
+         else if (arg->tag == Iex_GSPTR) {
             vassert(0); //ATC
             addInstr(env, ARM64Instr_MovI( argregs[nextArgReg],
                                            hregARM64_X21() ));
@@ -693,7 +677,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
          IRExpr* arg = args[i];
 
          IRType  aTy = Ity_INVALID;
-         if (LIKELY(!is_IRExpr_VECRET_or_BBPTR(arg)))
+         if (LIKELY(!is_IRExpr_VECRET_or_GSPTR(arg)))
             aTy = typeOfIRExpr(env->type_env, args[i]);
 
          if (nextArgReg >= ARM64_N_ARGREGS)
@@ -703,7 +687,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
             tmpregs[nextArgReg] = iselIntExpr_R(env, args[i]);
             nextArgReg++;
          }
-         else if (arg->tag == Iex_BBPTR) {
+         else if (arg->tag == Iex_GSPTR) {
             vassert(0); //ATC
             tmpregs[nextArgReg] = hregARM64_X21();
             nextArgReg++;
@@ -747,8 +731,8 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
 
    /* Do final checks, set the return values, and generate the call
       instruction proper. */
-   vassert(nBBPTRs == 0 || nBBPTRs == 1);
-   vassert(nVECRETs == (retTy == Ity_V128 || retTy == Ity_V256) ? 1 : 0);
+   vassert(nGSPTRs == 0 || nGSPTRs == 1);
+   vassert(nVECRETs == ((retTy == Ity_V128 || retTy == Ity_V256) ? 1 : 0));
    vassert(*stackAdjustAfterCall == 0);
    vassert(is_RetLoc_INVALID(*retloc));
    switch (retTy) {
@@ -784,7 +768,7 @@ Bool doHelperCall ( /*OUT*/UInt*   stackAdjustAfterCall,
       number into the call (we'll need to know it when doing register
       allocation, to know what regs the call reads.) */
 
-   target = (HWord)Ptr_to_ULong(cee->addr);
+   target = (Addr)cee->addr;
    addInstr(env, ARM64Instr_Call( cc, target, nextArgReg, *retloc ));
 
    return True; /* success */
@@ -1360,6 +1344,16 @@ static ARM64CondCode iselCondCode_wrk ( ISelEnv* env, IRExpr* e )
       return ARM64cc_NE;
    }
 
+   /* --- patterns rooted at: CmpNEZ16 --- */
+
+   if (e->tag == Iex_Unop
+       && e->Iex.Unop.op == Iop_CmpNEZ16) {
+      HReg      r1    = iselIntExpr_R(env, e->Iex.Unop.arg);
+      ARM64RIL* xFFFF = mb_mkARM64RIL_I(0xFFFF);
+      addInstr(env, ARM64Instr_Test(r1, xFFFF));
+      return ARM64cc_NE;
+   }
+
    /* --- patterns rooted at: CmpNEZ64 --- */
 
    if (e->tag == Iex_Unop
@@ -1387,12 +1381,13 @@ static ARM64CondCode iselCondCode_wrk ( ISelEnv* env, IRExpr* e )
            || e->Iex.Binop.op == Iop_CmpLT64S
            || e->Iex.Binop.op == Iop_CmpLT64U
            || e->Iex.Binop.op == Iop_CmpLE64S
-           || e->Iex.Binop.op == Iop_CmpLE64U)) {
+           || e->Iex.Binop.op == Iop_CmpLE64U
+           || e->Iex.Binop.op == Iop_CasCmpEQ64)) {
       HReg      argL = iselIntExpr_R(env, e->Iex.Binop.arg1);
       ARM64RIA* argR = iselIntExpr_RIA(env, e->Iex.Binop.arg2);
       addInstr(env, ARM64Instr_Cmp(argL, argR, True/*is64*/));
       switch (e->Iex.Binop.op) {
-         case Iop_CmpEQ64:  return ARM64cc_EQ;
+         case Iop_CmpEQ64: case Iop_CasCmpEQ64: return ARM64cc_EQ;
          case Iop_CmpNE64:  return ARM64cc_NE;
          case Iop_CmpLT64S: return ARM64cc_LT;
          case Iop_CmpLT64U: return ARM64cc_CC;
@@ -1409,18 +1404,47 @@ static ARM64CondCode iselCondCode_wrk ( ISelEnv* env, IRExpr* e )
            || e->Iex.Binop.op == Iop_CmpLT32S
            || e->Iex.Binop.op == Iop_CmpLT32U
            || e->Iex.Binop.op == Iop_CmpLE32S
-           || e->Iex.Binop.op == Iop_CmpLE32U)) {
+           || e->Iex.Binop.op == Iop_CmpLE32U
+           || e->Iex.Binop.op == Iop_CasCmpEQ32)) {
       HReg      argL = iselIntExpr_R(env, e->Iex.Binop.arg1);
       ARM64RIA* argR = iselIntExpr_RIA(env, e->Iex.Binop.arg2);
       addInstr(env, ARM64Instr_Cmp(argL, argR, False/*!is64*/));
       switch (e->Iex.Binop.op) {
-         case Iop_CmpEQ32:  return ARM64cc_EQ;
+         case Iop_CmpEQ32: case Iop_CasCmpEQ32: return ARM64cc_EQ;
          case Iop_CmpNE32:  return ARM64cc_NE;
          case Iop_CmpLT32S: return ARM64cc_LT;
          case Iop_CmpLT32U: return ARM64cc_CC;
          case Iop_CmpLE32S: return ARM64cc_LE;
          case Iop_CmpLE32U: return ARM64cc_LS;
          default: vpanic("iselCondCode(arm64): CmpXX32");
+      }
+   }
+
+   /* --- Cmp*16*(x,y) --- */
+   if (e->tag == Iex_Binop
+       && (e->Iex.Binop.op == Iop_CasCmpEQ16)) {
+      HReg argL  = iselIntExpr_R(env, e->Iex.Binop.arg1);
+      HReg argR  = iselIntExpr_R(env, e->Iex.Binop.arg2);
+      HReg argL2 = widen_z_16_to_64(env, argL);
+      HReg argR2 = widen_z_16_to_64(env, argR);
+      addInstr(env, ARM64Instr_Cmp(argL2, ARM64RIA_R(argR2), True/*is64*/));
+      switch (e->Iex.Binop.op) {
+         case Iop_CasCmpEQ16: return ARM64cc_EQ;
+         default: vpanic("iselCondCode(arm64): CmpXX16");
+      }
+   }
+
+   /* --- Cmp*8*(x,y) --- */
+   if (e->tag == Iex_Binop
+       && (e->Iex.Binop.op == Iop_CasCmpEQ8)) {
+      HReg argL  = iselIntExpr_R(env, e->Iex.Binop.arg1);
+      HReg argR  = iselIntExpr_R(env, e->Iex.Binop.arg2);
+      HReg argL2 = widen_z_8_to_64(env, argL);
+      HReg argR2 = widen_z_8_to_64(env, argR);
+      addInstr(env, ARM64Instr_Cmp(argL2, ARM64RIA_R(argR2), True/*is64*/));
+      switch (e->Iex.Binop.op) {
+         case Iop_CasCmpEQ8: return ARM64cc_EQ;
+         default: vpanic("iselCondCode(arm64): CmpXX8");
       }
    }
 
@@ -1708,7 +1732,7 @@ static HReg iselIntExpr_R_wrk ( ISelEnv* env, IRExpr* e )
          HReg res  = newVRegI(env);
          addInstr(env, ARM64Instr_MovI(hregARM64_X0(), regL));
          addInstr(env, ARM64Instr_MovI(hregARM64_X1(), regR));
-         addInstr(env, ARM64Instr_Call( ARM64cc_AL, (HWord)Ptr_to_ULong(fn),
+         addInstr(env, ARM64Instr_Call( ARM64cc_AL, (Addr)fn,
                                         2, mk_RetLoc_simple(RLPri_Int) ));
          addInstr(env, ARM64Instr_MovI(res, hregARM64_X0()));
          return res;
@@ -1854,6 +1878,7 @@ static HReg iselIntExpr_R_wrk ( ISelEnv* env, IRExpr* e )
             addInstr(env, ARM64Instr_VXfromDorS(dst, src, False/*!fromD*/));
             return dst;
          }
+         case Iop_1Sto16:
          case Iop_1Sto32:
          case Iop_1Sto64: {
             /* As with the iselStmt case for 'tmp:I1 = expr', we could
@@ -2150,10 +2175,38 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
       /* Only a very limited range of constants is handled. */
       vassert(e->Iex.Const.con->tag == Ico_V128);
       UShort con = e->Iex.Const.con->Ico.V128;
-      if (con == 0x0000 || con == 0xFFFF) {
-         HReg res = newVRegV(env);
-         addInstr(env, ARM64Instr_VImmQ(res, con));
-         return res;
+      HReg   res = newVRegV(env);
+      switch (con) {
+         case 0x0000: case 0x000F: case 0x003F: case 0x00FF: case 0xFFFF:
+            addInstr(env, ARM64Instr_VImmQ(res, con));
+            return res;
+         case 0x00F0:
+            addInstr(env, ARM64Instr_VImmQ(res, 0x000F));
+            addInstr(env, ARM64Instr_VExtV(res, res, res, 12));
+            return res;
+         case 0x0F00:
+            addInstr(env, ARM64Instr_VImmQ(res, 0x000F));
+            addInstr(env, ARM64Instr_VExtV(res, res, res, 8));
+            return res;
+         case 0x0FF0:
+            addInstr(env, ARM64Instr_VImmQ(res, 0x00FF));
+            addInstr(env, ARM64Instr_VExtV(res, res, res, 12));
+            return res;
+         case 0x0FFF:
+            addInstr(env, ARM64Instr_VImmQ(res, 0x000F));
+            addInstr(env, ARM64Instr_VExtV(res, res, res, 4));
+            addInstr(env, ARM64Instr_VUnaryV(ARM64vecu_NOT, res, res));
+            return res;
+         case 0xF000:
+            addInstr(env, ARM64Instr_VImmQ(res, 0x000F));
+            addInstr(env, ARM64Instr_VExtV(res, res, res, 4));
+            return res;
+         case 0xFF00:
+            addInstr(env, ARM64Instr_VImmQ(res, 0x00FF));
+            addInstr(env, ARM64Instr_VExtV(res, res, res, 8));
+            return res;
+         default: 
+            break;
       }
       /* Unhandled */
       goto v128_expr_bad;
@@ -2216,9 +2269,12 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
          case Iop_Reverse32sIn64_x2:
          case Iop_RecipEst32Ux4:
          case Iop_RSqrtEst32Ux4:
+         case Iop_RecipEst64Fx2: case Iop_RecipEst32Fx4:
+         case Iop_RSqrtEst64Fx2: case Iop_RSqrtEst32Fx4:
          {
-            HReg res = newVRegV(env);
-            HReg arg = iselV128Expr(env, e->Iex.Unop.arg);
+            HReg res   = newVRegV(env);
+            HReg arg   = iselV128Expr(env, e->Iex.Unop.arg);
+            Bool setRM = False;
             ARM64VecUnaryOp op = ARM64vecu_INVALID;
             switch (e->Iex.Unop.op) {
                case Iop_NotV128:           op = ARM64vecu_NOT;         break;
@@ -2246,7 +2302,22 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
                case Iop_Reverse32sIn64_x2: op = ARM64vecu_REV644S;     break;
                case Iop_RecipEst32Ux4:     op = ARM64vecu_URECPE32x4;  break;
                case Iop_RSqrtEst32Ux4:     op = ARM64vecu_URSQRTE32x4; break;
+               case Iop_RecipEst64Fx2:     setRM = True;
+                                           op = ARM64vecu_FRECPE64x2;  break;
+               case Iop_RecipEst32Fx4:     setRM = True;
+                                           op = ARM64vecu_FRECPE32x4;  break;
+               case Iop_RSqrtEst64Fx2:     setRM = True;
+                                           op = ARM64vecu_FRSQRTE64x2; break;
+               case Iop_RSqrtEst32Fx4:     setRM = True;
+                                           op = ARM64vecu_FRSQRTE32x4; break;
                default: vassert(0);
+            }
+            if (setRM) {
+               // This is a bit of a kludge.  We should do rm properly for
+               // these recip-est insns, but that would require changing the
+               // primop's type to take an rmode.
+               set_FPCR_rounding_mode(env, IRExpr_Const(
+                                              IRConst_U32(Irrm_NEAREST)));
             }
             addInstr(env, ARM64Instr_VUnaryV(op, res, arg));
             return res;
@@ -2320,6 +2391,17 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
 
    if (e->tag == Iex_Binop) {
       switch (e->Iex.Binop.op) {
+         case Iop_Sqrt32Fx4:
+         case Iop_Sqrt64Fx2: {
+            HReg arg = iselV128Expr(env, e->Iex.Binop.arg2);
+            HReg res = newVRegV(env);
+            set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
+            ARM64VecUnaryOp op 
+               = e->Iex.Binop.op == Iop_Sqrt32Fx4
+                    ? ARM64vecu_FSQRT32x4 : ARM64vecu_FSQRT64x2;
+            addInstr(env, ARM64Instr_VUnaryV(op, res, arg));
+            return res;
+         }
          case Iop_64HLtoV128: {
             HReg res  = newVRegV(env);
             HReg argL = iselIntExpr_R(env, e->Iex.Binop.arg1);
@@ -2377,11 +2459,16 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
          case Iop_Rsh32Sx4: case Iop_Rsh64Sx2:
          case Iop_Rsh8Ux16: case Iop_Rsh16Ux8:
          case Iop_Rsh32Ux4: case Iop_Rsh64Ux2:
+         case Iop_Max64Fx2: case Iop_Max32Fx4:
+         case Iop_Min64Fx2: case Iop_Min32Fx4:
+         case Iop_RecipStep64Fx2: case Iop_RecipStep32Fx4:
+         case Iop_RSqrtStep64Fx2: case Iop_RSqrtStep32Fx4:
          {
-            HReg res  = newVRegV(env);
-            HReg argL = iselV128Expr(env, e->Iex.Binop.arg1);
-            HReg argR = iselV128Expr(env, e->Iex.Binop.arg2);
-            Bool sw   = False;
+            HReg res   = newVRegV(env);
+            HReg argL  = iselV128Expr(env, e->Iex.Binop.arg1);
+            HReg argR  = iselV128Expr(env, e->Iex.Binop.arg2);
+            Bool sw    = False;
+            Bool setRM = False;
             ARM64VecBinOp op = ARM64vecb_INVALID;
             switch (e->Iex.Binop.op) {
                case Iop_AndV128:    op = ARM64vecb_AND; break;
@@ -2494,7 +2581,26 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
                case Iop_Rsh16Ux8:       op = ARM64vecb_URSHL16x8; break;
                case Iop_Rsh32Ux4:       op = ARM64vecb_URSHL32x4; break;
                case Iop_Rsh64Ux2:       op = ARM64vecb_URSHL64x2; break;
+               case Iop_Max64Fx2:       op = ARM64vecb_FMAX64x2; break;
+               case Iop_Max32Fx4:       op = ARM64vecb_FMAX32x4; break;
+               case Iop_Min64Fx2:       op = ARM64vecb_FMIN64x2; break;
+               case Iop_Min32Fx4:       op = ARM64vecb_FMIN32x4; break;
+               case Iop_RecipStep64Fx2: setRM = True;
+                                        op = ARM64vecb_FRECPS64x2; break;
+               case Iop_RecipStep32Fx4: setRM = True;
+                                        op = ARM64vecb_FRECPS32x4; break;
+               case Iop_RSqrtStep64Fx2: setRM = True;
+                                        op = ARM64vecb_FRSQRTS64x2; break;
+               case Iop_RSqrtStep32Fx4: setRM = True;
+                                        op = ARM64vecb_FRSQRTS32x4; break;
                default: vassert(0);
+            }
+            if (setRM) {
+               // This is a bit of a kludge.  We should do rm properly for
+               // these recip-step insns, but that would require changing the
+               // primop's type to take an rmode.
+               set_FPCR_rounding_mode(env, IRExpr_Const(
+                                              IRConst_U32(Irrm_NEAREST)));
             }
             if (sw) {
                addInstr(env, ARM64Instr_VBinV(op, res, argR, argL));
@@ -2753,51 +2859,50 @@ static HReg iselV128Expr_wrk ( ISelEnv* env, IRExpr* e )
             break;
          }
 
-         // JRS 01 Sept 2014: these are tested and believed to be correct,
-         // but they are no longer used by the front end, hence commented
-         // out.  They are replaced by Iop_SliceV128, which is more general
-         // and in many cases leads to better code overall.
-         //case Iop_ShlV128:
-         //case Iop_ShrV128: {
-         //   Bool isSHR = e->Iex.Binop.op == Iop_ShrV128;
-         //   /* This is tricky.  Generate an EXT instruction with zeroes in
-         //      the high operand (shift right) or low operand (shift left).
-         //      Note that we can only slice in the EXT instruction at a byte
-         //      level of granularity, so the shift amount needs careful
-         //      checking. */
-         //   IRExpr* argL = e->Iex.Binop.arg1;
-         //   IRExpr* argR = e->Iex.Binop.arg2;
-         //  if (argR->tag == Iex_Const && argR->Iex.Const.con->tag == Ico_U8) {
-         //      UInt amt   = argR->Iex.Const.con->Ico.U8;
-         //      Bool amtOK = False;
-         //      switch (amt) {
-         //         case 0x08: case 0x10: case 0x18: case 0x20: case 0x28:
-         //         case 0x30: case 0x38: case 0x40: case 0x48: case 0x50:
-         //         case 0x58: case 0x60: case 0x68: case 0x70: case 0x78:
-         //            amtOK = True; break;
-         //      }
-         //      /* We could also deal with amt==0 by copying the source to
-         //         the destination, but there's no need for that so far. */
-         //      if (amtOK) {
-         //         HReg src  = iselV128Expr(env, argL);
-         //         HReg srcZ = newVRegV(env);
-         //         addInstr(env, ARM64Instr_VImmQ(srcZ, 0x0000));
-         //         UInt immB = amt / 8;
-         //         vassert(immB >= 1 && immB <= 15);
-         //         HReg dst = newVRegV(env);
-         //         if (isSHR) {
-         //           addInstr(env, ARM64Instr_VExtV(dst, src/*lo*/, srcZ/*hi*/,
-         //                                                immB));
-         //         } else {
-         //           addInstr(env, ARM64Instr_VExtV(dst, srcZ/*lo*/, src/*hi*/,
-         //                                                16 - immB));
-         //         }
-         //         return dst;
-         //      }
-         //   }
-         //   /* else fall out; this is unhandled */
-         //   break;
-         //}
+         // Use Iop_SliceV128 in preference to Iop_ShlV128 and Iop_ShrV128,
+         // as it is in some ways more general and often leads to better
+         // code overall. 
+         case Iop_ShlV128:
+         case Iop_ShrV128: {
+            Bool isSHR = e->Iex.Binop.op == Iop_ShrV128;
+            /* This is tricky.  Generate an EXT instruction with zeroes in
+               the high operand (shift right) or low operand (shift left).
+               Note that we can only slice in the EXT instruction at a byte
+               level of granularity, so the shift amount needs careful
+               checking. */
+            IRExpr* argL = e->Iex.Binop.arg1;
+            IRExpr* argR = e->Iex.Binop.arg2;
+            if (argR->tag == Iex_Const && argR->Iex.Const.con->tag == Ico_U8) {
+               UInt amt   = argR->Iex.Const.con->Ico.U8;
+               Bool amtOK = False;
+               switch (amt) {
+                  case 0x08: case 0x10: case 0x18: case 0x20: case 0x28:
+                  case 0x30: case 0x38: case 0x40: case 0x48: case 0x50:
+                  case 0x58: case 0x60: case 0x68: case 0x70: case 0x78:
+                     amtOK = True; break;
+               }
+               /* We could also deal with amt==0 by copying the source to
+                  the destination, but there's no need for that so far. */
+               if (amtOK) {
+                  HReg src  = iselV128Expr(env, argL);
+                  HReg srcZ = newVRegV(env);
+                  addInstr(env, ARM64Instr_VImmQ(srcZ, 0x0000));
+                  UInt immB = amt / 8;
+                  vassert(immB >= 1 && immB <= 15);
+                  HReg dst = newVRegV(env);
+                  if (isSHR) {
+                    addInstr(env, ARM64Instr_VExtV(dst, src/*lo*/, srcZ/*hi*/,
+                                                         immB));
+                  } else {
+                    addInstr(env, ARM64Instr_VExtV(dst, srcZ/*lo*/, src/*hi*/,
+                                                         16 - immB));
+                  }
+                  return dst;
+               }
+            }
+            /* else fall out; this is unhandled */
+            break;
+         }
 
          case Iop_PolynomialMull8x8:
          case Iop_Mull32Ux2:
@@ -2932,6 +3037,16 @@ static HReg iselDblExpr_wrk ( ISelEnv* env, IRExpr* e )
          addInstr(env, ARM64Instr_VDfromX(dst, src));
          return dst;
       }
+      if (con->tag == Ico_F64) {
+         HReg src = newVRegI(env);
+         HReg dst = newVRegD(env);
+         union { Double d64; ULong u64; } u;
+         vassert(sizeof(u) == 8);
+         u.d64 = con->Ico.F64;
+         addInstr(env, ARM64Instr_Imm64(src, u.u64));
+         addInstr(env, ARM64Instr_VDfromX(dst, src));
+         return dst;
+      }
    }
 
    if (e->tag == Iex_Load && e->Iex.Load.end == Iend_LE) {
@@ -2972,6 +3087,12 @@ static HReg iselDblExpr_wrk ( ISelEnv* env, IRExpr* e )
             addInstr(env, ARM64Instr_VCvtSD(True/*sToD*/, dst, src));
             return dst;
          }
+         case Iop_F16toF64: {
+            HReg src = iselF16Expr(env, e->Iex.Unop.arg);
+            HReg dst = newVRegD(env);
+            addInstr(env, ARM64Instr_VCvtHD(True/*hToD*/, dst, src));
+            return dst;
+         }
          case Iop_I32UtoF64:
          case Iop_I32StoF64: {
             /* Rounding mode is not involved here, since the
@@ -2991,18 +3112,20 @@ static HReg iselDblExpr_wrk ( ISelEnv* env, IRExpr* e )
 
    if (e->tag == Iex_Binop) {
       switch (e->Iex.Binop.op) {
-         case Iop_RoundF64toInt: {
+         case Iop_RoundF64toInt:
+         case Iop_SqrtF64:
+         case Iop_RecpExpF64: {
             HReg src = iselDblExpr(env, e->Iex.Binop.arg2);
             HReg dst = newVRegD(env);
             set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
-            addInstr(env, ARM64Instr_VUnaryD(ARM64fpu_RINT, dst, src));
-            return dst;
-         }
-         case Iop_SqrtF64: {
-            HReg src = iselDblExpr(env, e->Iex.Binop.arg2);
-            HReg dst = newVRegD(env);
-            set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
-            addInstr(env, ARM64Instr_VUnaryD(ARM64fpu_SQRT, dst, src));
+            ARM64FpUnaryOp op = ARM64fpu_INVALID;
+            switch (e->Iex.Binop.op) {
+               case Iop_RoundF64toInt: op = ARM64fpu_RINT;  break;
+               case Iop_SqrtF64:       op = ARM64fpu_SQRT;  break;
+               case Iop_RecpExpF64:    op = ARM64fpu_RECPX; break;
+               default: vassert(0);
+            }
+            addInstr(env, ARM64Instr_VUnaryD(op, dst, src));
             return dst;
          }
          case Iop_I64StoF64:
@@ -3038,6 +3161,17 @@ static HReg iselDblExpr_wrk ( ISelEnv* env, IRExpr* e )
          addInstr(env, ARM64Instr_VBinD(dblop, dst, argL, argR));
          return dst;
       }
+   }
+
+   if (e->tag == Iex_ITE) {
+      /* ITE(ccexpr, iftrue, iffalse) */
+      ARM64CondCode cc;
+      HReg r1  = iselDblExpr(env, e->Iex.ITE.iftrue);
+      HReg r0  = iselDblExpr(env, e->Iex.ITE.iffalse);
+      HReg dst = newVRegD(env);
+      cc = iselCondCode(env, e->Iex.ITE.cond);
+      addInstr(env, ARM64Instr_VFCSel(dst, r1, r0, cc, True/*64-bit*/));
+      return dst;
    }
 
    ppIRExpr(e);
@@ -3090,6 +3224,24 @@ static HReg iselFltExpr_wrk ( ISelEnv* env, IRExpr* e )
          addInstr(env, ARM64Instr_VDfromX(dst, src));
          return dst;
       }
+      if (con->tag == Ico_F32) {
+         HReg src = newVRegI(env);
+         HReg dst = newVRegD(env);
+         union { Float f32; UInt u32; } u;
+         vassert(sizeof(u) == 4);
+         u.f32 = con->Ico.F32;
+         addInstr(env, ARM64Instr_Imm64(src, (ULong)u.u32));
+         addInstr(env, ARM64Instr_VDfromX(dst, src));
+         return dst;
+      }
+   }
+
+   if (e->tag == Iex_Load && e->Iex.Load.end == Iend_LE) {
+      vassert(e->Iex.Load.ty == Ity_F32);
+      HReg addr = iselIntExpr_R(env, e->Iex.Load.addr);
+      HReg res  = newVRegD(env);
+      addInstr(env, ARM64Instr_VLdStS(True/*isLoad*/, res, addr, 0));
+      return res;
    }
 
    if (e->tag == Iex_Get) {
@@ -3116,6 +3268,12 @@ static HReg iselFltExpr_wrk ( ISelEnv* env, IRExpr* e )
             addInstr(env, ARM64Instr_VUnaryS(ARM64fpu_ABS, dst, src));
             return dst;
          }
+         case Iop_F16toF32: {
+            HReg src = iselF16Expr(env, e->Iex.Unop.arg);
+            HReg dst = newVRegD(env);
+            addInstr(env, ARM64Instr_VCvtHS(True/*hToS*/, dst, src));
+            return dst;
+         }
          default:
             break;
       }
@@ -3123,25 +3281,27 @@ static HReg iselFltExpr_wrk ( ISelEnv* env, IRExpr* e )
 
    if (e->tag == Iex_Binop) {
       switch (e->Iex.Binop.op) {
-         case Iop_RoundF32toInt: {
+         case Iop_RoundF32toInt:
+         case Iop_SqrtF32:
+         case Iop_RecpExpF32: {
             HReg src = iselFltExpr(env, e->Iex.Binop.arg2);
             HReg dst = newVRegD(env);
             set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
-            addInstr(env, ARM64Instr_VUnaryS(ARM64fpu_RINT, dst, src));
-            return dst;
-         }
-         case Iop_SqrtF32: {
-            HReg src = iselFltExpr(env, e->Iex.Binop.arg2);
-            HReg dst = newVRegD(env);
-            set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
-            addInstr(env, ARM64Instr_VUnaryS(ARM64fpu_SQRT, dst, src));
+            ARM64FpUnaryOp op = ARM64fpu_INVALID;
+            switch (e->Iex.Binop.op) {
+               case Iop_RoundF32toInt: op = ARM64fpu_RINT;  break;
+               case Iop_SqrtF32:       op = ARM64fpu_SQRT;  break;
+               case Iop_RecpExpF32:    op = ARM64fpu_RECPX; break;
+               default: vassert(0);
+            }
+            addInstr(env, ARM64Instr_VUnaryS(op, dst, src));
             return dst;
          }
          case Iop_F64toF32: {
             HReg srcD = iselDblExpr(env, e->Iex.Binop.arg2);
             set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
             HReg dstS = newVRegD(env);
-            addInstr(env, ARM64Instr_VCvtSD(False/*dToS*/, dstS, srcD));
+            addInstr(env, ARM64Instr_VCvtSD(False/*!sToD*/, dstS, srcD));
             return dstS;
          }
          case Iop_I32UtoF32:
@@ -3187,8 +3347,83 @@ static HReg iselFltExpr_wrk ( ISelEnv* env, IRExpr* e )
       }
    }
 
+   if (e->tag == Iex_ITE) {
+      /* ITE(ccexpr, iftrue, iffalse) */
+      ARM64CondCode cc;
+      HReg r1  = iselFltExpr(env, e->Iex.ITE.iftrue);
+      HReg r0  = iselFltExpr(env, e->Iex.ITE.iffalse);
+      HReg dst = newVRegD(env);
+      cc = iselCondCode(env, e->Iex.ITE.cond);
+      addInstr(env, ARM64Instr_VFCSel(dst, r1, r0, cc, False/*!64-bit*/));
+      return dst;
+   }
+
    ppIRExpr(e);
    vpanic("iselFltExpr_wrk");
+}
+
+
+/*---------------------------------------------------------*/
+/*--- ISEL: Floating point expressions (16 bit)         ---*/
+/*---------------------------------------------------------*/
+
+/* Compute a 16-bit floating point value into a register, the identity
+   of which is returned.  As with iselIntExpr_R, the reg may be either
+   real or virtual; in any case it must not be changed by subsequent
+   code emitted by the caller.  Values are generated into HRcFlt64
+   registers despite the values themselves being Ity_F16s. */
+
+static HReg iselF16Expr ( ISelEnv* env, IRExpr* e )
+{
+   HReg r = iselF16Expr_wrk( env, e );
+#  if 0
+   vex_printf("\n"); ppIRExpr(e); vex_printf("\n");
+#  endif
+   vassert(hregClass(r) == HRcFlt64);
+   vassert(hregIsVirtual(r));
+   return r;
+}
+
+/* DO NOT CALL THIS DIRECTLY */
+static HReg iselF16Expr_wrk ( ISelEnv* env, IRExpr* e )
+{
+   IRType ty = typeOfIRExpr(env->type_env,e);
+   vassert(e);
+   vassert(ty == Ity_F16);
+
+   if (e->tag == Iex_Get) {
+      Int offs = e->Iex.Get.offset;
+      if (offs >= 0 && offs < 8192 && 0 == (offs & 1)) {
+         HReg rD = newVRegD(env);
+         HReg rN = get_baseblock_register();
+         addInstr(env, ARM64Instr_VLdStH(True/*isLoad*/, rD, rN, offs));
+         return rD;
+      }
+   }
+
+   if (e->tag == Iex_Binop) {
+      switch (e->Iex.Binop.op) {
+         case Iop_F32toF16: {
+            HReg srcS = iselFltExpr(env, e->Iex.Binop.arg2);
+            set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
+            HReg dstH = newVRegD(env);
+            addInstr(env, ARM64Instr_VCvtHS(False/*!hToS*/, dstH, srcS));
+            return dstH;
+         }
+         case Iop_F64toF16: {
+            HReg srcD = iselDblExpr(env, e->Iex.Binop.arg2);
+            set_FPCR_rounding_mode(env, e->Iex.Binop.arg1);
+            HReg dstH = newVRegD(env);
+            addInstr(env, ARM64Instr_VCvtHD(False/*!hToD*/, dstH, srcD));
+            return dstH;
+         }
+         default:
+            break;
+      }
+   }
+
+   ppIRExpr(e);
+   vpanic("iselF16Expr_wrk");
 }
 
 
@@ -3411,9 +3646,15 @@ static void iselStmt ( ISelEnv* env, IRStmt* stmt )
          return;
       }
       if (tyd == Ity_F32 && 0 == (offs & 3) && offs < (4<<12)) {
-         HReg dD   = iselFltExpr(env, stmt->Ist.Put.data);
+         HReg sD   = iselFltExpr(env, stmt->Ist.Put.data);
          HReg bbp  = get_baseblock_register();
-         addInstr(env, ARM64Instr_VLdStS(False/*!isLoad*/, dD, bbp, offs));
+         addInstr(env, ARM64Instr_VLdStS(False/*!isLoad*/, sD, bbp, offs));
+         return;
+      }
+      if (tyd == Ity_F16 && 0 == (offs & 1) && offs < (2<<12)) {
+         HReg hD   = iselF16Expr(env, stmt->Ist.Put.data);
+         HReg bbp  = get_baseblock_register();
+         addInstr(env, ARM64Instr_VLdStH(False/*!isLoad*/, hD, bbp, offs));
          return;
       }
 
@@ -3620,11 +3861,65 @@ static void iselStmt ( ISelEnv* env, IRStmt* stmt )
       break;
    }
 
+   /* --------- ACAS --------- */
+   case Ist_CAS: {
+      if (stmt->Ist.CAS.details->oldHi == IRTemp_INVALID) {
+         /* "normal" singleton CAS */
+         UChar  sz;
+         IRCAS* cas = stmt->Ist.CAS.details;
+         IRType ty  = typeOfIRExpr(env->type_env, cas->dataLo);
+         switch (ty) { 
+            case Ity_I64: sz = 8; break;
+            case Ity_I32: sz = 4; break;
+            case Ity_I16: sz = 2; break;
+            case Ity_I8:  sz = 1; break; 
+            default: goto unhandled_cas;
+         }
+         HReg rAddr = iselIntExpr_R(env, cas->addr);
+         HReg rExpd = iselIntExpr_R(env, cas->expdLo);
+         HReg rData = iselIntExpr_R(env, cas->dataLo);
+         vassert(cas->expdHi == NULL);
+         vassert(cas->dataHi == NULL);
+         addInstr(env, ARM64Instr_MovI(hregARM64_X3(), rAddr));
+         addInstr(env, ARM64Instr_MovI(hregARM64_X5(), rExpd));
+         addInstr(env, ARM64Instr_MovI(hregARM64_X7(), rData));
+         addInstr(env, ARM64Instr_CAS(sz));
+         /* Now we have the lowest szB bytes of x1 are either equal to
+            the lowest szB bytes of x5, indicating success, or they
+            aren't, indicating failure.  The IR semantics actually
+            require us to return the old value at the location,
+            regardless of success or failure, but in the case of
+            failure it's not clear how to do this, since
+            ARM64Instr_CAS can't provide that.  Instead we'll just
+            return the relevant bit of x1, since that's at least
+            guaranteed to be different from the lowest bits of x5 on
+            failure. */
+         HReg rResult = hregARM64_X1();
+         switch (sz) {
+            case 8:  break;
+            case 4:  rResult = widen_z_32_to_64(env, rResult); break;
+            case 2:  rResult = widen_z_16_to_64(env, rResult); break;
+            case 1:  rResult = widen_z_8_to_64(env, rResult); break;
+            default: vassert(0);
+         }
+         // "old" in this case is interpreted somewhat liberally, per
+         // the previous comment.
+         HReg rOld = lookupIRTemp(env, cas->oldLo);
+         addInstr(env, ARM64Instr_MovI(rOld, rResult));
+         return;
+      }
+      unhandled_cas:
+      break;
+   }
+
    /* --------- MEM FENCE --------- */
    case Ist_MBE:
       switch (stmt->Ist.MBE.event) {
          case Imbe_Fence:
             addInstr(env, ARM64Instr_MFence());
+            return;
+         case Imbe_CancelReservation:
+            addInstr(env, ARM64Instr_ClrEX());
             return;
          default:
             break;
@@ -3634,6 +3929,12 @@ static void iselStmt ( ISelEnv* env, IRStmt* stmt )
    /* --------- INSTR MARK --------- */
    /* Doesn't generate any executable code ... */
    case Ist_IMark:
+       return;
+
+   /* --------- ABI HINT --------- */
+   /* These have no meaning (denotation in the IR) and so we ignore
+      them ... if any actually made it this far. */
+   case Ist_AbiHint:
        return;
 
    /* --------- NO-OP --------- */
@@ -3651,9 +3952,7 @@ static void iselStmt ( ISelEnv* env, IRStmt* stmt )
          = mk_baseblock_64bit_access_amode(stmt->Ist.Exit.offsIP);
 
       /* Case: boring transfer to known address */
-      if (stmt->Ist.Exit.jk == Ijk_Boring
-          /*ATC || stmt->Ist.Exit.jk == Ijk_Call */
-          /*ATC || stmt->Ist.Exit.jk == Ijk_Ret */ ) {
+      if (stmt->Ist.Exit.jk == Ijk_Boring) {
          if (env->chainingAllowed) {
             /* .. almost always true .. */
             /* Skip the event check at the dst if this is a forwards
@@ -3671,6 +3970,26 @@ static void iselStmt ( ISelEnv* env, IRStmt* stmt )
             addInstr(env, ARM64Instr_XAssisted(r, amPC, cc, Ijk_Boring));
          }
          return;
+      }
+
+      /* Case: assisted transfer to arbitrary address */
+      switch (stmt->Ist.Exit.jk) {
+         /* Keep this list in sync with that for iselNext below */
+         case Ijk_ClientReq:
+         case Ijk_NoDecode:
+         case Ijk_NoRedir:
+         case Ijk_Sys_syscall:
+         case Ijk_InvalICache:
+         case Ijk_FlushDCache:
+         case Ijk_SigTRAP:
+         case Ijk_Yield: {
+            HReg r = iselIntExpr_R(env, IRExpr_Const(stmt->Ist.Exit.dst));
+            addInstr(env, ARM64Instr_XAssisted(r, amPC, cc,
+                                               stmt->Ist.Exit.jk));
+            return;
+         }
+         default:
+            break;
       }
 
       /* Do we ever expect to see any other kind? */
@@ -3755,6 +4074,8 @@ static void iselNext ( ISelEnv* env,
       case Ijk_Sys_syscall:
       case Ijk_InvalICache:
       case Ijk_FlushDCache:
+      case Ijk_SigTRAP:
+      case Ijk_Yield:
       {
          HReg        r    = iselIntExpr_R(env, next);
          ARM64AMode* amPC = mk_baseblock_64bit_access_amode(offsIP);
@@ -3780,15 +4101,15 @@ static void iselNext ( ISelEnv* env,
 
 /* Translate an entire SB to arm64 code. */
 
-HInstrArray* iselSB_ARM64 ( IRSB* bb,
+HInstrArray* iselSB_ARM64 ( const IRSB* bb,
                             VexArch      arch_host,
-                            VexArchInfo* archinfo_host,
-                            VexAbiInfo*  vbi/*UNUSED*/,
+                            const VexArchInfo* archinfo_host,
+                            const VexAbiInfo*  vbi/*UNUSED*/,
                             Int offs_Host_EvC_Counter,
                             Int offs_Host_EvC_FailAddr,
                             Bool chainingAllowed,
                             Bool addProfInc,
-                            Addr64 max_ga )
+                            Addr max_ga )
 {
    Int        i, j;
    HReg       hreg, hregHI;
@@ -3806,7 +4127,7 @@ HInstrArray* iselSB_ARM64 ( IRSB* bb,
    vassert(sizeof(ARM64Instr) <= 32);
 
    /* Make up an initial environment to use. */
-   env = LibVEX_Alloc(sizeof(ISelEnv));
+   env = LibVEX_Alloc_inline(sizeof(ISelEnv));
    env->vreg_ctr = 0;
 
    /* Set up output code array. */
@@ -3818,8 +4139,8 @@ HInstrArray* iselSB_ARM64 ( IRSB* bb,
    /* Make up an IRTemp -> virtual HReg mapping.  This doesn't
       change as we go along. */
    env->n_vregmap = bb->tyenv->types_used;
-   env->vregmap   = LibVEX_Alloc(env->n_vregmap * sizeof(HReg));
-   env->vregmapHI = LibVEX_Alloc(env->n_vregmap * sizeof(HReg));
+   env->vregmap   = LibVEX_Alloc_inline(env->n_vregmap * sizeof(HReg));
+   env->vregmapHI = LibVEX_Alloc_inline(env->n_vregmap * sizeof(HReg));
 
    /* and finally ... */
    env->chainingAllowed = chainingAllowed;
@@ -3835,22 +4156,23 @@ HInstrArray* iselSB_ARM64 ( IRSB* bb,
       switch (bb->tyenv->types[i]) {
          case Ity_I1:
          case Ity_I8: case Ity_I16: case Ity_I32: case Ity_I64:
-            hreg = mkHReg(j++, HRcInt64, True);
+            hreg = mkHReg(True, HRcInt64, 0, j++);
             break;
          case Ity_I128:
-            hreg   = mkHReg(j++, HRcInt64, True);
-            hregHI = mkHReg(j++, HRcInt64, True);
+            hreg   = mkHReg(True, HRcInt64, 0, j++);
+            hregHI = mkHReg(True, HRcInt64, 0, j++);
             break;
+         case Ity_F16: // we'll use HRcFlt64 regs for F16 too
          case Ity_F32: // we'll use HRcFlt64 regs for F32 too
          case Ity_F64:
-            hreg = mkHReg(j++, HRcFlt64, True);
+            hreg = mkHReg(True, HRcFlt64, 0, j++);
             break;
          case Ity_V128:
-            hreg = mkHReg(j++, HRcVec128, True);
+            hreg = mkHReg(True, HRcVec128, 0, j++);
             break;
          case Ity_V256:
-            hreg   = mkHReg(j++, HRcVec128, True);
-            hregHI = mkHReg(j++, HRcVec128, True);
+            hreg   = mkHReg(True, HRcVec128, 0, j++);
+            hregHI = mkHReg(True, HRcVec128, 0, j++);
             break;
          default:
             ppIRType(bb->tyenv->types[i]);

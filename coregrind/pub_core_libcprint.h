@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2013 Julian Seward
+   Copyright (C) 2000-2017 Julian Seward
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -38,21 +38,43 @@
 
 #include "pub_tool_libcprint.h"
 
-/* An output file descriptor wrapped up with a Bool indicating whether
-   or not the fd is a socket. */
 typedef
-   struct { Int fd; Bool is_socket; }
+   enum {
+      VgLogTo_Fd,
+      VgLogTo_File,
+      VgLogTo_Socket
+   }
+   VgLogTo;
+
+/* An output file descriptor wrapped up with its type and expanded name. */
+typedef
+   struct {
+      Int fd;
+      VgLogTo type;
+      HChar *fsname_expanded; // 'fs' stands for file or socket
+   }
    OutputSink;
  
 /* And the destinations for normal and XML output. */
 extern OutputSink VG_(log_output_sink);
 extern OutputSink VG_(xml_output_sink);
 
-/* Get the elapsed wallclock time since startup into buf, which must
-   16 chars long.  This is unchecked.  It also relies on the
+/* Initializes normal log and xml sinks (of type fd, file, or socket).
+   Any problem encountered is considered a hard error and causes V. to exit. */
+extern void VG_(init_log_xml_sinks)(VgLogTo log_to, VgLogTo xml_to,
+                                  Int /*initial*/log_fd, Int /*initial*/xml_fd);
+
+extern void VG_(print_preamble)(Bool logging_to_fd);
+
+extern void VG_(logging_atfork_child)(ThreadId tid);
+
+/* Get the elapsed wallclock time since startup into buf which has size
+   bufsize. The function will assert if bufsize is not large enough.
+   Upon return, buf will contain the zero-terminated wallclock time as
+   a string. The function also relies on the
    millisecond timer having been set to zero by an initial read in
    m_main during startup. */
-void VG_(elapsed_wallclock_time) ( /*OUT*/HChar* buf );
+void VG_(elapsed_wallclock_time) ( /*OUT*/HChar* buf, SizeT bufsize );
 
 /* Call this if the executable is missing.  This function prints an
    error message, then shuts down the entire system. */
@@ -63,6 +85,11 @@ extern void VG_(err_missing_prog) ( void );
    error. */
 __attribute__((noreturn))
 extern void VG_(err_config_error) ( const HChar* format, ... );
+
+/* Called by main_process_cmd_line_options to indicate an unrecognised
+   command line option. */
+__attribute__((noreturn))
+extern void VG_(fmsg_unknown_option) ( const HChar *opt );
 
 #endif   // __PUB_CORE_LIBCPRINT_H
 
