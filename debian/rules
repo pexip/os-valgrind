@@ -1,16 +1,15 @@
 #!/usr/bin/make -f
 
+# valgrind uses -fno-stack-protector
+export DEB_BUILD_MAINT_OPTIONS := hardening=-stackprotector,-stackprotectorstrong
+
 CFLAGS   = $(shell dpkg-buildflags --get CFLAGS)
 CFLAGS  += $(shell dpkg-buildflags --get CPPFLAGS)
 CFLAGS  += "-I/usr/include/$(DEB_HOST_GNU_TYPE)"   # fixes #676029
 LDFLAGS  = $(shell dpkg-buildflags --get LDFLAGS)
 
-ifeq ($(DEB_HOST_ARCH),mipsel)
-	CFLAGS += -mips2 # fixes 710307
-endif
-
 %:
-	dh $@ --parallel --with=autoreconf,bash-completion
+	dh $@ --parallel --with=autoreconf
 
 override_dh_auto_configure:
 	dh_auto_configure -- --enable-tls CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
@@ -32,11 +31,11 @@ override_dh_strip:
 
 target=$(CURDIR)/debian/valgrind
 override_dh_install:
-	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
 	dh_install -pvalgrind -Xlibmpiwrap
+	dh_install --remaining-packages
+	# valgrind script
 	mv -f $(target)/usr/bin/valgrind $(target)/usr/bin/valgrind.bin
 	mv -f ${target}/usr/bin/valgrind.sh $(target)/usr/bin/valgrind
-	dh_install --remaining-packages
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS

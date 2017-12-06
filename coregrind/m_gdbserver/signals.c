@@ -486,7 +486,7 @@ enum target_signal target_signal_from_host (int hostsig)
 }
 
 /* Convert a OURSIG (an enum target_signal) to the form used by the
-   target operating system (refered to as the ``host'') or zero if the
+   target operating system (referred to as the ``host'') or zero if the
    equivalent host signal is not available.  Set/clear OURSIG_OK
    accordingly. */
 
@@ -741,7 +741,7 @@ int do_target_signal_to_host (enum target_signal oursig,
       }
 #endif
       error ("Valgrind GDBSERVER bug: (do_target_signal_to_host):"
-             " unrecognized target signal %d\n", oursig);
+             " unrecognized target signal %u\n", oursig);
       *oursig_ok = 0;
       return 0;
    }

@@ -213,7 +213,7 @@ License: GPL-2.0+
 
 Files: coregrind/m_mach/mach_msg.c
 Copyright: 1991,1990,1989 Carnegie Mellon University
-License: 
+License: other
  Permission to use, copy, modify and distribute this software and its
  documentation is hereby granted, provided that both the copyright
  notice and this permission notice appear in all copies of the

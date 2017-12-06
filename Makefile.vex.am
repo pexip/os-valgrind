@@ -10,8 +10,6 @@ EXTRA_DIST = \
 	HACKING.README \
 	LICENSE.README \
 	LICENSE.GPL \
-	quote.txt \
-	newline.txt \
 	auxprogs/genoffsets.c
 
 pkginclude_HEADERS = \
@@ -73,6 +71,7 @@ endif
 # This is very uggerly.  Need to sed out both "xyzzyN" and
 # "xyzzy$N" since gcc on different targets emits the constants
 # differently -- with a leading $ on x86/amd64 but none on ppc32/64.
+# ICC also emits the constants differently with a leading # #define
 pub/libvex_guest_offsets.h: auxprogs/genoffsets.c \
 			    pub/libvex_basictypes.h \
 			    pub/libvex_guest_x86.h \
@@ -91,7 +90,8 @@ pub/libvex_guest_offsets.h: auxprogs/genoffsets.c \
 	      $(AM_CFLAGS_@VGCONF_PLATFORM_PRI_CAPS@) \
 				-O -S -o auxprogs/genoffsets.s \
 					 $(srcdir)/auxprogs/genoffsets.c
-	grep xyzzy auxprogs/genoffsets.s | grep "^#define" \
+	grep xyzzy auxprogs/genoffsets.s | grep "^[# ]*#define" \
+	   | sed "s/# #define/#define/g" \
 	   | sed "s/xyzzy\\$$//g" \
 	   | sed "s/xyzzy#//g" \
 	   | sed "s/xyzzy//g" \
@@ -99,12 +99,18 @@ pub/libvex_guest_offsets.h: auxprogs/genoffsets.c \
 	rm -f auxprogs/genoffsets.s
 
 #----------------------------------------------------------------------------
-# libvex-<platform>.a
+# libvex-<platform>-<os>.a : containing all VEX objects, including
+# a main_main.o compiled in single arch (guest==host).
+# libvexmultiarch-<platform>-<os>.a, only containing multiarch_main_main.o,
+# which is main_main.c compiled so that any guest/host combination
+# can be done at runtime.
 #----------------------------------------------------------------------------
 
-pkglib_LIBRARIES  = libvex-@VGCONF_ARCH_PRI@-@VGCONF_OS@.a
+pkglib_LIBRARIES  = libvex-@VGCONF_ARCH_PRI@-@VGCONF_OS@.a \
+	libvexmultiarch-@VGCONF_ARCH_PRI@-@VGCONF_OS@.a
 if VGCONF_HAVE_PLATFORM_SEC
-pkglib_LIBRARIES += libvex-@VGCONF_ARCH_SEC@-@VGCONF_OS@.a
+pkglib_LIBRARIES += libvex-@VGCONF_ARCH_SEC@-@VGCONF_OS@.a \
+	libvexmultiarch-@VGCONF_ARCH_SEC@-@VGCONF_OS@.a
 endif
 
 LIBVEX_SOURCES_COMMON = \
@@ -153,10 +159,10 @@ LIBVEX_SOURCES_COMMON = \
 	priv/host_mips_defs.c \
 	priv/host_mips_isel.c
 
+LIBVEXMULTIARCH_SOURCES = priv/multiarch_main_main.c
+
 LIBVEX_CFLAGS = \
 	-Wbad-function-cast \
-	-Wcast-qual \
-	-Wcast-align \
 	-fstrict-aliasing
 
 libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_SOURCES  = $(LIBVEX_SOURCES_COMMON)
@@ -169,6 +175,21 @@ libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_SOURCES  = $(LIBVEX_SOURCES_COMMON)
 libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS = \
         $(AM_CPPFLAGS_@VGCONF_PLATFORM_SEC_CAPS@) -Ipriv
 libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS   = \
+        $(AM_CFLAGS_@VGCONF_PLATFORM_SEC_CAPS@) $(LIBVEX_CFLAGS)
+endif
+
+libvexmultiarch_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_SOURCES  = \
+	$(LIBVEXMULTIARCH_SOURCES)
+libvexmultiarch_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS = \
+        $(AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@) -Ipriv
+libvexmultiarch_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS   = \
+        $(AM_CFLAGS_@VGCONF_PLATFORM_PRI_CAPS@) $(LIBVEX_CFLAGS)
+if VGCONF_HAVE_PLATFORM_SEC
+libvexmultiarch_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_SOURCES  = \
+	$(LIBVEXMULTIARCH_SOURCES)
+libvexmultiarch_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS = \
+        $(AM_CPPFLAGS_@VGCONF_PLATFORM_SEC_CAPS@) -Ipriv
+libvexmultiarch_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS   = \
         $(AM_CFLAGS_@VGCONF_PLATFORM_SEC_CAPS@) $(LIBVEX_CFLAGS)
 endif
 

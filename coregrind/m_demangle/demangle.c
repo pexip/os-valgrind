@@ -7,8 +7,12 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2013 Julian Seward 
+   Copyright (C) 2000-2017 Julian Seward 
       jseward@acm.org
+
+   Rust demangler components are
+   Copyright (C) 2016-2016 David Tolnay
+      dtolnay@gmail.com
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -39,12 +43,22 @@
 #include "vg_libciface.h"
 #include "demangle.h"
 
-/* The demangler's job is to take a raw symbol name and turn it into
-   something a Human Bean can understand.  There are two levels of
-   mangling.
 
-   1. First, C++ names are mangled by the compiler.  So we'll have to
-      undo that.
+/*------------------------------------------------------------*/
+/*---                                                      ---*/
+/*------------------------------------------------------------*/
+
+/* The demangler's job is to take a raw symbol name and turn it into
+   something a Human Bean can understand.  Our mangling model
+   comprises a three stage pipeline.  Mangling pushes names forward
+   through the pipeline (0, then 1, then 2) and demangling is
+   obviously the reverse.  In practice it is highly unlikely that a
+   name would require all stages, but it is not impossible either.
+
+   0. If we're working with Rust, Rust names are lightly mangled by
+      the Rust front end.
+
+   1. Then the name is subject to standard C++ mangling.
 
    2. Optionally, in relatively rare cases, the resulting name is then
       itself encoded using Z-escaping (see pub_core_redir.h) so as to
@@ -52,20 +66,32 @@
 
    Therefore, VG_(demangle) first tries to undo (2).  If successful,
    the soname part is discarded (humans don't want to see that).
-   Then, it tries to undo (1) (using demangling code from GNU/FSF).
+   Then, it tries to undo (1) (using demangling code from GNU/FSF) and
+   finally it tries to undo (0).
 
-   Finally, change the name of all symbols which are known to be
+   Finally, it changes the name of all symbols which are known to be
    functions below main() to "(below main)".  This helps reduce
    variability of stack traces, something which has been a problem for
    the testsuite for a long time.
 
    --------
-   If do_cxx_demangle == True, does all the above stages:
+   If do_cxx_demangle == True, it does all the above stages:
    - undo (2) [Z-encoding]
    - undo (1) [C++ mangling]
+   - if (1) succeeds, undo (0) [Rust mangling]
    - do the below-main hack
 
-   If do_cxx_demangle == False, the middle stage is skipped:
+   Rust demangling (0) is only done if C++ demangling (1) succeeds
+   because Rust demangling is performed in-place, and it is difficult
+   to prove that we "own" the storage -- hence, that the in-place
+   operation is safe -- unless it is clear that it has come from the
+   C++ demangler, which returns its output in a heap-allocated buffer
+   which we can be sure we own.  In practice (Nov 2016) this does not
+   seem to be a problem, since the Rust compiler appears to apply C++
+   mangling after Rust mangling, so we never encounter symbols that
+   require Rust demangling but not C++ demangling.
+
+   If do_cxx_demangle == False, the C++ and Rust stags are skipped:
    - undo (2) [Z-encoding]
    - do the below-main hack
 */
@@ -83,36 +109,67 @@
 
 /* This is the main, standard demangler entry point. */
 
+/* Upon return, *RESULT will point to the demangled name.
+   The memory buffer that holds the demangled name is allocated on the
+   heap and will be deallocated in the next invocation. Conceptually,
+   that buffer is owned by VG_(demangle). That means two things:
+   (1) Users of VG_(demangle) must not free that buffer.
+   (2) If the demangled name needs to be stashed away for later use,
+       the contents of the buffer need to be copied. It is not sufficient
+       to just store the pointer as it will point to deallocated memory
+       after the next VG_(demangle) invocation. */
 void VG_(demangle) ( Bool do_cxx_demangling, Bool do_z_demangling,
-                     HChar* orig, HChar* result, Int result_size )
+                     /* IN */  const HChar  *orig,
+                     /* OUT */ const HChar **result )
 {
-#  define N_ZBUF 4096
-   HChar* demangled = NULL;
-   HChar z_demangled[N_ZBUF];
-
    /* Possibly undo (2) */
    /* Z-Demangling was requested.  
       The fastest way to see if it's a Z-mangled name is just to attempt
       to Z-demangle it (with NULL for the soname buffer, since we're not
       interested in that). */
    if (do_z_demangling) {
-      if (VG_(maybe_Z_demangle)( orig, NULL,0,/*soname*/
-                                 z_demangled, N_ZBUF, NULL, NULL, NULL )) {
+      const HChar *z_demangled;
+
+      if (VG_(maybe_Z_demangle)( orig, NULL, /*soname*/
+                                 &z_demangled, NULL, NULL, NULL )) {
          orig = z_demangled;
       }
    }
 
    /* Possibly undo (1) */
-   if (do_cxx_demangling && VG_(clo_demangle)) {
+   if (do_cxx_demangling && VG_(clo_demangle)
+       && orig != NULL && orig[0] == '_' && orig[1] == 'Z') {
+      /* !!! vvv STATIC vvv !!! */
+      static HChar* demangled = NULL;
+      /* !!! ^^^ STATIC ^^^ !!! */
+
+      /* Free up previously demangled name */
+      if (demangled) {
+         VG_(arena_free) (VG_AR_DEMANGLE, demangled);
+         demangled = NULL;
+      }
       demangled = ML_(cplus_demangle) ( orig, DMGL_ANSI | DMGL_PARAMS );
+
+      *result = (demangled == NULL) ? orig : demangled;
+
+      if (demangled) {
+         /* Possibly undo (0).  This is the only place where it is
+            safe, from a storage management perspective, to
+            Rust-demangle the symbol.  That's because Rust demangling
+            happens in place, so we need to be sure that the storage
+            it is happening in is actually owned by us, and non-const.
+            In this case, the value returned by ML_(cplus_demangle)
+            does have that property. */
+         if (rust_is_mangled(demangled)) {
+            rust_demangle_sym(demangled);
+         }
+         *result = demangled;
+      } else {
+         *result = orig;
+      }
+
    } else {
-      demangled = NULL;
-   }
-   if (demangled) {
-      VG_(strncpy_safely)(result, demangled, result_size);
-      VG_(arena_free) (VG_AR_DEMANGLE, demangled);
-   } else {
-      VG_(strncpy_safely)(result, orig, result_size);
+      *result = orig;
    }
 
    // 13 Mar 2005: We used to check here that the demangler wasn't leaking
@@ -120,7 +177,6 @@ void VG_(demangle) ( Bool do_cxx_demangling, Bool do_z_demangling,
    // very rarely (ie. I've heard of it twice in 3 years), the demangler
    // does leak.  But, we can't do much about it, and it's not a disaster,
    // so we just let it slide without aborting or telling the user.
-#  undef N_ZBUF
 }
 
 
@@ -141,38 +197,48 @@ void VG_(demangle) ( Bool do_cxx_demangling, Bool do_z_demangling,
    function name part. */
 
 Bool VG_(maybe_Z_demangle) ( const HChar* sym, 
-                             /*OUT*/HChar* so, Int soLen,
-                             /*OUT*/HChar* fn, Int fnLen,
+                             /*OUT*/const HChar** so,
+                             /*OUT*/const HChar** fn,
                              /*OUT*/Bool* isWrap,
                              /*OUT*/Int*  eclassTag,
                              /*OUT*/Int*  eclassPrio )
 {
+   static HChar *sobuf;
+   static HChar *fnbuf;
+   static SizeT  buf_len = 0;
+
+   /* The length of the name after undoing Z-encoding is always smaller
+      than the mangled name. Making the soname and fnname buffers as large
+      as the demangled name is therefore always safe and overflow can never
+      occur. */
+   SizeT len = VG_(strlen)(sym) + 1;
+
+   if (buf_len < len) {
+      sobuf = VG_(arena_realloc)(VG_AR_DEMANGLE, "Z-demangle", sobuf, len);
+      fnbuf = VG_(arena_realloc)(VG_AR_DEMANGLE, "Z-demangle", fnbuf, len);
+      buf_len = len;
+   }
+   sobuf[0] = fnbuf[0] = '\0';
+
+   if (so) 
+     *so = sobuf;
+   *fn = fnbuf;
+
 #  define EMITSO(ch)                           \
       do {                                     \
          if (so) {                             \
-            if (soi >= soLen) {                \
-               so[soLen-1] = 0; oflow = True;  \
-            } else {                           \
-               so[soi++] = ch; so[soi] = 0;    \
-            }                                  \
+            sobuf[soi++] = ch; sobuf[soi] = 0; \
          }                                     \
       } while (0)
 #  define EMITFN(ch)                           \
       do {                                     \
-         if (fni >= fnLen) {                   \
-            fn[fnLen-1] = 0; oflow = True;     \
-         } else {                              \
-            fn[fni++] = ch; fn[fni] = 0;       \
-         }                                     \
+         fnbuf[fni++] = ch; fnbuf[fni] = 0;    \
       } while (0)
 
-   Bool error, oflow, valid, fn_is_encoded, is_VG_Z_prefixed;
+   Bool error, valid, fn_is_encoded, is_VG_Z_prefixed;
    Int  soi, fni, i;
 
-   vg_assert(soLen > 0 || (soLen == 0 && so == NULL));
-   vg_assert(fnLen > 0);
    error = False;
-   oflow = False;
    soi = 0;
    fni = 0;
 
@@ -263,7 +329,9 @@ Bool VG_(maybe_Z_demangle) ( const HChar* sym,
          case 'A': EMITSO('@'); break;
          case 'D': EMITSO('$'); break;
          case 'L': EMITSO('('); break;
+         case 'P': EMITSO('%'); break;
          case 'R': EMITSO(')'); break;
+         case 'S': EMITSO('/'); break;
          case 'Z': EMITSO('Z'); break;
          default: error = True; goto out;
       }
@@ -312,7 +380,9 @@ Bool VG_(maybe_Z_demangle) ( const HChar* sym,
          case 'A': EMITFN('@'); break;
          case 'D': EMITFN('$'); break;
          case 'L': EMITFN('('); break;
+         case 'P': EMITFN('%'); break;
          case 'R': EMITFN(')'); break;
+         case 'S': EMITFN('/'); break;
          case 'Z': EMITFN('Z'); break;
          default: error = True; goto out;
       }
@@ -327,12 +397,6 @@ Bool VG_(maybe_Z_demangle) ( const HChar* sym,
       /* Something's wrong.  Give up. */
       VG_(message)(Vg_UserMsg,
                    "m_demangle: error Z-demangling: %s\n", sym);
-      return False;
-   }
-   if (oflow) {
-      /* It didn't fit.  Give up. */
-      VG_(message)(Vg_UserMsg,
-                   "m_demangle: oflow Z-demangling: %s\n", sym);
       return False;
    }
 

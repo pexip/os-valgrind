@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2013 Julian Seward 
+   Copyright (C) 2000-2017 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -42,8 +42,8 @@
    Other headers to include
    ------------------------------------------------------------------ */
 
-// VEX defines Char, UChar, Short, UShort, Int, UInt, Long, ULong,
-// Addr32, Addr64, HWord, HChar, Bool, False and True.
+// VEX defines Char, UChar, Short, UShort, Int, UInt, Long, ULong, SizeT,
+// Addr, Addr32, Addr64, HWord, HChar, Bool, False and True.
 #include "libvex_basictypes.h"
 
 // For varargs types
@@ -86,17 +86,8 @@
 typedef unsigned long          UWord;     // 32             64
 typedef   signed long           Word;     // 32             64
 
-// Addr is for holding an address.  AddrH was intended to be "Addr on the
-// host", for the notional case where host word size != guest word size.
-// But since the assumption that host arch == guest arch has become so
-// deeply wired in, it's a pretty pointless distinction now.
-typedef UWord                  Addr;      // 32             64
-typedef UWord                  AddrH;     // 32             64
-
-// Our equivalents of POSIX 'size_t' and 'ssize_t':
-// - size_t is an "unsigned integer type of the result of the sizeof operator".
+// Our equivalent of POSIX 'ssize_t':
 // - ssize_t is "used for a count of bytes or an error indication".
-typedef UWord                  SizeT;     // 32             64
 typedef  Word                 SSizeT;     // 32             64
 
 // Our equivalent of POSIX 'ptrdiff_t':
@@ -111,7 +102,7 @@ typedef  Word                 PtrdiffT;   // 32             64
 // used in those cases.
 // Nb: on Linux, off_t is a signed word-sized int.  On Darwin it's
 // always a signed 64-bit int.  So we defined our own Off64T as well.
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_solaris)
 typedef Word                   OffT;      // 32             64
 #elif defined(VGO_darwin)
 typedef Long                   OffT;      // 64             64
@@ -138,12 +129,31 @@ typedef  struct { UWord uw1; UWord uw2; }  UWordPair;
 /* ThreadIds are simply indices into the VG_(threads)[] array. */
 typedef UInt ThreadId;
 
+/* Many data structures need to allocate and release memory.
+   The allocation/release functions must be provided by the caller.
+   The Alloc_Fn_t function must allocate a chunk of memory of size szB.
+   cc is the Cost Centre for this allocated memory. This constant string
+   is used to provide Valgrind's heap profiling, activated by
+   --profile-heap=no|yes.
+   The corresponding Free_Fn_t frees the memory chunk p. */
+
+typedef void* (*Alloc_Fn_t)       ( const HChar* cc, SizeT szB );
+typedef void  (*Free_Fn_t)        ( void* p );
+
 /* An abstraction of syscall return values.
-   Linux:
+   Linux/MIPS32 and Linux/MIPS64:
+      When _isError == False, 
+         _val and possible _valEx hold the return value.  Whether
+         _valEx actually holds a valid value depends on which syscall
+         this SysRes holds of the result of.
+      When _isError == True,  
+         _val holds the error code.
+
+   Linux/other:
       When _isError == False, 
          _val holds the return value.
       When _isError == True,  
-         _err holds the error code.
+         _val holds the error code.
 
    Darwin:
       Interpretation depends on _mode:
@@ -158,15 +168,31 @@ typedef UInt ThreadId;
          userspace, but we have to record it, so that we can correctly
          update both {R,E}DX and {R,E}AX (in guest state) given a SysRes,
          if we're required to.
+
+   Solaris:
+      When _isError == False,
+         _val and _val2 hold the return value.
+      When _isError == True,
+         _val holds the error code.
 */
-#if defined(VGO_linux)
+#if defined(VGP_mips32_linux) || defined(VGP_mips64_linux)
 typedef
    struct {
-      UWord _val;
-      UWord _valEx;   // only used on mips-linux
       Bool  _isError;
+      UWord _val;
+      UWord _valEx;
    }
    SysRes;
+
+#elif defined(VGO_linux) \
+      && !defined(VGP_mips32_linux) && !defined(VGP_mips64_linux)
+typedef
+   struct {
+      Bool  _isError;
+      UWord _val;
+   }
+   SysRes;
+
 #elif defined(VGO_darwin)
 typedef
    enum { 
@@ -183,6 +209,16 @@ typedef
       SysResMode _mode;
    }
    SysRes;
+
+#elif defined(VGO_solaris)
+typedef
+   struct {
+      UWord _val;
+      UWord _val2;
+      Bool  _isError;
+   }
+   SysRes;
+
 #else
 #  error "Unknown OS"
 #endif
@@ -190,7 +226,7 @@ typedef
 
 /* ---- And now some basic accessor functions for it. ---- */
 
-#if defined(VGO_linux)
+#if defined(VGP_mips32_linux) || defined(VGP_mips64_linux)
 
 static inline Bool sr_isError ( SysRes sr ) {
    return sr._isError;
@@ -201,25 +237,63 @@ static inline UWord sr_Res ( SysRes sr ) {
 static inline UWord sr_ResEx ( SysRes sr ) {
    return sr._isError ? 0 : sr._valEx;
 }
-static inline UWord sr_ResHI ( SysRes sr ) {
-   return 0;
+static inline UWord sr_Err ( SysRes sr ) {
+   return sr._isError ? sr._val : 0;
+}
+static inline Bool sr_EQ ( UInt sysno, SysRes sr1, SysRes sr2 ) {
+   /* This uglyness of hardcoding syscall numbers is necessary to
+      avoid having this header file be dependent on
+      include/vki/vki-scnums-mips{32,64}-linux.h.  It seems pretty
+      safe given that it is inconceivable that the syscall numbers
+      for such simple syscalls would ever change.  To make it 
+      really safe, coregrind/m_vkiscnums.c static-asserts that these
+      syscall numbers haven't changed, so that the build wil simply
+      fail if they ever do. */
+#  if defined(VGP_mips32_linux)
+   const UInt __nr_Linux = 4000;
+   const UInt __nr_pipe  = __nr_Linux + 42;
+   const UInt __nr_pipe2 = __nr_Linux + 328;
+#  else
+   const UInt __nr_Linux = 5000;
+   const UInt __nr_pipe  = __nr_Linux + 21;
+   const UInt __nr_pipe2 = __nr_Linux + 287;
+#  endif
+   Bool useEx = sysno == __nr_pipe || sysno == __nr_pipe2;
+   return sr1._val == sr2._val
+          && (useEx ? (sr1._valEx == sr2._valEx) : True)
+          && sr1._isError == sr2._isError;
+}
+
+#elif defined(VGO_linux) \
+      && !defined(VGP_mips32_linux) && !defined(VGP_mips64_linux)
+
+static inline Bool sr_isError ( SysRes sr ) {
+   return sr._isError;
+}
+static inline UWord sr_Res ( SysRes sr ) {
+   return sr._isError ? 0 : sr._val;
 }
 static inline UWord sr_Err ( SysRes sr ) {
    return sr._isError ? sr._val : 0;
 }
-static inline Bool sr_EQ ( SysRes sr1, SysRes sr2 ) {
-   return sr1._val == sr2._val 
-          && ((sr1._isError && sr2._isError) 
-              || (!sr1._isError && !sr2._isError));
+static inline Bool sr_EQ ( UInt sysno, SysRes sr1, SysRes sr2 ) {
+   /* sysno is ignored for Linux/not-MIPS */
+   return sr1._val == sr2._val
+          && sr1._isError == sr2._isError;
 }
 
 #elif defined(VGO_darwin)
 
 static inline Bool sr_isError ( SysRes sr ) {
    switch (sr._mode) {
-      case SysRes_UNIX_ERR: return True;
-      default:              return False;
+      case SysRes_UNIX_ERR:
+         return True;
       /* should check tags properly and assert here, but we can't here */
+      case SysRes_MACH:
+      case SysRes_MDEP:
+      case SysRes_UNIX_OK:
+      default:
+         return False;
    }
 }
 
@@ -227,28 +301,66 @@ static inline UWord sr_Res ( SysRes sr ) {
    switch (sr._mode) {
       case SysRes_MACH:
       case SysRes_MDEP:
-      case SysRes_UNIX_OK: return sr._wLO;
-      default: return 0; /* should assert, but we can't here */
+      case SysRes_UNIX_OK:
+         return sr._wLO;
+      /* should assert, but we can't here */
+      case SysRes_UNIX_ERR:
+      default:
+         return 0;
    }
 }
 
 static inline UWord sr_ResHI ( SysRes sr ) {
    switch (sr._mode) {
-      case SysRes_UNIX_OK: return sr._wHI;
-      default: return 0; /* should assert, but we can't here */
+      case SysRes_UNIX_OK:
+         return sr._wHI;
+      /* should assert, but we can't here */
+      case SysRes_MACH:
+      case SysRes_MDEP:
+      case SysRes_UNIX_ERR:
+      default:
+         return 0;
    }
 }
 
 static inline UWord sr_Err ( SysRes sr ) {
    switch (sr._mode) {
-      case SysRes_UNIX_ERR: return sr._wLO;
-      default: return 0; /* should assert, but we can't here */
+      case SysRes_UNIX_ERR:
+         return sr._wLO;
+      /* should assert, but we can't here */
+      case SysRes_MACH:
+      case SysRes_MDEP:
+      case SysRes_UNIX_OK:
+      default:
+         return 0;
    }
 }
 
-static inline Bool sr_EQ ( SysRes sr1, SysRes sr2 ) {
+static inline Bool sr_EQ ( UInt sysno, SysRes sr1, SysRes sr2 ) {
+   /* sysno is ignored for Darwin */
    return sr1._mode == sr2._mode
           && sr1._wLO == sr2._wLO && sr1._wHI == sr2._wHI;
+}
+
+#elif defined(VGO_solaris)
+
+static inline Bool sr_isError ( SysRes sr ) {
+   return sr._isError;
+}
+static inline UWord sr_Res ( SysRes sr ) {
+   return sr._isError ? 0 : sr._val;
+}
+static inline UWord sr_ResHI ( SysRes sr ) {
+   return sr._isError ? 0 : sr._val2;
+}
+static inline UWord sr_Err ( SysRes sr ) {
+   return sr._isError ? sr._val : 0;
+}
+static inline Bool sr_EQ ( UInt sysno, SysRes sr1, SysRes sr2 ) {
+   /* sysno is ignored for Solaris */
+   return sr1._val == sr2._val
+       && sr1._isError == sr2._isError
+       && (!sr1._isError) ? (sr1._val2 == sr2._val2) : True;
 }
 
 #else
@@ -278,6 +390,37 @@ static inline Bool sr_EQ ( SysRes sr1, SysRes sr2 ) {
 #else
 #  error Unknown arch
 #endif
+
+/* Offsetof */
+#if !defined(offsetof)
+#   define offsetof(type,memb) ((SizeT)(HWord)&((type*)0)->memb)
+#endif
+
+#if !defined(container_of)
+#   define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
+#endif
+
+/* Alignment */
+/* We use a prefix vg_ for vg_alignof as its behaviour slightly
+   differs from the standard alignof/gcc defined __alignof__
+
+   vg_alignof returns a "safe" alignement.
+   "safe" is defined as the alignment chosen by the compiler in
+   a struct made of a char followed by this type.
+
+      Note that this is not necessarily the "preferred" alignment
+      for a platform. This preferred alignment is returned by the gcc
+       __alignof__ and by the standard (in recent standard) alignof.
+      Compared to __alignof__, vg_alignof gives on some platforms (e.g.
+      amd64, ppc32, ppc64) a bigger alignment for long double (16 bytes
+      instead of 8).
+      On some platforms (e.g. x86), vg_alignof gives a smaller alignment
+      than __alignof__ for long long and double (4 bytes instead of 8). 
+      If we want to have the "preferred" alignment for the basic types,
+      then either we need to depend on gcc __alignof__, or on a (too)
+      recent standard and compiler (implementing <stdalign.h>).
+*/
+#define vg_alignof(_type) (sizeof(struct {char c;_type _t;})-sizeof(_type))
 
 /* Regparmness */
 #if defined(VGA_x86)
@@ -318,6 +461,35 @@ static inline Bool sr_EQ ( SysRes sr1, SysRes sr2 ) {
 #define PRINTF_CHECK(x, y)
 #endif
 
+// Macro to "cast" away constness (from type const T to type T) without
+// GCC complaining about it. This macro should be used RARELY. 
+// x is expected to have type const T
+#define CONST_CAST(T,x)    \
+   ({                      \
+      union {              \
+         const T in;      \
+         T out;           \
+      } var = { .in = x }; var.out;  \
+   })
+
+/* Some architectures (eg. mips, arm) do not support unaligned memory access
+   by hardware, so GCC warns about suspicious situations. This macro could
+   be used to avoid these warnings but only after careful examination. */
+#define ASSUME_ALIGNED(D, x)                 \
+   ({                                        \
+      union {                                \
+         void *in;                           \
+         D out;                              \
+      } var;                                 \
+      var.in = (void *) (x); var.out;        \
+   })
+
+// Poor man's static assert
+#define STATIC_ASSERT(x)  extern int VG_(VG_(VG_(unused)))[(x) ? 1 : -1] \
+                                     __attribute__((unused))
+
+#define VG_MAX(a,b) ((a) > (b) ? a : b)
+#define VG_MIN(a,b) ((a) < (b) ? a : b)
 
 #endif /* __PUB_TOOL_BASICS_H */
 

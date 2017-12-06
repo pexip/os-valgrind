@@ -5,7 +5,6 @@ Maintainer: Pexip AS <packaging@pexip.com>
 XBCS-Original-Maintainer: Alessandro Ghedini <ghedo@debian.org>
 XBCS-Original-Uploaders: Roland Stigge <stigge@debian.org>
 Build-Depends: debhelper (>= 7.0.50~),
- bash-completion,
  dh-autoreconf,
  gdb,
  gcc-multilib [amd64],
@@ -15,10 +14,11 @@ Build-Depends: debhelper (>= 7.0.50~),
  docbook-xsl,
  docbook-xml,
  xsltproc
-Standards-Version: 3.9.6
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/valgrind.git
-Vcs-Git: git://anonscm.debian.org/collab-maint/valgrind.git
+Standards-Version: 4.0.0
+Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/valgrind.git
+Vcs-Git: https://anonscm.debian.org/git/collab-maint/valgrind.git
 Homepage: http://www.valgrind.org/
+Testsuite: autopkgtest
 XS-Pexip-Upstream: http://ftp.debian.org/debian/ buster
 
 Package: valgrind

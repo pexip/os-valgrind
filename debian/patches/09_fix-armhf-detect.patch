@@ -6,7 +6,7 @@ Last-Update: 2013-11-30
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -212,7 +212,7 @@
+@@ -234,7 +234,7 @@
          ARCH_MAX="s390x"
          ;;
  

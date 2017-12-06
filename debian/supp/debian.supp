@@ -24,3 +24,14 @@
   fun:_dlerror_run
   fun:dlopen@@GLIBC_2.2.5
 }
+
+{
+  openmp with libgomp bug#783685
+  Memcheck:Leak
+  fun:malloc
+  fun:gomp_malloc
+  fun:gomp_init_num_threads
+  fun:initialize_env
+  fun:call_init.part.0
+  fun:call_init
+}
