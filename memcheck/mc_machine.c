@@ -9,7 +9,7 @@
    This file is part of MemCheck, a heavyweight Valgrind tool for
    detecting memory errors.
 
-   Copyright (C) 2008-2013 OpenWorks Ltd
+   Copyright (C) 2008-2017 OpenWorks Ltd
       info@open-works.co.uk
 
    This program is free software; you can redistribute it and/or
@@ -41,60 +41,19 @@
 #include "pub_tool_libcassert.h"
 #include "pub_tool_libcprint.h"
 #include "pub_tool_tooliface.h"
+#include "pub_tool_guest.h"         // VexGuestArchState
 
 #include "mc_include.h"
 
-#undef MC_SIZEOF_GUEST_STATE
+#define MC_SIZEOF_GUEST_STATE  sizeof(VexGuestArchState)
 
-#if defined(VGA_x86)
-# include "libvex_guest_x86.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestX86State)
-#endif
-
-#if defined(VGA_amd64)
-# include "libvex_guest_amd64.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestAMD64State)
-#endif
-
-#if defined(VGA_ppc32)
-# include "libvex_guest_ppc32.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestPPC32State)
-#endif
-
-#if defined(VGA_ppc64be) || defined(VGA_ppc64le)
-# include "libvex_guest_ppc64.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestPPC64State)
-#endif
-
-#if defined(VGA_s390x)
-# include "libvex_guest_s390x.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestS390XState)
-#endif
-
-#if defined(VGA_arm)
-# include "libvex_guest_arm.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestARMState)
-#endif
-
-#if defined(VGA_arm64)
-# include "libvex_guest_arm64.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestARM64State)
-#endif
-
-#if defined(VGA_mips32)
-# include "libvex_guest_mips32.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestMIPS32State)
-#endif
-
-#if defined(VGA_mips64)
-# include "libvex_guest_mips64.h"
-# define MC_SIZEOF_GUEST_STATE sizeof(VexGuestMIPS64State)
-#endif
-
+__attribute__((unused))
 static inline Bool host_is_big_endian ( void ) {
    UInt x = 0x11223344;
    return 0x1122 == *(UShort*)(&x);
 }
+
+__attribute__((unused))
 static inline Bool host_is_little_endian ( void ) {
    UInt x = 0x11223344;
    return 0x3344 == *(UShort*)(&x);
@@ -219,12 +178,22 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(IP_AT_SYSCALL) && sz == 8) return -1; /* slot unused */
    if (o == GOF(FPROUND)   && sz == 1) return -1;
    if (o == GOF(DFPROUND)  && sz == 1) return -1;
+   if (o == GOF(C_FPCC)    && sz == 1) return -1;
    if (o == GOF(EMNOTE)    && sz == 4) return -1;
    if (o == GOF(CMSTART)   && sz == 8) return -1;
    if (o == GOF(CMLEN)     && sz == 8) return -1;
    if (o == GOF(VSCR)      && sz == 4) return -1;
    if (o == GOF(VRSAVE)    && sz == 4) return -1;
    if (o == GOF(REDIR_SP)  && sz == 8) return -1;
+   if (o == GOF(NRADDR)    && sz == 8) return -1;
+   if (o == GOF(NRADDR_GPR2) && sz == 8) return -1;
+   if (o == GOF(REDIR_STACK) && sz == 8) return -1;
+   if (o == GOF(TFHAR)     && sz == 8) return -1;
+   if (o == GOF(TEXASR)    && sz == 8) return -1;
+   if (o == GOF(TEXASRU)   && sz == 8) return -1;
+   if (o == GOF(TFIAR)     && sz == 8) return -1;
+   if (o == GOF(PPR)       && sz == 8) return -1;
+   if (o == GOF(PSPB)      && sz == 8) return -1;
 
    // With ISA 2.06, the "Vector-Scalar Floating-point" category
    // provides facilities to support vector and scalar binary floating-
@@ -607,8 +576,8 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(IP_AT_SYSCALL) && sz == 8) return -1; /* slot unused */
    if (o == GOF(IDFLAG)  && sz == 8) return -1; /* slot used for %DH */
    if (o == GOF(ACFLAG)  && sz == 8) return -1; /* slot unused */
-   if (o == GOF(FS_ZERO) && sz == 8) return -1; /* slot unused */
-   if (o == GOF(GS_0x60) && sz == 8) return -1; /* slot unused */
+   if (o == GOF(FS_CONST) && sz == 8) return -1; /* slot unused */
+   if (o == GOF(GS_CONST) && sz == 8) return -1; /* slot unused */
    if (o == GOF(CMSTART) && sz == 8) return -1; /* slot unused */
    if (o == GOF(CMLEN)   && sz == 8) return -1; /* slot unused */
    if (o == GOF(NRADDR)  && sz == 8) return -1; /* slot unused */
@@ -1066,6 +1035,10 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(CMSTART) && sz == 8) return -1; // untracked
    if (o == GOF(CMLEN)   && sz == 8) return -1; // untracked
 
+   if (o == GOF(LLSC_SIZE) && sz == 8) return -1; // untracked
+   if (o == GOF(LLSC_ADDR) && sz == 8) return o;
+   if (o == GOF(LLSC_DATA) && sz == 8) return o;
+
    VG_(printf)("MC_(get_otrack_shadow_offset)(arm64)(off=%d,sz=%d)\n",
                offset,szB);
    tl_assert(0);
@@ -1185,6 +1158,9 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(ac2)  && sz == 8) return o;
    if (o == GOF(ac3)  && sz == 8) return o;
 
+   if (o == GOF(LLaddr) && sz == 4) return -1;  /* slot unused */
+   if (o == GOF(LLdata) && sz == 4) return -1;  /* slot unused */
+
    VG_(printf)("MC_(get_otrack_shadow_offset)(mips)(off=%d,sz=%d)\n",
                offset,szB);
    tl_assert(0);
@@ -1263,6 +1239,9 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o >= GOF(f31) && o+sz <= GOF(f31)+SZB(f31)) return GOF(f31);
 
    if ((o > GOF(NRADDR)) && (o <= GOF(NRADDR) +12 )) return -1;
+
+   if (o == GOF(LLaddr) && sz == 8) return -1;  /* slot unused */
+   if (o == GOF(LLdata) && sz == 8) return -1;  /* slot unused */
 
    VG_(printf)("MC_(get_otrack_shadow_offset)(mips)(off=%d,sz=%d)\n",
                offset,szB);
@@ -1384,6 +1363,7 @@ IRType MC_(get_otrack_reg_array_equiv_int_type) ( IRRegArray* arr )
    ppIRRegArray(arr);
    VG_(printf)("\n");
    tl_assert(0);
+
 #  else
 #    error "FIXME: not implemented for this architecture"
 #  endif

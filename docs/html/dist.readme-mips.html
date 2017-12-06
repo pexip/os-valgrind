@@ -3,11 +3,11 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>11. README.mips</title>
 <link rel="stylesheet" type="text/css" href="vg_basic.css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.78.1">
+<meta name="generator" content="DocBook XSL Stylesheets V1.79.1">
 <link rel="home" href="index.html" title="Valgrind Documentation">
 <link rel="up" href="dist.html" title="Valgrind Distribution Documents">
 <link rel="prev" href="dist.readme-android_emulator.html" title="10. README.android_emulator">
-<link rel="next" href="licenses.html" title="GNU Licenses">
+<link rel="next" href="dist.readme-solaris.html" title="12. README.solaris">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <div><table class="nav" width="100%" cellspacing="3" cellpadding="3" border="0" summary="Navigation header"><tr>
@@ -15,7 +15,7 @@
 <td width="25px" align="center" valign="middle"><a accesskey="u" href="dist.html"><img src="images/up.png" width="21" height="18" border="0" alt="Up"></a></td>
 <td width="31px" align="center" valign="middle"><a accesskey="h" href="index.html"><img src="images/home.png" width="27" height="20" border="0" alt="Up"></a></td>
 <th align="center" valign="middle">Valgrind Distribution Documents</th>
-<td width="22px" align="center" valign="middle"><a accesskey="n" href="licenses.html"><img src="images/next.png" width="18" height="21" border="0" alt="Next"></a></td>
+<td width="22px" align="center" valign="middle"><a accesskey="n" href="dist.readme-solaris.html"><img src="images/next.png" width="18" height="21" border="0" alt="Next"></a></td>
 </tr></table></div>
 <div class="chapter">
 <div class="titlepage"><div><div><h1 class="title">
@@ -42,14 +42,9 @@ CFLAGS="-mips64 -mabi=64" will do the trick and compile Valgrind correctly.<br>
 - Example of configure line and additional configure options:<br>
 <br>
    $ ./configure --host=mipsel-linux-gnu --prefix=&lt;path_to_install_directory&gt;<br>
-        [--with-pagesize=&lt;4|16|64&gt;]<br>
 <br>
  * --host=mips-linux-gnu is necessary only if Valgrind is built on platform<br>
    other then MIPS, tools for building MIPS application have to be in PATH.<br>
-<br>
- * --with-pagesize option is used to set default PAGE SIZE. If option is not<br>
-   used, PAGE SIZE is set to value default for platform on which Valgrind is<br>
-   built on. Possible values are 4, 16 of 64 and represent size in kilobytes.<br>
 <br>
  * --host=mips-linux-gnu is necessary if you compile it with cross toolchain<br>
    compiler for big endian platform.<br>
@@ -84,7 +79,7 @@ Limitations<br>
 <td rowspan="2" width="40%" align="left">
 <a accesskey="p" href="dist.readme-android_emulator.html">&lt;&lt; 10. README.android_emulator</a> </td>
 <td width="20%" align="center"><a accesskey="u" href="dist.html">Up</a></td>
-<td rowspan="2" width="40%" align="right"> <a accesskey="n" href="licenses.html">GNU Licenses &gt;&gt;</a>
+<td rowspan="2" width="40%" align="right"> <a accesskey="n" href="dist.readme-solaris.html">12. README.solaris &gt;&gt;</a>
 </td>
 </tr>
 <tr><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td></tr>

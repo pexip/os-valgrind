@@ -46,6 +46,11 @@ program is using, it also gives very detailed information that indicates
 which parts of your program are responsible for allocating the heap memory.
 </para>
 
+<para>Massif also provides <xref linkend="manual-core.xtree"/> memory
+  profiling using the command line
+  option <computeroutput>--xtree-memory</computeroutput> and the monitor command
+   <computeroutput>xtmemory</computeroutput>.</para>
+
 </sect1>
 
 
@@ -874,6 +879,12 @@ gdbserver (see <xref linkend="manual-core-adv.gdbserver-commandhandling"/>).
   <listitem>
     <para><varname>detailed_snapshot [&lt;filename&gt;]</varname>
     requests to take a detailed snapshot and save it in the given
+    &lt;filename&gt; (default massif.vgdb.out).
+    </para>
+  </listitem>
+  <listitem>
+    <para><varname>all_snapshots [&lt;filename&gt;]</varname>
+    requests to take all captured snapshots so far and save them in the given
     &lt;filename&gt; (default massif.vgdb.out).
     </para>
   </listitem>

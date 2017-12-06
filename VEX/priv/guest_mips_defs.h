@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2010-2013 RT-RK
+   Copyright (C) 2010-2017 RT-RK
       mips-valgrind@rt-rk.com
 
    This program is free software; you can redistribute it and/or
@@ -40,17 +40,18 @@
 /*---               mips to IR conversion               ---*/
 /*---------------------------------------------------------*/
 
-/* Convert one MIPS insn to IR. See the type DisOneInstrFn in bb_to_IR.h. */
+/* Convert one MIPS insn to IR. See the type DisOneInstrFn in 
+   guest_generic_bb_to_IR.h. */
 extern DisResult disInstr_MIPS ( IRSB*        irbb,
-                                 Bool         (*resteerOkFn) (void *, Addr64),
+                                 Bool         (*resteerOkFn) (void *, Addr),
                                  Bool         resteerCisOk,
                                  void*        callback_opaque,
-                                 UChar*       guest_code,
+                                 const UChar* guest_code,
                                  Long         delta,
-                                 Addr64       guest_IP,
+                                 Addr         guest_IP,
                                  VexArch      guest_arch,
-                                 VexArchInfo* archinfo,
-                                 VexAbiInfo*  abiinfo,
+                                 const VexArchInfo* archinfo,
+                                 const VexAbiInfo*  abiinfo,
                                  VexEndness   host_endness,
                                  Bool         sigill_diag );
 
@@ -68,9 +69,13 @@ extern IRExpr *guest_mips64_spechelper ( const HChar * function_name,
 /* Describes to the optimser which part of the guest state require
    precise memory exceptions.  This is logically part of the guest
    state description. */
-extern Bool guest_mips32_state_requires_precise_mem_exns ( Int, Int );
+extern
+Bool guest_mips32_state_requires_precise_mem_exns ( Int, Int,
+                                                    VexRegisterUpdates );
 
-extern Bool guest_mips64_state_requires_precise_mem_exns ( Int, Int );
+extern
+Bool guest_mips64_state_requires_precise_mem_exns ( Int, Int,
+                                                    VexRegisterUpdates );
 
 extern VexGuestLayout mips32Guest_layout;
 extern VexGuestLayout mips64Guest_layout;
@@ -89,15 +94,13 @@ typedef enum {
    SUBS,     SUBD,    DIVS
 } flt_op;
 
-extern UInt mips32_dirtyhelper_mfc0 ( UInt rd, UInt sel );
-
-extern ULong mips64_dirtyhelper_dmfc0 ( UInt rd, UInt sel );
-
-
-#if defined(__mips__) && ((defined(__mips_isa_rev) && __mips_isa_rev >= 2))
-extern UInt mips32_dirtyhelper_rdhwr ( UInt rt, UInt rd );
-extern ULong mips64_dirtyhelper_rdhwr ( ULong rt, ULong rd );
+#if defined (_MIPSEL)
+   #define MIPS_IEND Iend_LE
+#else
+   #define MIPS_IEND Iend_BE
 #endif
+
+extern HWord mips_dirtyhelper_rdhwr ( UInt rd );
 
 /* Calculate FCSR in fp32 mode. */
 extern UInt mips_dirtyhelper_calculate_FCSR_fp32 ( void* guest_state, UInt fs,

@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2013 Julian Seward 
+   Copyright (C) 2000-2017 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -31,7 +31,6 @@
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
 #include "pub_core_vkiscnums.h"
-#include "pub_core_libcsetjmp.h"    // to keep threadstate.h happy
 #include "pub_core_threadstate.h"
 #include "pub_core_gdbserver.h"
 #include "pub_core_aspacemgr.h"
@@ -50,7 +49,8 @@
    Assertery.
    ------------------------------------------------------------------ */
 
-#if defined(VGP_x86_linux) || defined(VGP_x86_darwin)
+#if defined(VGP_x86_linux) || defined(VGP_x86_darwin) \
+    || defined(VGP_x86_solaris)
 #  define GET_STARTREGS(srP)                              \
       { UInt eip, esp, ebp;                               \
         __asm__ __volatile__(                             \
@@ -66,7 +66,8 @@
         (srP)->r_sp = (ULong)esp;                         \
         (srP)->misc.X86.r_ebp = ebp;                      \
       }
-#elif defined(VGP_amd64_linux) || defined(VGP_amd64_darwin)
+#elif defined(VGP_amd64_linux) || defined(VGP_amd64_darwin) \
+      || defined(VGP_amd64_solaris)
 #  define GET_STARTREGS(srP)                              \
       { ULong rip, rsp, rbp;                              \
         __asm__ __volatile__(                             \
@@ -86,8 +87,8 @@
       { UInt cia, r1, lr;                                 \
         __asm__ __volatile__(                             \
            "mflr 0;"                   /* r0 = lr */      \
-           "bl m_libcassert_get_ip;"   /* lr = pc */      \
-           "m_libcassert_get_ip:\n"                       \
+           "bl 0f;"                    /* lr = pc */      \
+           "0:\n"                                         \
            "mflr %0;"                  /* %0 = pc */      \
            "mtlr 0;"                   /* restore lr */   \
            "mr %1,1;"                  /* %1 = r1 */      \
@@ -105,8 +106,8 @@
       { ULong cia, r1, lr;                                \
         __asm__ __volatile__(                             \
            "mflr 0;"                   /* r0 = lr */      \
-           "bl .m_libcassert_get_ip;"  /* lr = pc */      \
-           ".m_libcassert_get_ip:\n"                      \
+           "bl 0f;"                    /* lr = pc */      \
+           "0:\n"                                         \
            "mflr %0;"                  /* %0 = pc */      \
            "mtlr 0;"                   /* restore lr */   \
            "mr %1,1;"                  /* %1 = r1 */      \
@@ -134,8 +135,8 @@
            : /* trash */ "memory"                         \
         );                                                \
         (srP)->r_pc = block[0] - 8;                       \
-        (srP)->r_sp = block[1];                           \
-        (srP)->misc.ARM.r14 = block[2];                   \
+        (srP)->misc.ARM.r14 = block[1];                   \
+        (srP)->r_sp = block[2];                           \
         (srP)->misc.ARM.r12 = block[3];                   \
         (srP)->misc.ARM.r11 = block[4];                   \
         (srP)->misc.ARM.r7  = block[5];                   \
@@ -179,8 +180,8 @@
 #  define GET_STARTREGS(srP)                              \
       { UInt pc, sp, fp, ra, gp;                          \
       asm("move $8, $31;"             /* t0 = ra */       \
-          "bal m_libcassert_get_ip;"  /* ra = pc */       \
-          "m_libcassert_get_ip:\n"                        \
+          "bal 0f;"                   /* ra = pc */       \
+          "0:\n"                                          \
           "move %0, $31;"                                 \
           "move $31, $8;"             /* restore lr */    \
           "move %1, $29;"                                 \
@@ -202,10 +203,10 @@
       }
 #elif defined(VGP_mips64_linux)
 #  define GET_STARTREGS(srP)                              \
-      { ULong pc, sp, fp, ra, gp;                          \
+      { ULong pc, sp, fp, ra, gp;                         \
       asm("move $8, $31;"             /* t0 = ra */       \
-          "bal m_libcassert_get_ip;"  /* ra = pc */       \
-          "m_libcassert_get_ip:\n"                        \
+          "bal 0f;"                   /* ra = pc */       \
+          "0:\n"                                          \
           "move %0, $31;"                                 \
           "move $31, $8;"             /* restore lr */    \
           "move %1, $29;"                                 \
@@ -240,13 +241,14 @@ static void exit_wrk( Int status, Bool gdbserver_call_allowed)
    if (gdbserver_call_allowed && !exit_called) {
       const ThreadId atid = 1; // Arbitrary tid used to call/terminate gdbsrv.
       exit_called = True;
-      if (status != 0 && VG_(gdbserver_stop_at) (VgdbStopAt_ValgrindAbExit)) {
+      if (status != 0 
+          && VgdbStopAtiS(VgdbStopAt_ValgrindAbExit, VG_(clo_vgdb_stop_at))) {
          if (VG_(gdbserver_init_done)()) {
             VG_(umsg)("(action at valgrind abnormal exit) vgdb me ... \n");
             VG_(gdbserver) (atid);
          } else {
-            VG_(umsg)("(action at valgrind abnormal exit) "
-                      "Early valgrind exit : vgdb not yet usable\n");
+            VG_(umsg)("(action at valgrind abnormal exit)\n"
+                      "valgrind exit is too early => vgdb not yet usable\n");
          }
       }
       if (VG_(gdbserver_init_done)()) {
@@ -269,7 +271,7 @@ void VG_(exit_now)( Int status )
 {
 #if defined(VGO_linux)
    (void)VG_(do_syscall1)(__NR_exit_group, status );
-#elif defined(VGO_darwin)
+#elif defined(VGO_darwin) || defined(VGO_solaris)
    (void)VG_(do_syscall1)(__NR_exit, status );
 #else
 #  error Unknown OS
@@ -293,12 +295,46 @@ void VG_(client_exit)( Int status )
    exit_wrk (status, False);
 }
 
+static void print_thread_state (Bool stack_usage,
+                                const HChar* prefix, ThreadId i)
+{
+   VgStack *stack 
+      = (VgStack*)VG_(threads)[i].os_state.valgrind_stack_base;
+
+   VG_(printf)("\n%sThread %d: status = %s (lwpid %d)\n", prefix, i, 
+               VG_(name_of_ThreadStatus)(VG_(threads)[i].status),
+               VG_(threads)[i].os_state.lwpid);
+   if (VG_(threads)[i].status != VgTs_Empty)
+      VG_(get_and_pp_StackTrace)( i, BACKTRACE_DEPTH );
+   if (stack_usage && VG_(threads)[i].client_stack_highest_byte != 0 ) {
+      Addr start, end;
+      
+      start = end = 0;
+      VG_(stack_limits)(VG_(get_SP)(i), &start, &end);
+      if (start != end)
+         VG_(printf)("%sclient stack range: [%p %p] client SP: %p\n",
+                     prefix,
+                     (void*)start, (void*)end, (void*)VG_(get_SP)(i));
+      else
+         VG_(printf)("%sclient stack range: ??????? client SP: %p\n",
+                     prefix,
+                     (void*)VG_(get_SP)(i));
+   }
+   if (stack_usage && stack != 0)
+      VG_(printf)
+         ("%svalgrind stack top usage: %lu of %lu\n",
+          prefix,
+          VG_(clo_valgrind_stacksize)
+          - VG_(am_get_VgStack_unused_szB) (stack,
+                                            VG_(clo_valgrind_stacksize)),
+          (SizeT) VG_(clo_valgrind_stacksize));
+}
 
 // Print the scheduler status.
 static void show_sched_status_wrk ( Bool host_stacktrace,
                                     Bool stack_usage,
                                     Bool exited_threads,
-                                    UnwindStartRegs* startRegsIN)
+                                    const UnwindStartRegs* startRegsIN)
 {
    Int i; 
    if (host_stacktrace) {
@@ -338,37 +374,37 @@ static void show_sched_status_wrk ( Bool host_stacktrace,
    }
 
    VG_(printf)("\nsched status:\n"); 
-   VG_(printf)("  running_tid=%d\n", VG_(get_running_tid)());
-   for (i = 1; i < VG_N_THREADS; i++) {
-      VgStack* stack 
-         = (VgStack*)VG_(threads)[i].os_state.valgrind_stack_base;
-      /* If a thread slot was never used (yet), valgrind_stack_base is 0.
-         If a thread slot is used by a thread or was used by a thread which
-         has exited, then valgrind_stack_base points to the stack base. */
-      if (VG_(threads)[i].status == VgTs_Empty
-          && (!exited_threads || stack == 0)) continue;
-      VG_(printf)("\nThread %d: status = %s\n", i, 
-                  VG_(name_of_ThreadStatus)(VG_(threads)[i].status) );
-      if (VG_(threads)[i].status != VgTs_Empty)
-         VG_(get_and_pp_StackTrace)( i, BACKTRACE_DEPTH );
-      if (stack_usage && VG_(threads)[i].client_stack_highest_byte != 0 ) {
-         Addr start, end;
-         
-         start = end = 0;
-         VG_(stack_limits)(VG_(threads)[i].client_stack_highest_byte,
-                           &start, &end);
-         if (start != end)
-            VG_(printf)("client stack range: [%p %p] client SP: %p\n",
-                        (void*)start, (void*)end, (void*)VG_(get_SP)(i));
-         else
-            VG_(printf)("client stack range: ???????\n");
+   if (VG_(threads) == NULL) {
+      VG_(printf)("  scheduler not yet initialised\n");
+   } else {
+      VG_(printf)("  running_tid=%u\n", VG_(get_running_tid)());
+      for (i = 1; i < VG_N_THREADS; i++) {
+         VgStack *stack 
+            = (VgStack*)VG_(threads)[i].os_state.valgrind_stack_base;
+         /* If a thread slot was never used (yet), valgrind_stack_base is 0.
+            If a thread slot is used by a thread or was used by a thread which
+            has exited, then valgrind_stack_base points to the stack base. */
+         if (VG_(threads)[i].status == VgTs_Empty
+             && (!exited_threads || stack == 0)) continue;
+         print_thread_state(stack_usage, "", i);
+         if (VG_(inner_threads) != NULL) {
+            /* An inner V has informed us (the outer) of its thread array.
+               Report the inner guest stack trace. */
+            UInt inner_tid;
+
+            for (inner_tid = 1; inner_tid < VG_N_THREADS; inner_tid++) {
+               if (VG_(threads)[i].os_state.lwpid 
+                   == VG_(inner_threads)[inner_tid].os_state.lwpid) {
+                  ThreadState* save_outer_vg_threads = VG_(threads);
+
+                  VG_(threads) = VG_(inner_threads);
+                  print_thread_state(stack_usage, "INNER ", inner_tid);
+                  VG_(threads) = save_outer_vg_threads;
+                  break;
+               }
+            }
+         }
       }
-      if (stack_usage && stack != 0)
-          VG_(printf)("valgrind stack top usage: %ld of %ld\n",
-                      VG_STACK_ACTIVE_SZB 
-                      - VG_(am_get_VgStack_unused_szB)(stack,
-                                                       VG_STACK_ACTIVE_SZB),
-                      (SizeT) VG_STACK_ACTIVE_SZB);
    }
    VG_(printf)("\n");
 }
@@ -385,7 +421,7 @@ void VG_(show_sched_status) ( Bool host_stacktrace,
 
 __attribute__ ((noreturn))
 static void report_and_quit ( const HChar* report,
-                              UnwindStartRegs* startRegsIN )
+                              const UnwindStartRegs* startRegsIN )
 {
    show_sched_status_wrk (True,  // host_stacktrace
                           False, // stack_usage
@@ -410,8 +446,7 @@ static void report_and_quit ( const HChar* report,
 void VG_(assert_fail) ( Bool isCore, const HChar* expr, const HChar* file, 
                         Int line, const HChar* fn, const HChar* format, ... )
 {
-   va_list vargs;
-   HChar buf[512];
+   va_list vargs, vargs_copy;
    const HChar* component;
    const HChar* bugs_to;
    UInt written;
@@ -420,15 +455,6 @@ void VG_(assert_fail) ( Bool isCore, const HChar* expr, const HChar* file,
    if (entered) 
       VG_(exit)(2);
    entered = True;
-
-   va_start(vargs, format);
-   written = VG_(vsnprintf) ( buf, sizeof(buf), format, vargs );
-   va_end(vargs);
-
-   if (written >= sizeof(buf)) {
-      VG_(printf)("\nvalgrind: %s: buf is too small, sizeof(buf) = %u, "
-                  "written = %d\n", __func__, (unsigned)sizeof(buf), written);
-   }
 
    if (isCore) {
       component = "valgrind";
@@ -449,15 +475,26 @@ void VG_(assert_fail) ( Bool isCore, const HChar* expr, const HChar* file,
       VG_(printf)("\n%s: %s:%d (%s): Assertion '%s' failed.\n",
                   component, file, line, fn, expr );
    }
-   if (!VG_STREQ(buf, ""))
-      VG_(printf)("%s: %s\n", component, buf );
+
+   /* Check whether anything will be written */
+   HChar buf[5];
+   va_start(vargs, format);
+   va_copy(vargs_copy, vargs);
+   written = VG_(vsnprintf) ( buf, sizeof(buf), format, vargs );
+   va_end(vargs);
+
+   if (written > 0) {
+      VG_(printf)("%s: ", component);
+      VG_(vprintf)(format, vargs_copy);
+      VG_(printf)("\n");
+   }
 
    report_and_quit(bugs_to, NULL);
 }
 
 __attribute__ ((noreturn))
 static void panic ( const HChar* name, const HChar* report, const HChar* str,
-                    UnwindStartRegs* startRegs )
+                    const UnwindStartRegs* startRegs )
 {
    if (VG_(clo_xml))
       VG_(printf_xml)("</valgrindoutput>\n");
@@ -465,7 +502,7 @@ static void panic ( const HChar* name, const HChar* report, const HChar* str,
    report_and_quit(report, startRegs);
 }
 
-void VG_(core_panic_at) ( const HChar* str, UnwindStartRegs* startRegs )
+void VG_(core_panic_at) ( const HChar* str, const UnwindStartRegs* startRegs )
 {
    panic("valgrind", VG_BUGS_TO, str, startRegs);
 }
@@ -481,8 +518,15 @@ void VG_(tool_panic) ( const HChar* str )
 }
 
 /* Print some helpful-ish text about unimplemented things, and give up. */
-void VG_(unimplemented) ( const HChar* msg )
+void VG_(unimplemented) ( const HChar* format, ... )
 {
+   va_list vargs;
+   HChar msg[256];
+
+   va_start(vargs, format);
+   VG_(vsnprintf)(msg, sizeof(msg), format, vargs);
+   va_end(vargs);
+
    if (VG_(clo_xml))
       VG_(printf_xml)("</valgrindoutput>\n");
    VG_(umsg)("\n");

@@ -7,7 +7,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright (C) 2000-2013 Julian Seward 
+   Copyright (C) 2000-2017 Julian Seward 
       jseward@acm.org
 
    This program is free software; you can redistribute it and/or
@@ -65,6 +65,16 @@ Bool VG_(replacement_malloc_process_cmd_line_option)(const HChar* arg)
             VG_MIN_MALLOC_SZB);
       }
    }
+   else if VG_XACT_CLO(arg, "--xtree-memory=none",
+                       VG_(clo_xtree_memory), Vg_XTMemory_None) {}
+   else if VG_XACT_CLO(arg, "--xtree-memory=allocs",
+                       VG_(clo_xtree_memory), Vg_XTMemory_Allocs) {}
+   else if VG_XACT_CLO(arg, "--xtree-memory=full",
+                       VG_(clo_xtree_memory), Vg_XTMemory_Full) {}
+   else if VG_STR_CLO (arg, "--xtree-memory-file",
+                       VG_(clo_xtree_memory_file)) {}
+   else if VG_BOOL_CLO(arg, "--xtree-compress-strings",
+                       VG_(clo_xtree_compress_strings)) {}
 
    else if VG_BOOL_CLO(arg, "--trace-malloc",  VG_(clo_trace_malloc)) {}
    else 
@@ -101,6 +111,12 @@ void VG_(cli_free) ( void* p )
    VG_(arena_free) ( VG_AR_CLIENT, p );                          
 }
 
+// Useful for querying user blocks.           
+SizeT VG_(cli_malloc_usable_size) ( void* p )                    
+{                                                            
+   return VG_(arena_malloc_usable_size)(VG_AR_CLIENT, p);
+}                                                            
+  
 Bool VG_(addr_is_in_block)( Addr a, Addr start, SizeT size, SizeT rz_szB )
 {
    return ( start - rz_szB <= a  &&  a < start + size + rz_szB );

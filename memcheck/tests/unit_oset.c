@@ -28,6 +28,7 @@
 #define vgPlain_memset                 memset
 #define vgPlain_memcpy                 memcpy
 #define vgPlain_memmove                memmove
+#define vgPlain_strcmp                 strcmp
 
 // Crudely replace some functions (in m_xarray.c, but not needed for
 // this unit test) by (hopefully) failing asserts.
@@ -69,7 +70,7 @@ static void free_node(void* p)
 // case a Word), in which case the element is also the key.
 
 __attribute__((unused))
-static HChar *wordToStr(void *p)
+static const HChar *wordToStr(const void *p)
 {
    static HChar buf[32];
    sprintf(buf, "%ld", *(Word*)p);
@@ -207,7 +208,8 @@ void example1singleset(OSet* oset, char *descr)
    // Check that we can remove half of the elements, and that their values
    // are as expected.
    for (i = 0; i < NN; i += 2) {
-      assert( pv = VG_(OSetGen_Remove)(oset, vs[i]) );
+      pv = VG_(OSetGen_Remove)(oset, vs[i]);
+      assert( pv );
       assert( pv == vs[i] );
    }
 
@@ -216,7 +218,8 @@ void example1singleset(OSet* oset, char *descr)
 
    // Check we can find the remaining elements (with the right values).
    for (i = 1; i < NN; i += 2) {
-      assert( pv = VG_(OSetGen_LookupWithCmp)(oset, vs[i], NULL) );
+      pv = VG_(OSetGen_LookupWithCmp)(oset, vs[i], NULL);
+      assert( pv );
       assert( pv == vs[i] );
    }
 
@@ -228,7 +231,8 @@ void example1singleset(OSet* oset, char *descr)
    // Check that we can remove the remaining half of the elements, and that
    // their values are as expected.
    for (i = 1; i < NN; i += 2) {
-      assert( pv = VG_(OSetGen_Remove)(oset, vs[i]) );
+      pv = VG_(OSetGen_Remove)(oset, vs[i]);
+      assert( pv );
       assert( pv == vs[i] );
    }
 
