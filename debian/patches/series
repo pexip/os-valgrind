@@ -4,3 +4,4 @@
 07_fix-spelling-in-binary.patch
 08_fix-spelling-in-manpage.patch
 09_fix-armhf-detect.patch
+10_mpi-pkg-config.patch

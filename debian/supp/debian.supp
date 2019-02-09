@@ -35,3 +35,19 @@
   fun:call_init.part.0
   fun:call_init
 }
+
+{
+   helgrind false positive with glibc 2.28 bug#918023
+   Helgrind:Race
+   fun:mempcpy
+   fun:_IO_new_file_xsputn
+   fun:_IO_file_xsputn@@GLIBC_2.2.5
+}
+
+{
+   drd false positive with glibc 2.28 bug#918023
+   drd:ConflictingAccess
+   fun:mempcpy
+   fun:_IO_new_file_xsputn
+   fun:_IO_file_xsputn@@GLIBC_2.2.5
+}
