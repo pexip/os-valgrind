@@ -16,7 +16,7 @@ Last-Update: 2015-09-25
            && VKI_S_ISREG(stat_buf.mode)
 --- a/coregrind/m_gdbserver/server.c
 +++ b/coregrind/m_gdbserver/server.c
-@@ -254,7 +254,7 @@
+@@ -256,7 +256,7 @@
  "    Valgrind internal host status/memory\n"
  "  v.translate <addr> [<traceflags>]  : debug translation of <addr> with <traceflags>\n"
  "    (default traceflags 0b00100000 : show after instrumentation)\n"
@@ -27,7 +27,7 @@ Last-Update: 2015-09-25
     case  1: /* v.set */
 --- a/VEX/priv/ir_defs.c
 +++ b/VEX/priv/ir_defs.c
-@@ -4643,7 +4643,7 @@
+@@ -4709,7 +4709,7 @@
     if (bb->stmts_used < 0 || bb->stmts_size < 8
         || bb->stmts_used > bb->stmts_size)
        /* this BB is so strange we can't even print it */
@@ -60,7 +60,7 @@ Last-Update: 2015-09-25
                  " N-plicated elts\n");
 --- a/coregrind/m_scheduler/scheduler.c
 +++ b/coregrind/m_scheduler/scheduler.c
-@@ -2147,7 +2147,7 @@
+@@ -2212,7 +2212,7 @@
        "to recompile such code, using the header files from this version of\n"
        "Valgrind, and not any previous version.\n"
        "\n"
@@ -71,7 +71,7 @@ Last-Update: 2015-09-25
        "   http://www.valgrind.org/support/bug_reports.html\n"
 --- a/coregrind/m_xtree.c
 +++ b/coregrind/m_xtree.c
-@@ -946,7 +946,7 @@
+@@ -961,7 +961,7 @@
        FP("n%u: %llu %s\n", n_groups, top_total, header->top_node_desc);
  
        /* Output depth 0 groups. */

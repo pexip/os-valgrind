@@ -64,7 +64,7 @@ Last-Update: 2016-11-03
  .RS 4
 --- a/docs/valgrind.1
 +++ b/docs/valgrind.1
-@@ -1947,7 +1947,7 @@
+@@ -2149,7 +2149,7 @@
  callgrind_control \-i on\&.
  .sp
  Note that the resulting call graph will most probably not contain

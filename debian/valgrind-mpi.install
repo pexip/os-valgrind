@@ -1,1 +1,1 @@
-usr/lib/valgrind/libmpiwrap*
+usr/lib/*/valgrind/libmpiwrap*
