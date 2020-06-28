@@ -20,9 +20,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -80,11 +78,9 @@ ExeContext* VG_(record_depth_1_ExeContext)(ThreadId tid, Word first_ip_delta);
 // Apply a function to every element in the ExeContext.  The parameter 'n'
 // gives the index of the passed ip.  Doesn't go below main() unless
 // --show-below-main=yes is set.
-// Currently, the below function is unused. If ever it is used one day,
-// we should add epoch args similarly to function VG_(apply_StackTrace)
-// in pub_tool_stacktrace.h.
-extern void VG_(apply_ExeContext)( void(*action)(UInt n, Addr ip),
-                                   ExeContext* ec, UInt n_ips );
+extern void VG_(apply_ExeContext)(
+   void(*action)(UInt n, DiEpoch ep, Addr ip, void* opaque),
+   void* opaque, ExeContext* ec);
 
 // Compare two ExeContexts.  Number of callers considered depends on `res':
 //   Vg_LowRes:  2

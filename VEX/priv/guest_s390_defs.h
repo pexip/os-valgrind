@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -41,9 +39,6 @@
 /* Convert one s390 insn to IR.  See the type DisOneInstrFn in
    guest_generic_bb_to_IR.h. */
 DisResult disInstr_S390 ( IRSB*        irbb,
-                          Bool         (*resteerOkFn) ( void*, Addr ),
-                          Bool         resteerCisOk,
-                          void*        callback_opaque,
                           const UChar* guest_code,
                           Long         delta,
                           Addr         guest_IP,
@@ -160,7 +155,9 @@ enum {
    S390_CC_OP_DFP_128_TO_INT_64 = 57,
    S390_CC_OP_PFPO_32 = 58,
    S390_CC_OP_PFPO_64 = 59,
-   S390_CC_OP_PFPO_128 = 60
+   S390_CC_OP_PFPO_128 = 60,
+   S390_CC_OP_MUL_32 = 61,
+   S390_CC_OP_MUL_64 = 62
 };
 
 /*------------------------------------------------------------*/
@@ -264,7 +261,7 @@ extern ULong last_execute_target;
 /* Vector operatons passed to s390x_dirtyhelper_vec_op(...) helper.
    Please don't change ordering of elements and append new items
    before  S390_VEC_OP_LAST. */
-enum {
+typedef enum {
    S390_VEC_OP_INVALID = 0,
    S390_VEC_OP_VPKS = 1,
    S390_VEC_OP_VPKLS = 2,
@@ -281,7 +278,11 @@ enum {
    S390_VEC_OP_VMALH = 13,
    S390_VEC_OP_VCH = 14,
    S390_VEC_OP_VCHL = 15,
-   S390_VEC_OP_LAST = 16 // supposed to be the last element in enum
+   S390_VEC_OP_VFCE = 16,
+   S390_VEC_OP_VFCH = 17,
+   S390_VEC_OP_VFCHE = 18,
+   S390_VEC_OP_VFTCI = 19,
+   S390_VEC_OP_LAST = 20 // supposed to be the last element in enum
 } s390x_vec_op_t;
 
 /* Arguments of s390x_dirtyhelper_vec_op(...) which are packed into one
@@ -300,8 +301,10 @@ typedef union {
 
       unsigned int m4 : 4;        // field m4 of insn or zero if it's missing
       unsigned int m5 : 4;        // field m5 of insn or zero if it's missing
+      unsigned int m6 : 4;        // field m6 of insn or zero if it's missing
+      unsigned int i3 : 12;       // field i3 of insn or zero if it's missing
       unsigned int read_only: 1;  // don't write result to Guest State
-      unsigned int reserved : 27; // reserved for future
+      unsigned int reserved : 11; // reserved for future
    };
    ULong serialized;
 } s390x_vec_op_details_t;

@@ -7,7 +7,7 @@ Last-Update: 2012-05-10
 
 --- a/callgrind/callgrind_control.in
 +++ b/callgrind/callgrind_control.in
-@@ -33,7 +33,7 @@
+@@ -31,7 +31,7 @@
    @pids = ();
    open LIST, $vgdb_exe . " $vgdbPrefixOption -l|";
    while(<LIST>) {

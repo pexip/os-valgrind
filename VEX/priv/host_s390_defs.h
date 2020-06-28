@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -180,6 +178,8 @@ typedef enum {
    S390_ALU_AND,
    S390_ALU_OR,
    S390_ALU_XOR,
+   S390_ALU_ILIH,  /* insert low half of 2nd operand into high half of 1st
+                      operand */
    S390_ALU_LSH,
    S390_ALU_RSH,
    S390_ALU_RSHA   /* arithmetic */
@@ -202,7 +202,11 @@ typedef enum {
    S390_VEC_ABS,
    S390_VEC_COUNT_LEADING_ZEROES,
    S390_VEC_COUNT_TRAILING_ZEROES,
-   S390_VEC_COUNT_ONES
+   S390_VEC_COUNT_ONES,
+   S390_VEC_FLOAT_NEG,
+   S390_VEC_FLOAT_ABS,
+   S390_VEC_FLOAT_SQRT,
+   S390_UNOP_T_INVALID
 } s390_unop_t;
 
 /* The kind of ternary BFP operations */
@@ -344,7 +348,8 @@ typedef enum {
    S390_VEC_GET_ELEM,
    S390_VEC_ELEM_SHL_INT,
    S390_VEC_ELEM_SHRA_INT,
-   S390_VEC_ELEM_SHRL_INT
+   S390_VEC_ELEM_SHRL_INT,
+   S390_VEC_AMODEOP_T_INVALID
 } s390_vec_amodeop_t;
 
 /* The vector operations with three (vector, amode and integer) operands */
@@ -394,11 +399,21 @@ typedef enum {
    S390_VEC_PWSUM_QW,
 
    S390_VEC_INIT_FROM_GPRS,
+   S390_VEC_FLOAT_ADD,
+   S390_VEC_FLOAT_SUB,
+   S390_VEC_FLOAT_MUL,
+   S390_VEC_FLOAT_DIV,
+   S390_VEC_FLOAT_COMPARE_EQUAL,
+   S390_VEC_FLOAT_COMPARE_LESS_OR_EQUAL,
+   S390_VEC_FLOAT_COMPARE_LESS,
+   S390_VEC_BINOP_T_INVALID
 } s390_vec_binop_t;
 
 /* The vector operations with three operands */
 typedef enum {
-   S390_VEC_PERM
+   S390_VEC_PERM,
+   S390_VEC_FLOAT_MADD,
+   S390_VEC_FLOAT_MSUB
 } s390_vec_triop_t;
 
 /* The details of a CDAS insn. Carved out to keep the size of
@@ -858,6 +873,7 @@ Int   emit_S390Instr       ( Bool *, UChar *, Int, const s390_insn *, Bool,
 const RRegUniverse *getRRegUniverse_S390( void );
 void  genSpill_S390        ( HInstr **, HInstr **, HReg , Int , Bool );
 void  genReload_S390       ( HInstr **, HInstr **, HReg , Int , Bool );
+HInstr* directReload_S390  ( HInstr *, HReg, Short );
 extern s390_insn* genMove_S390(HReg from, HReg to, Bool mode64);
 HInstrArray *iselSB_S390   ( const IRSB *, VexArch, const VexArchInfo *,
                              const VexAbiInfo *, Int, Int, Bool, Bool, Addr);
@@ -913,6 +929,8 @@ extern UInt s390_host_hwcaps;
                       (s390_host_hwcaps & (VEX_HWCAPS_S390X_VX))
 #define s390_host_has_msa5 \
                       (s390_host_hwcaps & (VEX_HWCAPS_S390X_MSA5))
+#define s390_host_has_lsc2 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_LSC2))
 #endif /* ndef __VEX_HOST_S390_DEFS_H */
 
 /*---------------------------------------------------------------*/

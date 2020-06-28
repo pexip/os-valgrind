@@ -1,0 +1,28 @@
+From 391a9558e2a53c901b7d7eefdf3cf898b738eb71 Mon Sep 17 00:00:00 2001
+From: Balint Reczey <balint.reczey@canonical.com>
+Date: Thu, 28 Nov 2019 13:34:21 +0100
+Subject: [PATCH] Don't look for debug alt file in debug image if it is already
+ found
+
+With dwz the .gnu_debuglink section may appear duplicated in the
+debug file referenced originally in the .gnu_debuglink section.
+
+https://bugs.launchpad.net/ubuntu/+source/valgrind/+bug/1848211
+
+Signed-off-by: Balint Reczey <balint.reczey@canonical.com>
+---
+ coregrind/m_debuginfo/readelf.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- a/coregrind/m_debuginfo/readelf.c
++++ b/coregrind/m_debuginfo/readelf.c
+@@ -3017,7 +3017,8 @@
+             if (!ML_(sli_is_valid)(debug_frame_escn))
+                FIND(need_dwarf2,     ".zdebug_frame",     debug_frame_escn)
+ 
+-            FIND(   need_dwarf2,     ".gnu_debugaltlink", debugaltlink_escn)
++            if (!ML_(sli_is_valid)(debugaltlink_escn))
++               FIND(   need_dwarf2,     ".gnu_debugaltlink", debugaltlink_escn)
+ 
+             FIND(   need_dwarf1,     ".debug",            dwarf1d_escn)
+             FIND(   need_dwarf1,     ".line",             dwarf1l_escn)

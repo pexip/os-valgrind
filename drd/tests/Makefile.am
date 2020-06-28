@@ -109,6 +109,10 @@ EXTRA_DIST =                                        \
 	dlopen.stderr.exp			    \
 	dlopen.stdout.exp			    \
 	dlopen.vgtest				    \
+	fork-serial.stderr.exp			    \
+	fork-serial.vgtest			    \
+	fork-parallel.stderr.exp		    \
+	fork-parallel.vgtest			    \
 	fp_race.stderr.exp                          \
 	fp_race.stderr.exp-mips32-be                \
 	fp_race.stderr.exp-mips32-le                \
@@ -267,9 +271,11 @@ EXTRA_DIST =                                        \
 	sigaltstack.stderr.exp                      \
 	sigaltstack.vgtest                          \
 	std_atomic.stderr.exp		  	    \
-	std_atomic.vgtest			            \
+	std_atomic.vgtest			    \
 	std_list.stderr.exp		  	    \
 	std_list.vgtest			            \
+	std_mutex.stderr.exp		  	    \
+	std_mutex.vgtest			    \
 	std_string.stderr.exp		  	    \
 	std_string.vgtest			    \
 	std_thread.stderr.exp		  	    \
@@ -370,6 +376,7 @@ check_PROGRAMS =      \
   concurrent_close    \
   dlopen_main         \
   dlopen_lib.so       \
+  fork                \
   fp_race             \
   free_is_write	      \
   hold_lock           \
@@ -429,6 +436,7 @@ if HAVE_SHARED_POINTER_ANNOTATION
 check_PROGRAMS += \
   std_atomic      \
   std_list        \
+  std_mutex	  \
   std_string      \
   std_thread      \
   std_thread2
@@ -553,6 +561,9 @@ std_atomic_CXXFLAGS         = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
 
 std_list_SOURCES            = std_list.cpp
 std_list_CXXFLAGS           = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
+
+std_mutex_SOURCES           = std_mutex.cpp
+std_mutex_CXXFLAGS          = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
 
 std_string_SOURCES          = std_string.cpp
 std_string_CXXFLAGS         = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare

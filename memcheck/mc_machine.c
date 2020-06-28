@@ -23,9 +23,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -120,11 +118,11 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    Int  o    = offset;
    tl_assert(sz > 0);
 
-#if defined(VGA_ppc64be)
+#  if defined(VGA_ppc64be)
    tl_assert(host_is_big_endian());
-#elif defined(VGA_ppc64le)
+#  elif defined(VGA_ppc64le)
    tl_assert(host_is_little_endian());
-#endif
+#  endif
 
    if (sz == 8 || sz == 4) {
       /* The point of this is to achieve
@@ -132,11 +130,11 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
             return GOF(GPRn);
          by testing ox instead of o, and setting ox back 4 bytes when sz == 4.
       */
-#if defined(VGA_ppc64le)
+#     if defined(VGA_ppc64le)
       Int ox = o;
-#else
+#     else
       Int ox = sz == 8 ? o : (o - 4);
-#endif
+#     endif
       if (ox == GOF(GPR0)) return ox;
       if (ox == GOF(GPR1)) return ox;
       if (ox == GOF(GPR2)) return ox;
@@ -240,11 +238,13 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(VSR31) && sz == 8) return o;
 
    /* For the various byte sized XER/CR pieces, use offset 8
-      in VSR0 .. VSR19. */
+      in VSR0 .. VSR21. */
    tl_assert(SZB(VSR0) == 16);
    if (o == GOF(XER_SO) && sz == 1) return 8 +GOF(VSR0);
    if (o == GOF(XER_OV) && sz == 1) return 8 +GOF(VSR1);
+   if (o == GOF(XER_OV32) && sz == 1) return 8 +GOF(VSR20);
    if (o == GOF(XER_CA) && sz == 1) return 8 +GOF(VSR2);
+   if (o == GOF(XER_CA32) && sz == 1) return 8 +GOF(VSR21);
    if (o == GOF(XER_BC) && sz == 1) return 8 +GOF(VSR3);
 
    if (o == GOF(CR0_321) && sz == 1) return 8 +GOF(VSR4);
@@ -388,6 +388,7 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(IP_AT_SYSCALL) && sz == 4) return -1; /* slot unused */
    if (o == GOF(FPROUND)   && sz == 1) return -1;
    if (o == GOF(DFPROUND)  && sz == 1) return -1;
+   if (o == GOF(C_FPCC)    && sz == 1) return -1;
    if (o == GOF(VRSAVE)    && sz == 4) return -1;
    if (o == GOF(EMNOTE)    && sz == 4) return -1;
    if (o == GOF(CMSTART)   && sz == 4) return -1;
@@ -440,11 +441,13 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
    if (o == GOF(VSR31) && sz == 8) return o;
 
    /* For the various byte sized XER/CR pieces, use offset 8
-      in VSR0 .. VSR19. */
+      in VSR0 .. VSR21. */
    tl_assert(SZB(VSR0) == 16);
    if (o == GOF(XER_SO) && sz == 1) return 8 +GOF(VSR0);
    if (o == GOF(XER_OV) && sz == 1) return 8 +GOF(VSR1);
+   if (o == GOF(XER_OV32) && sz == 1) return 8 +GOF(VSR20);
    if (o == GOF(XER_CA) && sz == 1) return 8 +GOF(VSR2);
+   if (o == GOF(XER_CA32) && sz == 1) return 8 +GOF(VSR21);
    if (o == GOF(XER_BC) && sz == 1) return 8 +GOF(VSR3);
 
    if (o == GOF(CR0_321) && sz == 1) return 8 +GOF(VSR4);
@@ -1055,7 +1058,7 @@ static Int get_otrack_shadow_offset_wrk ( Int offset, Int szB )
 
    /* --------------------- mips32 --------------------- */
 
-#  elif defined(VGA_mips32)
+#  elif defined(VGA_mips32) || defined(VGA_nanomips)
 
 #  define GOF(_fieldname) \
       (offsetof(VexGuestMIPS32State,guest_##_fieldname))
@@ -1427,6 +1430,12 @@ IRType MC_(get_otrack_reg_array_equiv_int_type) ( IRRegArray* arr )
 /* --------------------- mips32 --------------------- */
 #  elif defined(VGA_mips32)
    VG_(printf)("get_reg_array_equiv_int_type(mips32): unhandled: ");
+   ppIRRegArray(arr);
+   VG_(printf)("\n");
+   tl_assert(0);
+/* --------------------- nanomips ------------------- */
+#  elif defined(VGA_nanomips)
+   VG_(printf)("get_reg_array_equiv_int_type(nanomips): unhandled: ");
    ppIRRegArray(arr);
    VG_(printf)("\n");
    tl_assert(0);

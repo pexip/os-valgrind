@@ -51,3 +51,19 @@
    fun:_IO_new_file_xsputn
    fun:_IO_file_xsputn@@GLIBC_2.2.5
 }
+
+{
+   helgrind false positive with glibc 2.28 bug#918023, bug#931315
+   Helgrind:Race
+   fun:mempcpy
+   fun:_IO_new_file_xsputn
+   fun:_IO_file_xsputn@@GLIBC_2.17
+}
+
+{
+   drd false positive with glibc 2.28 bug#918023, bug#931315
+   drd:ConflictingAccess
+   fun:mempcpy
+   fun:_IO_new_file_xsputn
+   fun:_IO_file_xsputn@@GLIBC_2.17
+}

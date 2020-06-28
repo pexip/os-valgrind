@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -411,6 +409,13 @@ extern void ppIRTemp ( IRTemp );
    their functionality.  Such obscure ones are thus not directly visible
    in the IR, but their effects on guest state (memory and registers) 
    are made visible via the annotations in IRDirty structures.
+
+   2018-Dec-27: some of int<->fp conversion operations have been renamed so as
+   to have a trailing _DEP, meaning "deprecated".  This is because they don't
+   specify a rounding mode to be used for the conversion and so are
+   underspecified.  Their use should be replaced with equivalents that do
+   specify a rounding mode, either as a first argument or using a suffix on the
+   name, that indicates the rounding mode to use.
 */
 typedef
    enum { 
@@ -452,12 +457,21 @@ typedef
       Iop_MullS8, Iop_MullS16, Iop_MullS32, Iop_MullS64,
       Iop_MullU8, Iop_MullU16, Iop_MullU32, Iop_MullU64,
 
-      /* Wierdo integer stuff */
+      /* Counting bits */
+      /* Ctz64/Ctz32/Clz64/Clz32 are UNDEFINED when given arguments of zero.
+         You must ensure they are never given a zero argument.  As of
+         2018-Nov-14 they are deprecated.  Try to use the Nat variants
+         immediately below, if you can.
+      */
       Iop_Clz64, Iop_Clz32,   /* count leading zeroes */
       Iop_Ctz64, Iop_Ctz32,   /* count trailing zeros */
-      /* Ctz64/Ctz32/Clz64/Clz32 are UNDEFINED when given arguments of
-         zero.  You must ensure they are never given a zero argument.
-      */
+      /* Count leading/trailing zeroes, with "natural" semantics for the
+         case where the input is zero: then the result is the number of bits
+         in the word. */
+      Iop_ClzNat64, Iop_ClzNat32,
+      Iop_CtzNat64, Iop_CtzNat32,
+      /* Population count -- compute the number of 1 bits in the argument. */
+      Iop_PopCount64, Iop_PopCount32,
 
       /* Standard integer comparisons */
       Iop_CmpLT32S, Iop_CmpLT64S,
@@ -543,6 +557,8 @@ typedef
       Iop_64HLto128,  // :: (I64,I64) -> I128
       /* 1-bit stuff */
       Iop_Not1,   /* :: Ity_Bit -> Ity_Bit */
+      Iop_And1,   /* :: (Ity_Bit, Ity_Bit) -> Ity_Bit.  Evaluates both args! */
+      Iop_Or1,    /* :: (Ity_Bit, Ity_Bit) -> Ity_Bit.  Evaluates both args! */
       Iop_32to1,  /* :: Ity_I32 -> Ity_Bit, just select bit[0] */
       Iop_64to1,  /* :: Ity_I64 -> Ity_Bit, just select bit[0] */
       Iop_1Uto8,  /* :: Ity_Bit -> Ity_I8,  unsigned widen */
@@ -831,11 +847,17 @@ typedef
       /* MISC (vector integer cmp != 0) */
       Iop_CmpNEZ16x2, Iop_CmpNEZ8x4,
 
+      /* Byte swap in a 32-bit word */
+      Iop_Reverse8sIn32_x1,
+
       /* ------------------ 64-bit SIMD FP ------------------------ */
 
-      /* Convertion to/from int */
-      Iop_I32UtoFx2,  Iop_I32StoFx2,    /* I32x4 -> F32x4 */
-      Iop_FtoI32Ux2_RZ,  Iop_FtoI32Sx2_RZ,    /* F32x4 -> I32x4 */
+      /* Conversion to/from int */
+      // Deprecated: these don't specify a rounding mode
+      Iop_I32UtoF32x2_DEP,  Iop_I32StoF32x2_DEP,    /* I32x2 -> F32x2 */
+
+      Iop_F32toI32Ux2_RZ,  Iop_F32toI32Sx2_RZ,    /* F32x2 -> I32x2 */
+
       /* Fixed32 format is floating-point number with fixed number of fraction
          bits. The number of fraction bits is passed as a second argument of
          type I8. */
@@ -1034,8 +1056,9 @@ typedef
       Iop_Slice64,  // (I64, I64, I8) -> I64
 
       /* REVERSE the order of chunks in vector lanes.  Chunks must be
-         smaller than the vector lanes (obviously) and so may be 8-,
-         16- and 32-bit in size. */
+         smaller than the vector lanes (obviously) and so may be 8-, 16- and
+         32-bit in size.  Note that the degenerate case,
+         Iop_Reverse8sIn64_x1, is a simply a vanilla byte-swap. */
       /* Examples:
             Reverse8sIn16_x4([a,b,c,d,e,f,g,h]) = [b,a,d,c,f,e,h,g]
             Reverse8sIn32_x2([a,b,c,d,e,f,g,h]) = [d,c,b,a,h,g,f,e]
@@ -1048,8 +1071,15 @@ typedef
          as indexed by control vector bytes:
             for i in 0 .. 7 . result[i] = argL[ argR[i] ] 
          argR[i] values may only be in the range 0 .. 7, else behaviour
-         is undefined. */
+         is undefined.  That is, argR[i][7:3] must be zero. */
       Iop_Perm8x8,
+
+      /* PERMUTING with optional zeroing:
+            for i in 0 .. 7 . result[i] = if argR[i] bit 7 is set
+                                          then zero else argL[ argR[i] ]
+         argR[i][6:3] must be zero, else behaviour is undefined.
+      */
+      Iop_PermOrZero8x8,
 
       /* MISC CONVERSION -- get high bits of each byte lane, a la
          x86/amd64 pmovmskb */
@@ -1357,6 +1387,8 @@ typedef
       /* Vector floating-point base 2 logarithm */
       Iop_Log2_32Fx4,
 
+      /* Vector floating-point exponential 2^x */
+      Iop_Exp2_32Fx4,
 
       /* Vector Reciprocal Square Root Step computes (3.0 - arg1 * arg2) / 2.0.
          Note, that of one of the arguments is zero and another one is infiinty
@@ -1367,9 +1399,15 @@ typedef
       /* Unlike the standard fp conversions, these irops take no
          rounding mode argument. Instead the irop trailers _R{M,P,N,Z}
          indicate the mode: {-inf, +inf, nearest, zero} respectively. */
-      Iop_I32UtoFx4,     Iop_I32StoFx4,       /* I32x4 -> F32x4       */
-      Iop_FtoI32Ux4_RZ,  Iop_FtoI32Sx4_RZ,    /* F32x4 -> I32x4       */
-      Iop_QFtoI32Ux4_RZ, Iop_QFtoI32Sx4_RZ,   /* F32x4 -> I32x4 (saturating) */
+
+      // These carry no rounding mode and are therefore deprecated
+      Iop_I32UtoF32x4_DEP, Iop_I32StoF32x4_DEP,  /* I32x4 -> F32x4 */
+
+      Iop_I32StoF32x4, /* IRRoundingMode(I32) x V128 -> V128 */
+      Iop_F32toI32Sx4, /* IRRoundingMode(I32) x V128 -> V128 */
+
+      Iop_F32toI32Ux4_RZ,  Iop_F32toI32Sx4_RZ,  /* F32x4 -> I32x4       */
+      Iop_QF32toI32Ux4_RZ, Iop_QF32toI32Sx4_RZ, /* F32x4 -> I32x4 (saturating) */
       Iop_RoundF32x4_RM, Iop_RoundF32x4_RP,   /* round to fp integer  */
       Iop_RoundF32x4_RN, Iop_RoundF32x4_RZ,   /* round to fp integer  */
       /* Fixed32 format is floating-point number with fixed number of fraction
@@ -1380,12 +1418,14 @@ typedef
 
       /* --- Single to/from half conversion --- */
       /* FIXME: what kind of rounding in F32x4 -> F16x4 case? */
-      Iop_F32toF16x4, Iop_F16toF32x4,         /* F32x4 <-> F16x4      */
-
-
+      // FIXME these carry no rounding mode
+      Iop_F32toF16x4_DEP, /* F32x4(==V128) -> F16x4(==I64), NO ROUNDING MODE */
+      Iop_F32toF16x4,     /* IRRoundingMode(I32) x V128 -> I64 */
+      Iop_F16toF32x4,     /* F16x4 -> F32x4 */
 
       /* -- Double to/from half conversion -- */
-      Iop_F64toF16x2, Iop_F16toF64x2,
+      Iop_F64toF16x2_DEP, // F64x2 -> F16x2, NO ROUNDING MODE
+      Iop_F16toF64x2,
 
       /* Values from two registers converted in smaller type and put in one
        IRRoundingMode(I32) x (F32x4 | F32x4) -> Q16x8 */
@@ -1580,6 +1620,7 @@ typedef
             [Foo16(a,b), Foo16(c,d), Foo16(e,f), Foo16(g,h)] */
       Iop_PwAdd8x16, Iop_PwAdd16x8, Iop_PwAdd32x4,
       Iop_PwAdd32Fx2,
+
       /* Longening variant is unary. The resulting vector contains two times
          less elements than operand, but they are two times wider.
          Example:
@@ -1587,6 +1628,15 @@ typedef
                where a+b and c+d are unsigned 32-bit values. */
       Iop_PwAddL8Ux16, Iop_PwAddL16Ux8, Iop_PwAddL32Ux4, Iop_PwAddL64Ux2,
       Iop_PwAddL8Sx16, Iop_PwAddL16Sx8, Iop_PwAddL32Sx4,
+
+      /* This is amd64 PMADDUBSW, (V128, V128) -> V128.  For each adjacent pair
+         of bytes [a,b] in the first arg and [c,d] in the second, computes:
+            signed/signed sat to 16 bits ( zxTo16(a) * sxTo16(b) 
+                                           + zxTo16(c) * sxTo16(d) )
+         This exists because it's frequently used and there's no reasonably
+         concise way to express it using other IROps.
+      */
+      Iop_PwExtUSMulQAdd8x16,
 
       /* Other unary pairwise ops */
 
@@ -1829,9 +1879,16 @@ typedef
          as indexed by control vector bytes:
             for i in 0 .. 15 . result[i] = argL[ argR[i] ] 
          argR[i] values may only be in the range 0 .. 15, else behaviour
-         is undefined. */
+         is undefined.  That is, argR[i][7:4] must be zero. */
       Iop_Perm8x16,
       Iop_Perm32x4, /* ditto, except argR values are restricted to 0 .. 3 */
+
+      /* PERMUTING with optional zeroing:
+            for i in 0 .. 15 . result[i] = if argR[i] bit 7 is set
+                                           then zero else argL[ argR[i] ]
+         argR[i][6:4] must be zero, else behaviour is undefined.
+      */
+      Iop_PermOrZero8x16,
 
       /* same, but Triop (argL consists of two 128-bit parts) */
       /* correct range for argR values is 0..31 */
@@ -1930,6 +1987,12 @@ typedef
       Iop_Add64Fx4, Iop_Sub64Fx4, Iop_Mul64Fx4, Iop_Div64Fx4,
       Iop_Add32Fx8, Iop_Sub32Fx8, Iop_Mul32Fx8, Iop_Div32Fx8,
 
+      Iop_I32StoF32x8, /* IRRoundingMode(I32) x V256 -> V256 */
+      Iop_F32toI32Sx8, /* IRRoundingMode(I32) x V256 -> V256 */
+
+      Iop_F32toF16x8,  /* IRRoundingMode(I32) x V256 -> V128 */
+      Iop_F16toF32x8,  /* F16x8(==V128) -> F32x8(==V256) */
+
       Iop_Sqrt32Fx8,
       Iop_Sqrt64Fx4,
       Iop_RSqrtEst32Fx8,
@@ -1949,6 +2012,11 @@ extern void ppIROp ( IROp );
 extern void typeOfPrimop ( IROp op,
                            /*OUTs*/ IRType* t_dst, IRType* t_arg1,
                            IRType* t_arg2, IRType* t_arg3, IRType* t_arg4 );
+
+/* Might the given primop trap (eg, attempt integer division by zero)?  If in
+   doubt returns True.  However, the vast majority of primops will never
+   trap. */
+extern Bool primopMightTrap ( IROp op );
 
 /* Encoding of IEEE754-specified rounding modes.
    Note, various front and back ends rely on the actual numerical
@@ -2320,7 +2388,7 @@ IRExpr* mkIRExprCCall ( IRType retty,
 /* Convenience functions for atoms (IRExprs which are either Iex_Tmp or
  * Iex_Const). */
 static inline Bool isIRAtom ( const IRExpr* e ) {
-   return toBool(e->tag == Iex_RdTmp || e->tag == Iex_Const);
+   return e->tag == Iex_RdTmp || e->tag == Iex_Const;
 }
 
 /* Are these two IR atoms identical?  Causes an assertion
@@ -3127,6 +3195,7 @@ extern void sanityCheckIRSB ( const  IRSB*  bb,
                               Bool   require_flatness, 
                               IRType guest_word_size );
 extern Bool isFlatIRStmt ( const IRStmt* );
+extern Bool isFlatIRSB ( const IRSB* );
 
 /* Is this any value actually in the enumeration 'IRType' ? */
 extern Bool isPlausibleIRType ( IRType ty );
