@@ -36,7 +36,7 @@
 /* Darwin / Mac OS X version */
 #undef DARWIN_VERS
 
-/* Disable intercept pthread_spin_lock() on MIPS32 and MIPS64. */
+/* Disable intercept pthread_spin_lock() on MIPS32, MIPS64 and nanoMIPS. */
 #undef DISABLE_PTHREAD_SPINLOCK_INTERCEPT
 
 /* configured to run as an inner Valgrind */
@@ -89,6 +89,9 @@
 
 /* Define to 1 if you have the `CLOCK_MONOTONIC' constant. */
 #undef HAVE_CLOCK_MONOTONIC
+
+/* Define to 1 if you have the `copy_file_range' function. */
+#undef HAVE_COPY_FILE_RANGE
 
 /* Define to 1 if you have a dlinfo that can do RTLD_DI_TLS_MODID. */
 #undef HAVE_DLINFO_RTLD_DI_TLS_MODID
@@ -159,6 +162,12 @@
 /* Define to 1 if you have the `ppoll' function. */
 #undef HAVE_PPOLL
 
+/* Define to 1 if you have the `preadv' function. */
+#undef HAVE_PREADV
+
+/* Define to 1 if you have the `preadv2' function. */
+#undef HAVE_PREADV2
+
 /* Define to 1 if you have the `process_vm_readv' function. */
 #undef HAVE_PROCESS_VM_READV
 
@@ -216,6 +225,12 @@
 
 /* Define to 1 if you have the `PTRACE_GETREGS' ptrace request. */
 #undef HAVE_PTRACE_GETREGS
+
+/* Define to 1 if you have the `pwritev' function. */
+#undef HAVE_PWRITEV
+
+/* Define to 1 if you have the `pwritev2' function. */
+#undef HAVE_PWRITEV2
 
 /* Define to 1 if you have the `readlinkat' function. */
 #undef HAVE_READLINKAT
@@ -462,6 +477,9 @@
 
 /* Temporary files directory */
 #undef VG_TMPDIR
+
+/* xcode sdk include directory */
+#undef XCODE_DIR
 
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef gid_t

@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -103,6 +101,7 @@
    20420 STPNCPY
    20430 WMEMCHR
    20440 WCSNLEN
+   20450 WSTRNCMP
 */
 
 #if defined(VGO_solaris)
@@ -1159,6 +1158,7 @@ static inline void my_exit ( int x )
  STPCPY(VG_Z_LIBC_SONAME,          __stpcpy_sse2_unaligned)
  STPCPY(VG_Z_LD_LINUX_SO_2,        stpcpy)
  STPCPY(VG_Z_LD_LINUX_X86_64_SO_2, stpcpy)
+ STPCPY(VG_Z_LD_LINUX_AARCH64_SO_1,stpcpy)
 
 #elif defined(VGO_darwin)
  //STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
@@ -1925,6 +1925,36 @@ static inline void my_exit ( int x )
 
 #if defined(VGO_linux)
  WCSCMP(VG_Z_LIBC_SONAME,          wcscmp)
+#endif
+
+/*---------------------- wcsncmp ----------------------*/
+
+// This is a wchar_t equivalent to strncmp.  We don't
+// have wchar_t available here, but in the GNU C Library
+// wchar_t is always 32 bits wide and wcsncmp uses signed
+// comparison, not unsigned as in strncmp function.
+
+#define WCSNCMP(soname, fnname) \
+   int VG_REPLACE_FUNCTION_EZU(20450,soname,fnname) \
+          ( const Int* s1, const Int* s2, SizeT nmax ); \
+   int VG_REPLACE_FUNCTION_EZU(20450,soname,fnname) \
+          ( const Int* s1, const Int* s2, SizeT nmax ) \
+   { \
+      SizeT n = 0; \
+      while (True) { \
+         if (n >= nmax) return 0; \
+         if (*s1 == 0 && *s2 == 0) return 0; \
+         if (*s1 == 0) return -1; \
+         if (*s2 == 0) return 1; \
+         \
+         if (*s1 < *s2) return -1; \
+         if (*s1 > *s2) return 1; \
+         \
+         s1++; s2++; n++; \
+      } \
+   }
+#if defined(VGO_linux)
+ WCSNCMP(VG_Z_LIBC_SONAME,          wcsncmp)
 #endif
 
 /*---------------------- wcscpy ----------------------*/

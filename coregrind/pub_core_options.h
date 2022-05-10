@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -50,6 +48,13 @@ extern Bool  VG_(clo_exit_on_first_error);
    default: 0 (no, return the application's exit code in the normal
    way. */
 extern Int   VG_(clo_error_exitcode);
+
+/* For tools that report errors, list detected errors and show suppression
+   usage counts at exit. Default: No.
+   Unless set explicitly by the user, the option is automatically
+   considered as set to yes for verbosity > 1. */
+extern Bool  VG_(clo_show_error_list);
+
 
 /* Markers used to mark the begin/end of an error, when errors are
    printed in textual (non xml) format.
@@ -373,6 +378,9 @@ extern UInt VG_(clo_kernel_variant);
 /* Darwin-specific: automatically run /usr/bin/dsymutil to update
    .dSYM directories as necessary? */
 extern Bool VG_(clo_dsymutil);
+
+/* Outputs the list of dynamically changeable options. */
+extern void VG_(list_dynamic_options) (void);
 
 /* Should we trace into this child executable (across execve etc) ?
    This involves considering --trace-children=,

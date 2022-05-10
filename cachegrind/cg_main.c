@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -1760,8 +1758,8 @@ static void cg_print_usage(void)
 {
    VG_(print_cache_clo_opts)();
    VG_(printf)(
-"    --cache-sim=yes|no  [yes]        collect cache stats?\n"
-"    --branch-sim=yes|no [no]         collect branch prediction stats?\n"
+"    --cache-sim=yes|no               collect cache stats? [yes]\n"
+"    --branch-sim=yes|no              collect branch prediction stats? [no]\n"
 "    --cachegrind-out-file=<file>     output file name [cachegrind.out.%%p]\n"
    );
 }

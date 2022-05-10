@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -379,6 +377,9 @@ s390x_dirtyhelper_STFLE(VexGuestS390XState *guest_state, ULong *addr)
    s390_set_facility_bit(addr, S390_FAC_CTREXE, 0);
    s390_set_facility_bit(addr, S390_FAC_TREXE,  0);
    s390_set_facility_bit(addr, S390_FAC_MSA4,   0);
+   s390_set_facility_bit(addr, S390_FAC_VXE,    0);
+   s390_set_facility_bit(addr, S390_FAC_VXE2,   0);
+   s390_set_facility_bit(addr, S390_FAC_DFLT,   0);
 
    return cc;
 }
@@ -986,6 +987,16 @@ decode_bfp_rounding_mode(UInt irrm)
 ({ \
    __asm__ volatile ( \
         opcode " %[op1],%[op2]\n\t" \
+        "ipm %[psw]\n\t"           : [psw] "=d"(psw), [op1] "+d"(cc_dep1) \
+                                   : [op2] "d"(cc_dep2) \
+                                   : "cc");\
+   psw >> 28;   /* cc */ \
+})
+
+#define S390_CC_FOR_TERNARY(opcode,cc_dep1,cc_dep2) \
+({ \
+   __asm__ volatile ( \
+        opcode ",%[op1],%[op1],%[op2],0\n\t" \
         "ipm %[psw]\n\t"           : [psw] "=d"(psw), [op1] "+d"(cc_dep1) \
                                    : [op2] "d"(cc_dep2) \
                                    : "cc");\
@@ -1804,6 +1815,12 @@ s390_calculate_cc(ULong cc_op, ULong cc_dep1, ULong cc_dep2, ULong cc_ndep)
       return psw >> 28;  /* cc */
    }
 
+   case S390_CC_OP_MUL_32:
+      return S390_CC_FOR_TERNARY(".insn rrf,0xb9fd0000", cc_dep1, cc_dep2);
+
+   case S390_CC_OP_MUL_64:
+      return S390_CC_FOR_TERNARY(".insn rrf,0xb9ed0000", cc_dep1, cc_dep2);
+
    default:
       break;
    }
@@ -2498,6 +2515,10 @@ s390x_dirtyhelper_vec_op(VexGuestS390XState *guest_state,
       {0xe7, 0xa9}, /* VMALH */
       {0xe7, 0xfb}, /* VCH */
       {0xe7, 0xf9}, /* VCHL */
+      {0xe7, 0xe8}, /* VFCE */
+      {0xe7, 0xeb}, /* VFCH */
+      {0xe7, 0xea}, /* VFCHE */
+      {0xe7, 0x4a}  /* VFTCI */
    };
 
    union {
@@ -2525,6 +2546,28 @@ s390x_dirtyhelper_vec_op(VexGuestS390XState *guest_state,
         unsigned int rxb : 4;
         unsigned int op2 : 8;
       } VRRd;
+      struct {
+         UInt op1 : 8;
+         UInt v1  : 4;
+         UInt v2  : 4;
+         UInt v3  : 4;
+         UInt     : 4;
+         UInt m6  : 4;
+         UInt m5  : 4;
+         UInt m4  : 4;
+         UInt rxb : 4;
+         UInt op2 : 8;
+      } VRRc;
+      struct {
+         UInt op1 : 8;
+         UInt v1  : 4;
+         UInt v2  : 4;
+         UInt i3  : 12;
+         UInt m5  : 4;
+         UInt m4  : 4;
+         UInt rxb : 4;
+         UInt op2 : 8;
+      } VRIe;
       UChar bytes[6];
    } the_insn;
 
@@ -2576,6 +2619,27 @@ s390x_dirtyhelper_vec_op(VexGuestS390XState *guest_state,
       the_insn.VRRd.rxb = 0b1111;
       the_insn.VRRd.m5 = d->m4;
       the_insn.VRRd.m6 = d->m5;
+      break;
+
+   case S390_VEC_OP_VFCE:
+   case S390_VEC_OP_VFCH:
+   case S390_VEC_OP_VFCHE:
+      the_insn.VRRc.v1 = 1;
+      the_insn.VRRc.v2 = 2;
+      the_insn.VRRc.v3 = 3;
+      the_insn.VRRc.rxb = 0b1110;
+      the_insn.VRRc.m4 = d->m4;
+      the_insn.VRRc.m5 = d->m5;
+      the_insn.VRRc.m6 = d->m6;
+      break;
+
+   case S390_VEC_OP_VFTCI:
+      the_insn.VRIe.v1 = 1;
+      the_insn.VRIe.v2 = 2;
+      the_insn.VRIe.rxb = 0b1100;
+      the_insn.VRIe.i3 = d->i3;
+      the_insn.VRIe.m4 = d->m4;
+      the_insn.VRIe.m5 = d->m5;
       break;
 
    default:

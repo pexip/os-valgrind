@@ -23,9 +23,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -4624,7 +4622,7 @@ static Bool check_cached_rcec_ok (Thr* thr, Addr previous_frame0)
                    instructions between 'previous_frame0' and current_pc.
                To investigate the last case, typically, disass the range of
                instructions where an invalidate cached stack might miss. */
-            VG_(printf)("%s diff tid %d frame %d "
+            VG_(printf)("%s diff tid %u frame %u "
                         "cached_pc %p check_pc %p\n",
                         reason ? reason : "unexpected",
                         thr->hgthread->coretid,
@@ -4663,7 +4661,7 @@ static RCEC* get_RCEC ( Thr* thr )
    const Addr cur_ip = VG_(get_IP)(thr->hgthread->coretid);
 
    if (DEBUG_CACHED_RCEC)
-      VG_(printf)("get rcec tid %d at IP %p SP %p"
+      VG_(printf)("get rcec tid %u at IP %p SP %p"
                   " first_sp_delta %ld cached valid %d\n",
                   thr->hgthread->coretid,
                   (void*)cur_ip,

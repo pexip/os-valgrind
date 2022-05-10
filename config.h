@@ -37,7 +37,7 @@
 /* Darwin / Mac OS X version */
 /* #undef DARWIN_VERS */
 
-/* Disable intercept pthread_spin_lock() on MIPS32 and MIPS64. */
+/* Disable intercept pthread_spin_lock() on MIPS32, MIPS64 and nanoMIPS. */
 /* #undef DISABLE_PTHREAD_SPINLOCK_INTERCEPT */
 
 /* configured to run as an inner Valgrind */
@@ -90,6 +90,9 @@
 
 /* Define to 1 if you have the `CLOCK_MONOTONIC' constant. */
 #define HAVE_CLOCK_MONOTONIC 1
+
+/* Define to 1 if you have the `copy_file_range' function. */
+#define HAVE_COPY_FILE_RANGE 1
 
 /* Define to 1 if you have a dlinfo that can do RTLD_DI_TLS_MODID. */
 #define HAVE_DLINFO_RTLD_DI_TLS_MODID 1
@@ -160,6 +163,12 @@
 /* Define to 1 if you have the `ppoll' function. */
 #define HAVE_PPOLL 1
 
+/* Define to 1 if you have the `preadv' function. */
+#define HAVE_PREADV 1
+
+/* Define to 1 if you have the `preadv2' function. */
+#define HAVE_PREADV2 1
+
 /* Define to 1 if you have the `process_vm_readv' function. */
 #define HAVE_PROCESS_VM_READV 1
 
@@ -217,6 +226,12 @@
 
 /* Define to 1 if you have the `PTRACE_GETREGS' ptrace request. */
 #define HAVE_PTRACE_GETREGS 1
+
+/* Define to 1 if you have the `pwritev' function. */
+#define HAVE_PWRITEV 1
+
+/* Define to 1 if you have the `pwritev2' function. */
+#define HAVE_PWRITEV2 1
 
 /* Define to 1 if you have the `readlinkat' function. */
 #define HAVE_READLINKAT 1
@@ -336,7 +351,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.14.0"
+#define PACKAGE_STRING "Valgrind 3.16.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -345,7 +360,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.14.0"
+#define PACKAGE_VERSION "3.16.1"
 
 /* Define to 1 if you have the `A_GETSTAT' and `A_SETSTAT' constants. */
 /* #undef SOLARIS_AUDITON_STAT */
@@ -459,10 +474,13 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "3.14.0"
+#define VERSION "3.16.1"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"
+
+/* xcode sdk include directory */
+/* #undef XCODE_DIR */
 
 /* Define to `int' if <sys/types.h> doesn't define. */
 /* #undef gid_t */

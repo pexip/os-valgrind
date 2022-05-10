@@ -1,8 +1,8 @@
 
 
 Valgrind FAQ
-Release 3.14.0 9 October 2018
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Release 3.16.1 22 June 2020
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Table of Contents
 1. Background
@@ -337,10 +337,6 @@ Unfortunately, Memcheck doesn't do bounds checking on global or stack
 arrays. We'd like to, but it's just not possible to do in a reasonable 
 way that fits with how Memcheck works. Sorry. 
 
-However, the experimental tool SGcheck can detect errors like this. Run 
-Valgrind with the --tool=exp-sgcheck option to try it, but be aware that 
-it is not as robust as Memcheck. 
-
 
 ------------------------------------------------------------------------
 5. Miscellaneous
@@ -438,6 +434,7 @@ details.
 6. How To Get Further Assistance
 ------------------------------------------------------------------------
 
+6.1. Where can I get more help? 
 Read the appropriate section(s) of the Valgrind Documentation: 
 <http://www.valgrind.org/docs/manual/index.html>. 
 
