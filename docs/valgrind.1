@@ -2,12 +2,12 @@
 .\"     Title: VALGRIND
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/09/2018
-.\"    Manual: Release 3.14.0
-.\"    Source: Release 3.14.0
+.\"      Date: 06/22/2020
+.\"    Manual: valgrind
+.\"    Source: Release 3.16.1
 .\"  Language: English
 .\"
-.TH "VALGRIND" "1" "10/09/2018" "Release 3.14.0" "Release 3.14.0"
+.TH "VALGRIND" "1" "06/22/2020" "Release 3\&.16\&.1" "valgrind"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 valgrind \- a suite of tools for debugging and profiling programs
 .SH "SYNOPSIS"
 .HP \w'\fBvalgrind\fR\ 'u
-\fBvalgrind\fR [\fIvalgrind\-options\fR] [\fByour\-program\fR] [\fIyour\-program\-options\fR]
+\fBvalgrind\fR [\fIvalgrind\-options\fR] [\fIyour\-program\fR] [\fIyour\-program\-options\fR]
 .SH "DESCRIPTION"
 .PP
 \fBValgrind\fR
@@ -49,7 +49,7 @@ The single most important option\&.
 \fB\-\-tool=<toolname> [default: memcheck] \fR
 .RS 4
 Run the Valgrind tool called
-\fItoolname\fR, e\&.g\&. memcheck, cachegrind, callgrind, helgrind, drd, massif, lackey, none, exp\-sgcheck, exp\-bbv, exp\-dhat, etc\&.
+\fItoolname\fR, e\&.g\&. memcheck, cachegrind, callgrind, helgrind, drd, massif, dhat, lackey, none, exp\-bbv, etc\&.
 .RE
 .SH "BASIC OPTIONS"
 .PP
@@ -294,7 +294,7 @@ Less important messages will still be printed in plain text, but because the XML
 and
 \fB\-\-log\-socket\fR) this should not cause problems\&.
 .sp
-This option is aimed at making life easier for tools that consume Valgrind\*(Aqs output as input, such as GUI front ends\&. Currently this option works with Memcheck, Helgrind, DRD and SGcheck\&. The output format is specified in the file
+This option is aimed at making life easier for tools that consume Valgrind\*(Aqs output as input, such as GUI front ends\&. Currently this option works with Memcheck, Helgrind and DRD\&. The output format is specified in the file
 docs/internals/xml\-output\-protocol4\&.txt
 in the source tree for Valgrind 3\&.5\&.0 or later\&.
 .sp
@@ -412,6 +412,23 @@ instructs to output a line containing the
 Such marker lines facilitate searching for errors and/or extracting errors in an output file that contain valgrind errors mixed with the program output\&.
 .sp
 Note that empty markers are accepted\&. So, only using a begin (or an end) marker is possible\&.
+.RE
+.PP
+\fB\-\-show\-error\-list=no|yes [default: no]\fR
+.RS 4
+If this option is enabled, for tools that report errors, valgrind will show the list of detected errors and the list of used suppressions at exit\&.
+.sp
+Note that at verbosity 2 and above, valgrind automatically shows the list of detected errors and the list of used suppressions at exit, unless
+\fB\-\-show\-error\-list=no\fR
+is selected\&.
+.RE
+.PP
+\fB\-s\fR
+.RS 4
+Specifying
+\fB\-s\fR
+is equivalent to
+\fB\-\-show\-error\-list=yes\fR\&.
 .RE
 .PP
 \fB\-\-sigill\-diagnostics=<yes|no> [default: yes] \fR
@@ -720,7 +737,7 @@ Increasing the redzone size makes it possible to detect overruns of larger dista
 Tools replacing Valgrind\*(Aqs
 \fBmalloc, realloc,\fR
 etc, can optionally produce an execution tree detailing which piece of code is responsible for heap memory usage\&. See
-???
+Execution Trees
 for a detailed explanation about execution trees\&.
 .sp
 When set to
@@ -761,7 +778,7 @@ If the filename contains the extension
 or no extension is provided or recognised, then the produced file format will be a callgrind output format\&.
 .sp
 See
-???
+Execution Trees
 for a detailed explanation about execution trees formats\&.
 .RE
 .SH "UNCOMMON OPTIONS"
@@ -801,7 +818,7 @@ takes advantage of this observation, limiting the overhead of checking to code w
 .PP
 \fB\-\-read\-inline\-info=<yes|no> [default: see below] \fR
 .RS 4
-When enabled, Valgrind will read information about inlined function calls from DWARF3 debug info\&. This slows Valgrind startup and makes it use more memory (typically for each inlined piece of code, 6 words and space for the function name), but it results in more descriptive stacktraces\&. For the 3\&.10\&.0 release, this functionality is enabled by default only for Linux, Android and Solaris targets and only for the tools Memcheck, Helgrind and DRD\&. Here is an example of some stacktraces with
+When enabled, Valgrind will read information about inlined function calls from DWARF3 debug info\&. This slows Valgrind startup and makes it use more memory (typically for each inlined piece of code, 6 words and space for the function name), but it results in more descriptive stacktraces\&. Currently, this functionality is enabled by default only for Linux, Android and Solaris targets and only for the tools Memcheck, Massif, Helgrind and DRD\&. Here is an example of some stacktraces with
 \fB\-\-read\-inline\-info=no\fR:
 .sp
 .if n \{\
@@ -1265,7 +1282,7 @@ on linux)\&. By default, no replacement is done for a statically linked binary o
 to specify one additional synonym pattern, giving flexibility in the replacement\&. Or to prevent interception of all public allocation symbols\&.
 .sp
 Currently, this flexibility is only allowed for the malloc related functions, using the synonym
-\fIsomalloc\fR\&. This synonym is usable for all tools doing standard replacement of malloc related functions (e\&.g\&. memcheck, massif, drd, helgrind, exp\-dhat, exp\-sgcheck)\&.
+\fIsomalloc\fR\&. This synonym is usable for all tools doing standard replacement of malloc related functions (e\&.g\&. memcheck, helgrind, drd, massif, dhat)\&.
 .sp
 .RS 4
 .ie n \{\
@@ -1377,7 +1394,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fIU\fR: total user time.RE
+\fIU\fR: total user time
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1387,7 +1405,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fIW\fR: total wallclock time.RE
+\fIW\fR: total wallclock time
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1397,7 +1416,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fICPU\fR: overall average cpu use.RE
+\fICPU\fR: overall average cpu use
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1407,9 +1427,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fIEvC\fR: number of event checks\&.  An event
-         check is a backwards branch in the simulated program, so this is a
-         measure of forward progress of the program.RE
+\fIEvC\fR: number of event checks\&. An event check is a backwards branch in the simulated program, so this is a measure of forward progress of the program
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1419,8 +1438,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fITIn\fR: number of code blocks instrumented
-          by the JIT.RE
+\fITIn\fR: number of code blocks instrumented by the JIT
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1430,8 +1449,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fITOut\fR: number of instrumented code
-          blocks that have been thrown away.RE
+\fITOut\fR: number of instrumented code blocks that have been thrown away
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1441,8 +1460,8 @@ Each line shows:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fI#thr\fR: number of threads in the
-        program.RE
+\fI#thr\fR: number of threads in the program
+.RE
 .sp
 From the progress of these, it is possible to observe:
 .sp
@@ -1455,7 +1474,10 @@ From the progress of these, it is possible to observe:
 .IP \(bu 2.3
 .\}
 when the program is compute bound (\fITIn\fR
-          rises slowly, \fIEvC\fR rises rapidly).RE
+rises slowly,
+\fIEvC\fR
+rises rapidly)
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1465,9 +1487,11 @@ when the program is compute bound (\fITIn\fR
 .sp -1
 .IP \(bu 2.3
 .\}
-when the program is in a spinloop
-          (\fITIn\fR/\fITOut\fR
-          fixed, \fIEvC\fR rises rapidly).RE
+when the program is in a spinloop (\fITIn\fR/\fITOut\fR
+fixed,
+\fIEvC\fR
+rises rapidly)
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1478,7 +1502,8 @@ when the program is in a spinloop
 .IP \(bu 2.3
 .\}
 when the program is JIT\-bound (\fITIn\fR
-          rises rapidly).RE
+rises rapidly)
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1488,8 +1513,9 @@ when the program is JIT\-bound (\fITIn\fR
 .sp -1
 .IP \(bu 2.3
 .\}
-when the program is rapidly discarding code
-          (\fITOut\fR rises rapidly).RE
+when the program is rapidly discarding code (\fITOut\fR
+rises rapidly)
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1499,9 +1525,9 @@ when the program is rapidly discarding code
 .sp -1
 .IP \(bu 2.3
 .\}
-when the program is about to achieve some expected state
-          (\fIEvC\fR arrives at some value you
-          expect).RE
+when the program is about to achieve some expected state (\fIEvC\fR
+arrives at some value you expect)
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -1511,8 +1537,10 @@ when the program is about to achieve some expected state
 .sp -1
 .IP \(bu 2.3
 .\}
- when the program is idling (\fIU\fR rises
-          more slowly than \fIW\fR).RE
+when the program is idling (\fIU\fR
+rises more slowly than
+\fIW\fR)
+.RE
 .sp
 .RE
 .SH "DEBUGGING VALGRIND OPTIONS"
@@ -1532,6 +1560,13 @@ or
 \fB\-\-show\-leak\-kinds\fR
 and
 \fB\-\-errors\-for\-leak\-kinds\fR\&.
+.sp
+If
+\fI\-\-xml=yes\fR
+is given, memcheck will automatically use the value
+\fI\-\-leak\-check=full\fR\&. You can use
+\fB\-\-show\-leak\-kinds=none\fR
+to reduce the size of the xml output if you are not interested in the leak results\&.
 .RE
 .PP
 \fB\-\-leak\-resolution=<low|med|high> [default: high] \fR
@@ -1646,7 +1681,7 @@ to activate the complete set of heuristics\&. It is equivalent to
 \fBnone\fR
 for the empty set\&.
 .RE
-.PP
+.sp
 Note that these heuristics are dependent on the layout of the objects produced by the C++ compiler\&. They have been tested with some gcc versions (e\&.g\&. 4\&.4 and 4\&.7)\&. They might not work properly with other C++ compilers\&.
 .RE
 .PP
@@ -1692,7 +1727,7 @@ is equivalent to
 is equivalent to
 \fB\-\-show\-leak\-kinds=all\fR\&.
 .RE
-.PP
+.sp
 Note that
 \fB\-\-show\-possibly\-lost=no\fR
 has no effect if
@@ -1702,8 +1737,10 @@ is specified\&.
 .PP
 \fB\-\-xtree\-leak=<no|yes> [no] \fR
 .RS 4
-If set to yes, the results for the leak search done at exit will be output in a \*(AqCallgrind Format\*(Aq execution tree file\&. Note that this automatically sets the option
-\fB\-\-leak\-check=full\fR\&. The produced file will contain the following events:
+If set to yes, the results for the leak search done at exit will be output in a \*(AqCallgrind Format\*(Aq execution tree file\&. Note that this automatically sets the options
+\fB\-\-leak\-check=full\fR
+and
+\fB\-\-show\-leak\-kinds=all\fR, to allow xtree visualisation tools such as kcachegrind to select what kind to leak to visualise\&. The produced file will contain the following events:
 .sp
 .RS 4
 .ie n \{\
@@ -1824,7 +1861,7 @@ is the decrease of
 event\&. The values for the increase and decrease events will be zero for the first leak search done\&.
 .sp
 See
-???
+Execution Trees
 for a detailed explanation about execution trees\&.
 .RE
 .PP
@@ -1841,7 +1878,7 @@ sequences appearing in the filename are expanded in exactly the same way as they
 for details\&.
 .sp
 See
-???
+Execution Trees
 for a detailed explanation about execution trees formats\&.
 .RE
 .PP
@@ -1929,8 +1966,7 @@ and/or by using a smaller value for the option
 If you want to use
 \-\-xtree\-memory=full
 memory profiling (see
-???
-), then you cannot specify
+Execution Trees), then you cannot specify
 \fI\-\-keep\-stacktraces=free\fR
 or
 \fI\-\-keep\-stacktraces=none\fR\&.
@@ -2075,7 +2111,7 @@ cachegrind\&.out\&.<pid>\&. The
 and
 \fB%q\fR
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
-\fB--log-file\fR\&.
+\fB\-\-log\-file\fR\&.
 .RE
 .SH "CALLGRIND OPTIONS"
 .PP
@@ -2089,7 +2125,7 @@ callgrind\&.out\&.<pid>\&. The
 and
 \fB%q\fR
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
-\fB--log-file\fR\&. When multiple dumps are made, the file name is modified further; see below\&.
+\fB\-\-log\-file\fR\&. When multiple dumps are made, the file name is modified further; see below\&.
 .RE
 .PP
 \fB\-\-dump\-line=<no|yes> [default: yes] \fR
@@ -2149,7 +2185,7 @@ no, Callgrind will not be able to collect any information, including calls, but 
 callgrind_control \-i on\&.
 .sp
 Note that the resulting call graph will most probably not contain
-\fBmain\fR, but will contain all the functions executed after instrumentation was enabled\&. Instrumentation can also programatically enabled/disabled\&. See the Callgrind include file
+\fBmain\fR, but will contain all the functions executed after instrumentation was enabled\&. Instrumentation can also be programmatically enabled/disabled\&. See the Callgrind include file
 callgrind\&.h
 for the macro you have to use in your source code\&.
 .sp
@@ -2187,7 +2223,7 @@ Switch on/off collection state as needed to only see event counters happening wh
 The second option can be used if the program part you want to profile is called many times\&. Option 1, i\&.e\&. creating a lot of dumps is not practical here\&.
 .sp
 Collection state can be toggled at entry and exit of a given function with the option
-\fB--toggle-collect\fR\&. If you use this option, collection state should be disabled at the beginning\&. Note that the specification of
+\fB\-\-toggle\-collect\fR\&. If you use this option, collection state should be disabled at the beginning\&. Note that the specification of
 \fB\-\-toggle\-collect\fR
 implicitly sets
 \fB\-\-collect\-state=no\fR\&.
@@ -2208,9 +2244,25 @@ Toggle collection on entry/exit of
 This specifies whether information for (conditional) jumps should be collected\&. As above, callgrind_annotate currently is not able to show you the data\&. You have to use KCachegrind to get jump arrows in the annotated code\&.
 .RE
 .PP
-\fB\-\-collect\-systime=<no|yes> [default: no] \fR
+\fB\-\-collect\-systime=<no|yes|msec|usec|nsec> [default: no] \fR
 .RS 4
 This specifies whether information for system call times should be collected\&.
+.sp
+The value
+no
+indicates to record no system call information\&.
+.sp
+The other values indicate to record the number of system calls done (sysCount event) and the elapsed time (sysTime event) spent in system calls\&. The
+\-\-collect\-systime
+value gives the unit used for sysTime : milli seconds, micro seconds or nano seconds\&. With the value
+nsec, callgrind also records the cpu time spent during system calls (sysCpuTime)\&.
+.sp
+The value
+yes
+is a synonym of
+msec\&. The value
+nsec
+is not supported on Darwin\&.
 .RE
 .PP
 \fB\-\-collect\-bus=<no|yes> [default: no] \fR
@@ -2290,12 +2342,8 @@ The following aspects have to be considered when using
 .sp -1
 .IP \(bu 2.3
 .\}
-In some cases (for example in a function prologue), the
-            valgrind unwinder might not properly unwind the stack, due to some
-            limitations and/or due to wrong unwind info\&. When using
-            \-\-delta\-stacktrace=yes, the wrong stack trace captured in the
-            function prologue will be kept till the next call or return\&.
-          .RE
+In some cases (for example in a function prologue), the valgrind unwinder might not properly unwind the stack, due to some limitations and/or due to wrong unwind info\&. When using \-\-delta\-stacktrace=yes, the wrong stack trace captured in the function prologue will be kept till the next call or return\&.
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -2305,10 +2353,8 @@ In some cases (for example in a function prologue), the
 .sp -1
 .IP \(bu 2.3
 .\}
-On the other hand, \-\-delta\-stacktrace=yes sometimes helps to
-            obtain a correct stacktrace, for example when the unwind info allows
-            a correct stacktrace to be done in the beginning of the sequence,
-            but not later on in the instruction sequence\&..RE
+On the other hand, \-\-delta\-stacktrace=yes sometimes helps to obtain a correct stacktrace, for example when the unwind info allows a correct stacktrace to be done in the beginning of the sequence, but not later on in the instruction sequence\&.
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -2318,15 +2364,8 @@ On the other hand, \-\-delta\-stacktrace=yes sometimes helps to
 .sp -1
 .IP \(bu 2.3
 .\}
-Determining which instructions are changing the callstack is
-            partially based on platform dependent heuristics, which have to be
-            tuned/validated specifically for the platform\&. Also, unwinding in a
-            function prologue must be good enough to allow using
-            \-\-delta\-stacktrace=yes\&. Currently, the option \-\-delta\-stacktrace=yes
-            has been reasonably validated only on linux x86 32 bits and linux
-            amd64 64 bits\&. For more details about how to validate
-            \-\-delta\-stacktrace=yes, see debug option \-\-hg\-sanity\-flags and the
-            function check_cached_rcec_ok in libhb_core\&.c\&..RE
+Determining which instructions are changing the callstack is partially based on platform dependent heuristics, which have to be tuned/validated specifically for the platform\&. Also, unwinding in a function prologue must be good enough to allow using \-\-delta\-stacktrace=yes\&. Currently, the option \-\-delta\-stacktrace=yes has been reasonably validated only on linux x86 32 bits and linux amd64 64 bits\&. For more details about how to validate \-\-delta\-stacktrace=yes, see debug option \-\-hg\-sanity\-flags and the function check_cached_rcec_ok in libhb_core\&.c\&.
+.RE
 .sp
 .RE
 .PP
@@ -2391,7 +2430,7 @@ Print an error message if any mutex or writer lock has been held longer than the
 .PP
 \fB\-\-join\-list\-vol=<n> [default: 10]\fR
 .RS 4
-Data races that occur between a statement at the end of one thread and another thread can be missed if memory access information is discarded immediately after a thread has been joined\&. This option allows to specify for how many joined threads memory access information should be retained\&.
+Data races that occur between a statement at the end of one thread and another thread can be missed if memory access information is discarded immediately after a thread has been joined\&. This option allows one to specify for how many joined threads memory access information should be retained\&.
 .RE
 .PP
 \fB \-\-first\-race\-only=<yes|no> [default: no] \fR
@@ -2453,7 +2492,7 @@ Controls segment merging\&. Segment merging is an algorithm to limit memory usag
 .PP
 \fB\-\-segment\-merging\-interval=<n> [default: 10]\fR
 .RS 4
-Perform segment merging only after the specified number of new segments have been created\&. This is an advanced configuration option that allows to choose whether to minimize DRD\*(Aqs memory usage by choosing a low value or to let DRD run faster by choosing a slightly higher value\&. The optimal value for this parameter depends on the program being analyzed\&. The default value works well for most programs\&.
+Perform segment merging only after the specified number of new segments have been created\&. This is an advanced configuration option that allows one to choose whether to minimize DRD\*(Aqs memory usage by choosing a low value or to let DRD run faster by choosing a slightly higher value\&. The optimal value for this parameter depends on the program being analyzed\&. The default value works well for most programs\&.
 .RE
 .PP
 \fB\-\-shared\-threshold=<n> [default: off]\fR
@@ -2671,11 +2710,8 @@ massif\&.out\&.<pid>\&. The
 and
 \fB%q\fR
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
-\fB--log-file\fR\&.
+\fB\-\-log\-file\fR\&.
 .RE
-.SH "SGCHECK OPTIONS"
-.PP
-There are no SGCheck\-specific command\-line options at present\&.
 .SH "BBV OPTIONS"
 .PP
 \fB\-\-bb\-out\-file=<name> [default: bb\&.out\&.%p] \fR
@@ -2685,7 +2721,7 @@ This option selects the name of the basic block vector file\&. The
 and
 \fB%q\fR
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
-\fB--log-file\fR\&.
+\fB\-\-log\-file\fR\&.
 .RE
 .PP
 \fB\-\-pc\-out\-file=<name> [default: pc\&.out\&.%p] \fR
@@ -2695,7 +2731,7 @@ This option selects the name of the PC file\&. This file holds program counter a
 and
 \fB%q\fR
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
-\fB--log-file\fR\&.
+\fB\-\-log\-file\fR\&.
 .RE
 .PP
 \fB\-\-interval\-size=<number> [default: 100000000] \fR
@@ -2820,6 +2856,7 @@ http://www\&.valgrind\&.org/docs/manual/index\&.html,
 \m[blue]\fBThe Commentary\fR\m[]\&\s-2\u[4]\d\s+2,
 \m[blue]\fBScheduling and Multi\-Thread Performance\fR\m[]\&\s-2\u[5]\d\s+2,
 \m[blue]\fBCachegrind: a cache and branch\-prediction profiler\fR\m[]\&\s-2\u[6]\d\s+2\&.
+\m[blue]\fBExecution Trees\fR\m[]\&\s-2\u[7]\d\s+2
 .SH "AUTHOR"
 .PP
 See the AUTHORS file in the valgrind distribution for a comprehensive list of authors\&.
@@ -2855,4 +2892,9 @@ Scheduling and Multi-Thread Performance
 Cachegrind: a cache and branch-prediction profiler
 .RS 4
 \%http://www.valgrind.org/docs/manual/cg-manual.html
+.RE
+.IP " 7." 4
+Execution Trees
+.RS 4
+\%http://www.valgrind.org/docs/manual/manual-core.html#manual-core.xtree
 .RE

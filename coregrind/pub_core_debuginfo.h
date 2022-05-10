@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -125,9 +123,11 @@ typedef
    D3UnwindRegs;
 #elif defined(VGA_s390x)
 typedef
-   struct { Addr ia; Addr sp; Addr fp; Addr lr;}
+   struct { Addr ia; Addr sp; Addr fp; Addr lr;
+            Addr f0; Addr f1; Addr f2; Addr f3;
+            Addr f4; Addr f5; Addr f6; Addr f7; }
    D3UnwindRegs;
-#elif defined(VGA_mips32) || defined(VGA_mips64)
+#elif defined(VGA_mips32) || defined(VGA_mips64) || defined(VGA_nanomips)
 typedef
    struct { Addr pc; Addr sp; Addr fp; Addr ra; }
    D3UnwindRegs;

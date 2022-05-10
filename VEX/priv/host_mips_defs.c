@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -3373,7 +3371,7 @@ static UChar *mkForm3R(UChar *p, UInt op, UInt df, UInt wd, UInt ws, UInt wt) {
    return emit32(p, theInstr);
 }
 
-static UChar *mkFormVEC(UChar *p, UInt op, UInt ws, UInt wt, UInt wd) {
+static UChar *mkFormVEC(UChar *p, UInt op, UInt wt, UInt ws, UInt wd) {
    UInt theInstr;
    vassert(op  < 0x20);
    vassert(wt  < 0x20);
@@ -3396,10 +3394,10 @@ static UChar *mkFormBIT(UChar *p, UInt op, UInt df, UInt ms, UInt ws, UInt wd) {
    switch (df) {
       case 0:
          dfm |= 0x10;
-
+         /* fallthrough */
       case 1:
          dfm |= 0x20;
-
+         /* fallthrough */
       case 2:
          dfm |= 0x40;
    }

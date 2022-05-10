@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -163,19 +161,38 @@
       }
 #elif defined(VGP_s390x_linux)
 #  define GET_STARTREGS(srP)                              \
-      { ULong ia, sp, fp, lr;                             \
+      { ULong ia;                                         \
+        ULong block[11];                                  \
         __asm__ __volatile__(                             \
-           "bras %0,0f;"                                  \
-           "0: lgr %1,15;"                                \
-           "lgr %2,11;"                                   \
-           "lgr %3,14;"                                   \
-           : "=r" (ia), "=r" (sp),"=r" (fp),"=r" (lr)     \
-           /* no read & clobber */                        \
+           "bras %0, 0f;"                                 \
+           "0: "                                          \
+           "stg %%r15, 0(%1);"                            \
+           "stg %%r11, 8(%1);"                            \
+           "stg %%r14, 16(%1);"                           \
+           "std %%f0, 24(%1);"                            \
+           "std %%f1, 32(%1);"                            \
+           "std %%f2, 40(%1);"                            \
+           "std %%f3, 48(%1);"                            \
+           "std %%f4, 56(%1);"                            \
+           "std %%f5, 64(%1);"                            \
+           "std %%f6, 72(%1);"                            \
+           "std %%f7, 80(%1);"                            \
+           : /* out */   "=r" (ia)                        \
+           : /* in */    "a" (&block[0])                  \
+           : /* trash */ "memory"                         \
         );                                                \
         (srP)->r_pc = ia;                                 \
-        (srP)->r_sp = sp;                                 \
-        (srP)->misc.S390X.r_fp = fp;                      \
-        (srP)->misc.S390X.r_lr = lr;                      \
+        (srP)->r_sp = block[0];                           \
+        (srP)->misc.S390X.r_fp = block[1];                \
+        (srP)->misc.S390X.r_lr = block[2];                \
+        (srP)->misc.S390X.r_f0 = block[3];                \
+        (srP)->misc.S390X.r_f1 = block[4];                \
+        (srP)->misc.S390X.r_f2 = block[5];                \
+        (srP)->misc.S390X.r_f3 = block[6];                \
+        (srP)->misc.S390X.r_f4 = block[7];                \
+        (srP)->misc.S390X.r_f5 = block[8];                \
+        (srP)->misc.S390X.r_f6 = block[9];                \
+        (srP)->misc.S390X.r_f7 = block[10];               \
       }
 #elif defined(VGP_mips32_linux)
 #  define GET_STARTREGS(srP)                              \
@@ -226,6 +243,26 @@
         (srP)->misc.MIPS64.r30 = (ULong)fp;               \
         (srP)->misc.MIPS64.r31 = (ULong)ra;               \
         (srP)->misc.MIPS64.r28 = (ULong)gp;               \
+      }
+#elif defined(VGP_nanomips_linux)
+#  define GET_STARTREGS(srP)                              \
+      { UInt pc=0, sp=0, fp=0, ra=0, gp=0;                \
+      asm("addiupc[32] %0, -4          \n\t"              \
+          "move %1, $sp                \n\t"              \
+          "move %2, $fp                \n\t"              \
+          "move %3, $ra                \n\t"              \
+          "move %4, $gp                \n\t"              \
+          : "=r" (pc),                                    \
+            "=r" (sp),                                    \
+            "=r" (fp),                                    \
+            "=r" (ra),                                    \
+            "=r" (gp)                                     \
+          );                                              \
+        (srP)->r_pc = (UInt)pc;                           \
+        (srP)->r_sp = (UInt)sp;                           \
+        (srP)->misc.MIPS32.r30 = (UInt)fp;                \
+        (srP)->misc.MIPS32.r31 = (UInt)ra;                \
+        (srP)->misc.MIPS32.r28 = (UInt)gp;                \
       }
 #else
 #  error Unknown platform
@@ -309,7 +346,7 @@ static void print_thread_state (Bool stack_usage,
                    VG_SYSNUM_STRING(VG_(is_in_syscall_no)(i)));
    else
       syscallno[0] = 0;
-   VG_(printf)("\n%sThread %d: status = %s%s (lwpid %d)\n", prefix, i,
+   VG_(printf)("\n%sThread %u: status = %s%s (lwpid %d)\n", prefix, i,
                VG_(name_of_ThreadStatus)(VG_(threads)[i].status),
                syscallno,
                VG_(threads)[i].os_state.lwpid);

@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -130,16 +128,23 @@ static void mostly_clear_thread_record ( ThreadId tid );
 static ULong n_scheduling_events_MINOR = 0;
 static ULong n_scheduling_events_MAJOR = 0;
 
-/* Stats: number of XIndirs, and number that missed in the fast
-   cache. */
-static ULong stats__n_xindirs = 0;
-static ULong stats__n_xindir_misses = 0;
+/* Stats: number of XIndirs looked up in the fast cache, the number of hits in
+   ways 1, 2 and 3, and the number of misses.  The number of hits in way 0 isn't
+   recorded because it can be computed from these five numbers. */
+static ULong stats__n_xIndirs = 0;
+static ULong stats__n_xIndir_hits1 = 0;
+static ULong stats__n_xIndir_hits2 = 0;
+static ULong stats__n_xIndir_hits3 = 0;
+static ULong stats__n_xIndir_misses = 0;
 
 /* And 32-bit temp bins for the above, so that 32-bit platforms don't
    have to do 64 bit incs on the hot path through
-   VG_(cp_disp_xindir). */
-/*global*/ UInt VG_(stats__n_xindirs_32) = 0;
-/*global*/ UInt VG_(stats__n_xindir_misses_32) = 0;
+   VG_(disp_cp_xindir). */
+/*global*/ UInt VG_(stats__n_xIndirs_32) = 0;
+/*global*/ UInt VG_(stats__n_xIndir_hits1_32) = 0;
+/*global*/ UInt VG_(stats__n_xIndir_hits2_32) = 0;
+/*global*/ UInt VG_(stats__n_xIndir_hits3_32) = 0;
+/*global*/ UInt VG_(stats__n_xIndir_misses_32) = 0;
 
 /* Sanity checking counts. */
 static UInt sanity_fast_count = 0;
@@ -149,11 +154,25 @@ void VG_(print_scheduler_stats)(void)
 {
    VG_(message)(Vg_DebugMsg,
       "scheduler: %'llu event checks.\n", bbs_done );
+
+   const ULong hits0
+      = stats__n_xIndirs - stats__n_xIndir_hits1 - stats__n_xIndir_hits2
+        - stats__n_xIndir_hits3 - stats__n_xIndir_misses;
    VG_(message)(Vg_DebugMsg,
-                "scheduler: %'llu indir transfers, %'llu misses (1 in %llu)\n",
-                stats__n_xindirs, stats__n_xindir_misses,
-                stats__n_xindirs / (stats__n_xindir_misses 
-                                    ? stats__n_xindir_misses : 1));
+                "scheduler: %'llu indir transfers, "
+                "%'llu misses (1 in %llu) ..\n",
+                stats__n_xIndirs, stats__n_xIndir_misses,
+                stats__n_xIndirs / (stats__n_xIndir_misses
+                                   ? stats__n_xIndir_misses : 1));
+   VG_(message)(Vg_DebugMsg,
+                "scheduler: .. of which: %'llu hit0, %'llu hit1, "
+                "%'llu hit2, %'llu hit3, %'llu missed\n",
+                hits0,
+                stats__n_xIndir_hits1,
+                stats__n_xIndir_hits2,
+                stats__n_xIndir_hits3,
+                stats__n_xIndir_misses);
+
    VG_(message)(Vg_DebugMsg,
       "scheduler: %'llu/%'llu major/minor sched events.\n",
       n_scheduling_events_MAJOR, n_scheduling_events_MINOR);
@@ -928,8 +947,11 @@ void run_thread_for_a_while ( /*OUT*/HWord* two_words,
    /* end Paranoia */
 
    /* Futz with the XIndir stats counters. */
-   vg_assert(VG_(stats__n_xindirs_32) == 0);
-   vg_assert(VG_(stats__n_xindir_misses_32) == 0);
+   vg_assert(VG_(stats__n_xIndirs_32) == 0);
+   vg_assert(VG_(stats__n_xIndir_hits1_32) == 0);
+   vg_assert(VG_(stats__n_xIndir_hits2_32) == 0);
+   vg_assert(VG_(stats__n_xIndir_hits3_32) == 0);
+   vg_assert(VG_(stats__n_xIndir_misses_32) == 0);
 
    /* Clear return area. */
    two_words[0] = two_words[1] = 0;
@@ -940,10 +962,13 @@ void run_thread_for_a_while ( /*OUT*/HWord* two_words,
       host_code_addr = alt_host_addr;
    } else {
       /* normal case -- redir translation */
-      UInt cno = (UInt)VG_TT_FAST_HASH((Addr)tst->arch.vex.VG_INSTR_PTR);
-      if (LIKELY(VG_(tt_fast)[cno].guest == (Addr)tst->arch.vex.VG_INSTR_PTR))
-         host_code_addr = VG_(tt_fast)[cno].host;
-      else {
+      Addr host_from_fast_cache = 0;
+      Bool found_in_fast_cache
+         = VG_(lookupInFastCache)( &host_from_fast_cache,
+                                   (Addr)tst->arch.vex.VG_INSTR_PTR );
+      if (found_in_fast_cache) {
+         host_code_addr = host_from_fast_cache;
+      } else {
          Addr res = 0;
          /* not found in VG_(tt_fast). Searching here the transtab
             improves the performance compared to returning directly
@@ -977,7 +1002,8 @@ void run_thread_for_a_while ( /*OUT*/HWord* two_words,
 
    /* Invalidate any in-flight LL/SC transactions, in the case that we're
       using the fallback LL/SC implementation.  See bugs 344524 and 369459. */
-#  if defined(VGP_mips32_linux) || defined(VGP_mips64_linux)
+#  if defined(VGP_mips32_linux) || defined(VGP_mips64_linux) \
+      || defined(VGP_nanomips_linux)
    tst->arch.vex.guest_LLaddr = (RegWord)(-1);
 #  elif defined(VGP_arm64_linux)
    tst->arch.vex.guest_LLSC_SIZE = 0;
@@ -1027,10 +1053,16 @@ void run_thread_for_a_while ( /*OUT*/HWord* two_words,
    /* Merge the 32-bit XIndir/miss counters into the 64 bit versions,
       and zero out the 32-bit ones in preparation for the next run of
       generated code. */
-   stats__n_xindirs += (ULong)VG_(stats__n_xindirs_32);
-   VG_(stats__n_xindirs_32) = 0;
-   stats__n_xindir_misses += (ULong)VG_(stats__n_xindir_misses_32);
-   VG_(stats__n_xindir_misses_32) = 0;
+   stats__n_xIndirs += (ULong)VG_(stats__n_xIndirs_32);
+   VG_(stats__n_xIndirs_32) = 0;
+   stats__n_xIndir_hits1 += (ULong)VG_(stats__n_xIndir_hits1_32);
+   VG_(stats__n_xIndir_hits1_32) = 0;
+   stats__n_xIndir_hits2 += (ULong)VG_(stats__n_xIndir_hits2_32);
+   VG_(stats__n_xIndir_hits2_32) = 0;
+   stats__n_xIndir_hits3 += (ULong)VG_(stats__n_xIndir_hits3_32);
+   VG_(stats__n_xIndir_hits3_32) = 0;
+   stats__n_xIndir_misses += (ULong)VG_(stats__n_xIndir_misses_32);
+   VG_(stats__n_xIndir_misses_32) = 0;
 
    /* Inspect the event counter. */
    vg_assert((Int)tst->arch.vex.host_EvC_COUNTER >= -1);
@@ -1290,10 +1322,6 @@ VgSchedReturnCode VG_(scheduler) ( ThreadId tid )
             VG_(force_vgdb_poll) ();
          else
             VG_(disable_vgdb_poll) ();
-
-         vg_assert (VG_(dyn_vgdb_error) == VG_(clo_vgdb_error));
-         /* As we are initializing, VG_(dyn_vgdb_error) can't have been
-            changed yet. */
 
          VG_(gdbserver_prerun_action) (1);
       } else {
@@ -1764,7 +1792,7 @@ void VG_(nuke_all_threads_except) ( ThreadId me, VgSchedReturnCode src )
 #elif defined (VGA_s390x)
 #  define VG_CLREQ_ARGS       guest_r2
 #  define VG_CLREQ_RET        guest_r3
-#elif defined(VGA_mips32) || defined(VGA_mips64)
+#elif defined(VGA_mips32) || defined(VGA_mips64) || defined(VGA_nanomips)
 #  define VG_CLREQ_ARGS       guest_r12
 #  define VG_CLREQ_RET        guest_r11
 #else
@@ -2084,6 +2112,11 @@ void do_client_request ( ThreadId tid )
          SET_CLREQ_RETVAL( tid, VG_(get_n_errs_found)() );
          break;
 
+      case VG_USERREQ__CLO_CHANGE:
+         VG_(process_dynamic_option) (cloD, (HChar *)arg[1]);
+         SET_CLREQ_RETVAL( tid, 0 );     /* return value is meaningless */
+         break;
+
       case VG_USERREQ__LOAD_PDB_DEBUGINFO:
          VG_(di_notify_pdb_debuginfo)( arg[1], arg[2], arg[3], arg[4] );
          SET_CLREQ_RETVAL( tid, 0 );     /* return value is meaningless */
@@ -2212,7 +2245,7 @@ void do_client_request ( ThreadId tid )
       "to recompile such code, using the header files from this version of\n"
       "Valgrind, and not any previous version.\n"
       "\n"
-      "If you see this mesage in any other circumstances, it is probably\n"
+      "If you see this message in any other circumstances, it is probably\n"
       "a bug in Valgrind.  In this case, please file a bug report at\n"
       "\n"
       "   http://www.valgrind.org/support/bug_reports.html\n"

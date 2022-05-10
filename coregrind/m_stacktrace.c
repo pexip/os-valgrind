@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -1256,6 +1254,14 @@ UInt VG_(get_StackTrace_wrk) ( ThreadId tid_if_known,
    Addr fp_min = uregs.sp - VG_STACK_REDZONE_SZB;
    uregs.fp = startRegs->misc.S390X.r_fp;
    uregs.lr = startRegs->misc.S390X.r_lr;
+   uregs.f0 = startRegs->misc.S390X.r_f0;
+   uregs.f1 = startRegs->misc.S390X.r_f1;
+   uregs.f2 = startRegs->misc.S390X.r_f2;
+   uregs.f3 = startRegs->misc.S390X.r_f3;
+   uregs.f4 = startRegs->misc.S390X.r_f4;
+   uregs.f5 = startRegs->misc.S390X.r_f5;
+   uregs.f6 = startRegs->misc.S390X.r_f6;
+   uregs.f7 = startRegs->misc.S390X.r_f7;
 
    fp_max = VG_PGROUNDUP(fp_max_orig);
    if (fp_max >= sizeof(Addr))
@@ -1317,7 +1323,8 @@ UInt VG_(get_StackTrace_wrk) ( ThreadId tid_if_known,
 #endif
 
 /* ------------------------ mips 32/64 ------------------------- */
-#if defined(VGP_mips32_linux) || defined(VGP_mips64_linux)
+#if defined(VGP_mips32_linux) || defined(VGP_mips64_linux) \
+ || defined(VGP_nanomips_linux)
 UInt VG_(get_StackTrace_wrk) ( ThreadId tid_if_known,
                                /*OUT*/Addr* ips, UInt max_n_ips,
                                /*OUT*/Addr* sps, /*OUT*/Addr* fps,
@@ -1338,7 +1345,7 @@ UInt VG_(get_StackTrace_wrk) ( ThreadId tid_if_known,
    uregs.sp = startRegs->r_sp;
    Addr fp_min = uregs.sp - VG_STACK_REDZONE_SZB;
 
-#if defined(VGP_mips32_linux)
+#if defined(VGP_mips32_linux) || defined(VGP_nanomips_linux)
    uregs.fp = startRegs->misc.MIPS32.r30;
    uregs.ra = startRegs->misc.MIPS32.r31;
 #elif defined(VGP_mips64_linux)
@@ -1426,7 +1433,7 @@ UInt VG_(get_StackTrace_wrk) ( ThreadId tid_if_known,
             }
          }
          if(debug)
-            VG_(printf)("offset: 0x%lx\n", frame_offset);
+            VG_(printf)("offset: 0x%ld\n", frame_offset);
       }
       if (seen_sp_adjust) {
          if (0 == uregs.pc || 1 == uregs.pc) break;

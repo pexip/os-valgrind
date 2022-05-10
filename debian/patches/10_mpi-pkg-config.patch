@@ -6,7 +6,7 @@ Last-Update: 2018-11-14
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -4191,6 +4191,14 @@
+@@ -4374,6 +4374,14 @@
             [CFLAGS_MPI="-g -O -fno-omit-frame-pointer -Wall -fpic"
              LDFLAGS_MPI="-fpic -shared"])
  
@@ -21,7 +21,7 @@ Last-Update: 2018-11-14
  AC_SUBST([CFLAGS_MPI])
  AC_SUBST([LDFLAGS_MPI])
  
-@@ -4198,9 +4206,7 @@
+@@ -4381,9 +4389,7 @@
  ## See if MPI_CC works for the primary target
  ##
  AC_MSG_CHECKING([primary target for usable MPI2-compliant C compiler and mpi.h])
@@ -31,7 +31,7 @@ Last-Update: 2018-11-14
  CFLAGS="$CFLAGS_MPI $mflag_primary"
  saved_LDFLAGS="$LDFLAGS"
  LDFLAGS="$LDFLAGS_MPI $mflag_primary"
-@@ -4220,27 +4226,23 @@
+@@ -4403,27 +4409,23 @@
  ac_have_mpi2_pri=no
  AC_MSG_RESULT([no])
  ])
@@ -62,7 +62,7 @@ Last-Update: 2018-11-14
  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
  #include <mpi.h>
  #include <stdio.h>
-@@ -4257,7 +4259,6 @@
+@@ -4440,7 +4442,6 @@
  ac_have_mpi2_sec=no
  AC_MSG_RESULT([no])
  ])

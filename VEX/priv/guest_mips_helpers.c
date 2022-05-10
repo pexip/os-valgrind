@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -1118,6 +1116,7 @@ extern UInt mips_dirtyhelper_calculate_MSACSR ( void* gs, UInt ws, UInt wt,
 
       case FSULTD:
          ASM_VOLATILE_MSA_BINARY(fsult.d);
+         break;
 
       case FMAXW:
          ASM_VOLATILE_MSA_BINARY(fmax.w);
@@ -1173,6 +1172,7 @@ extern UInt mips_dirtyhelper_calculate_MSACSR ( void* gs, UInt ws, UInt wt,
 
       case FRINTD:
          ASM_VOLATILE_MSA_UNARY(frint.d);
+         break;
 
       case FTRUNCUW:
          ASM_VOLATILE_MSA_UNARY(ftrunc_u.w);

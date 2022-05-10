@@ -1,3 +1,42 @@
+valgrind (1:3.16.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump Standards-Version to 4.5.0 (no changes needed)
+  * Bump debhelper compat level to 13
+  * Drop 07_fix-spelling-in-binary.patch (merged upstream)
+  * Update 08_fix-spelling-in-manpage.patch
+  * Update 11_arm64-cache-flush.patch
+  * Refresh patches
+  * Drop support for MPI 1 (Closes: #946329)
+  * Install dh_view tool.
+    Thanks to Sebastien Bacher for the patch. (Closes: #946640)
+  * Fix path to vgdb executable in output message (Closes: #942532)
+  * Fix debuginfo section duplicates a section in the main ELF file
+    (Closes: #942614)
+  * Update lintian overrides for renamed tags
+  * Remove sgcheck paragraph from copyright
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 28 Jun 2020 18:49:18 +0100
+
+valgrind (1:3.15.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Bump STandards-Version to 4.4.0 (no changes needed)
+  * Add additional suppressions for helgrind+drd false positives with glibc 2.28.
+    Thanks to Adam Borowski for the patch (Closes: #931315)
+  * Fix handling of cache flush instructions on arm64.
+    Thanks to Adam Borowski for the patch (Closes: #930708)
+  * Remove trailing empty line in changelog
+  * Update moved paths in copyright
+  * Update 08_fix-spelling-in-manpage.patch
+  * Update lintian overrides for dhat
+  * Update moved paths in copyright
+  * Update 08_fix-spelling-in-manpage.patch
+  * Update lintian overrides for dhat
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 14 Jul 2019 11:23:29 +0100
+
 valgrind (1:3.14.0-3pexip2) pexip; urgency=medium
 
   * Rebuild in buster environment
@@ -1679,4 +1718,3 @@ valgrind (0.0.20020224-1) unstable; urgency=low
   * Initial Release (closes: #135718)
 
  -- Cyrille Chepelov <cyrille@chepelov.org>  Mon, 25 Feb 2002 20:16:46 +0100
-

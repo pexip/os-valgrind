@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -76,6 +74,7 @@ static Error* errors = NULL;
    suppressions file.  Note that the list gets rearranged as a result
    of the searches done by is_suppressible_error(). */
 static Supp* suppressions = NULL;
+static Bool load_suppressions_called = False;
 
 /* Running count of unsuppressed errors detected. */
 static UInt n_errs_found = 0;
@@ -526,7 +525,7 @@ void do_actions_on_error(const Error* err, Bool allow_db_attach)
    /* if user wants to debug from a certain error nr, then wait for gdb/vgdb */
    if (VG_(clo_vgdb) != Vg_VgdbNo
        && allow_db_attach 
-       && VG_(dyn_vgdb_error) <= n_errs_shown) {
+       && VG_(clo_vgdb_error) <= n_errs_shown) {
       VG_(umsg)("(action on error) vgdb me ... \n");
       VG_(gdbserver)( err->tid );
       VG_(umsg)("Continuing ...\n");
@@ -979,29 +978,31 @@ void VG_(show_all_errors) (  Int verbosity, Bool xml )
    Int    i, n_min;
    Error *p, *p_min;
    Bool   any_supp;
+   Bool   any_error = False;
 
-   if (verbosity == 0)
+   if (verbosity == 0 && !VG_(clo_show_error_list))
       return;
 
    /* If we're printing XML, just show the suppressions and stop. */
    if (xml) {
-      (void)show_used_suppressions();
+      if (VG_(clo_show_error_list))
+         (void)show_used_suppressions();
       return;
    }
 
    /* We only get here if not printing XML. */
    VG_(umsg)("ERROR SUMMARY: "
              "%u errors from %u contexts (suppressed: %u from %u)\n",
-             n_errs_found, n_err_contexts, 
+             n_errs_found, n_err_contexts,
              n_errs_suppressed, n_supp_contexts );
 
-   if (verbosity <= 1)
+   if (!VG_(clo_show_error_list))
       return;
 
-   // We do the following only at -v or above, and only in non-XML
-   // mode
+   // We do the following if VG_(clo_show_error_list)
+   // or at -v or above, and only in non-XML mode.
 
-   /* Print the contexts in order of increasing error count. 
+   /* Print the contexts in order of increasing error count.
       Once an error is shown, we add a huge value to its count to filter it
       out.
       After having shown all errors, we reset count to the original value. */
@@ -1018,6 +1019,7 @@ void VG_(show_all_errors) (  Int verbosity, Bool xml )
       // XXX: this isn't right.  See bug 203651.
       if (p_min == NULL) continue; //VG_(core_panic)("show_all_errors()");
 
+      any_error = True;
       VG_(umsg)("\n");
       VG_(umsg)("%d errors in context %d of %u:\n",
                 p_min->count, i+1, n_err_contexts);
@@ -1035,9 +1037,9 @@ void VG_(show_all_errors) (  Int verbosity, Bool xml )
       }
 
       p_min->count = p_min->count + (1 << 30);
-   } 
+   }
 
-   /* reset the counts, otherwise a 2nd call does not show anything anymore */ 
+   /* reset the counts, otherwise a 2nd call does not show anything anymore */
    for (p = errors; p != NULL; p = p->next) {
       if (p->count >= (1 << 30))
          p->count = p->count - (1 << 30);
@@ -1046,14 +1048,15 @@ void VG_(show_all_errors) (  Int verbosity, Bool xml )
 
    any_supp = show_used_suppressions();
 
-   if (any_supp) 
+   if (any_supp)
       VG_(umsg)("\n");
-   // reprint this, so users don't have to scroll way up to find
+   // reprint summary, so users don't have to scroll way up to find
    // the first printing
-   VG_(umsg)("ERROR SUMMARY: "
-             "%u errors from %u contexts (suppressed: %u from %u)\n",
-             n_errs_found, n_err_contexts, n_errs_suppressed,
-             n_supp_contexts );
+   if (any_supp || any_error)
+      VG_(umsg)("ERROR SUMMARY: "
+                "%u errors from %u contexts (suppressed: %u from %u)\n",
+                n_errs_found, n_err_contexts, n_errs_suppressed,
+                n_supp_contexts );
 }
 
 void VG_(show_last_error) ( void )
@@ -1468,7 +1471,7 @@ static void load_one_suppressions_file ( Int clo_suppressions_i )
    VG_(umsg)("FATAL: in suppressions file \"%s\" near line %d:\n",
            filename, lineno );
    VG_(umsg)("   %s\n", err_str );
-   
+
    VG_(close)(fd);
    VG_(umsg)("exiting now.\n");
    VG_(exit)(1);
@@ -1476,11 +1479,19 @@ static void load_one_suppressions_file ( Int clo_suppressions_i )
 #  undef BOMB
 }
 
+void VG_(add_suppression_file)(const HChar *filename)
+{
+   HChar *f = VG_(strdup)("errormgr.addsup", filename);
+   VG_(addToXA)(VG_(clo_suppressions), &f);
+   if (load_suppressions_called)
+      load_one_suppressions_file( VG_(sizeXA)(VG_(clo_suppressions)) - 1 );
+}
 
 void VG_(load_suppressions) ( void )
 {
    Int i;
    suppressions = NULL;
+   load_suppressions_called = True;
    for (i = 0; i < VG_(sizeXA)(VG_(clo_suppressions)); i++) {
       if (VG_(clo_verbosity) > 1) {
          VG_(dmsg)("Reading suppressions file: %s\n", 

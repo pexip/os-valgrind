@@ -2,12 +2,12 @@
 .\"     Title: cg_annotate
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/09/2018
-.\"    Manual: Release 3.14.0
-.\"    Source: Release 3.14.0
+.\"      Date: 06/22/2020
+.\"    Manual: cg_annotate
+.\"    Source: Release 3.16.1
 .\"  Language: English
 .\"
-.TH "CG_ANNOTATE" "1" "10/09/2018" "Release 3.14.0" "Release 3.14.0"
+.TH "CG_ANNOTATE" "1" "06/22/2020" "Release 3\&.16\&.1" "cg_annotate"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -72,7 +72,12 @@ option with a colon and a number (no spaces, though)\&. E\&.g\&. if you want to 
 \fB\-\-sort=DLmr:1,DLmw:1\fR
 .RE
 .PP
-\fB\-\-auto=<no|yes> [default: no] \fR
+\fB\-\-show\-percs=<no|yes> [default: yes] \fR
+.RS 4
+When enabled, a percentage is printed next to all event counts\&. This helps gauge the relative importance of each function and line\&.
+.RE
+.PP
+\fB\-\-auto=<no|yes> [default: yes] \fR
 .RS 4
 When enabled, automatically annotates every file that is mentioned in the function\-by\-function summary that can be found\&. Also gives a list of those that couldn\*(Aqt be found\&.
 .RE

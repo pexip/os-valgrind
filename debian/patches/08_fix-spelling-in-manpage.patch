@@ -4,72 +4,14 @@ Author: Alessandro Ghedini <ghedo@debian.org>
 Reviewed-by: Alessandro Ghedini <ghedo@debian.org>
 Last-Update: 2016-11-03
 
---- a/drd/docs/drd-manual.xml
-+++ b/drd/docs/drd-manual.xml
-@@ -356,7 +356,7 @@
-         Data races that occur between a statement at the end of one thread
- 	and another thread can be missed if memory access information is
- 	discarded immediately after a thread has been joined. This option
--	allows to specify for how many joined threads memory access information
-+	allows one to specify for how many joined threads memory access information
- 	should be retained.
-       </para>
-     </listitem>
-@@ -455,7 +455,7 @@
-       <para>
-         Perform segment merging only after the specified number of new
-         segments have been created. This is an advanced configuration option
--        that allows to choose whether to minimize DRD's memory usage by
-+        that allows one to choose whether to minimize DRD's memory usage by
-         choosing a low value or to let DRD run faster by choosing a slightly
-         higher value. The optimal value for this parameter depends on the
-         program being analyzed. The default value works well for most programs.
-@@ -1028,7 +1028,7 @@
-       applications contain intentional races. There exist e.g. applications
-       where the same value is assigned to a shared variable from two different
-       threads. It may be more convenient to suppress such races than to solve
--      these. This client request allows to suppress such races.
-+      these. This client request allows one to suppress such races.
-     </para>
-   </listitem>
-   <listitem>
-@@ -1069,7 +1069,7 @@
-   <listitem>
-     <para>
-       The client request <varname>VG_USERREQ__DRD_START_TRACE_ADDR</varname>,
--      which allows to trace all load and store activity for the specified
-+      which allows one to trace all load and store activity for the specified
-       address range.
-     </para>
-   </listitem>
-@@ -1393,7 +1393,7 @@
- OpenMP stands for <emphasis>Open Multi-Processing</emphasis>. The OpenMP
- standard consists of a set of compiler directives for C, C++ and Fortran
- programs that allows a compiler to transform a sequential program into a
--parallel program. OpenMP is well suited for HPC applications and allows to
-+parallel program. OpenMP is well suited for HPC applications and allows one to
- work at a higher level compared to direct use of the POSIX threads API. While
- OpenMP ensures that the POSIX API is used correctly, OpenMP programs can still
- contain data races. So it definitely makes sense to verify OpenMP programs
---- a/docs/vgdb.1
-+++ b/docs/vgdb.1
-@@ -114,7 +114,7 @@
- .PP
- \fB\-\-port=<portnr>\fR
- .RS 4
--Instructs vgdb to use tcp/ip and listen for GDB on the specified port nr rather than to use a pipe to communicate with GDB\&. Using tcp/ip allows to have GDB running on one computer and debugging a Valgrind process running on another target computer\&. Example:
-+Instructs vgdb to use tcp/ip and listen for GDB on the specified port nr rather than to use a pipe to communicate with GDB\&. Using tcp/ip allows one to have GDB running on one computer and debugging a Valgrind process running on another target computer\&. Example:
- .sp
- .if n \{\
- .RS 4
---- a/docs/valgrind.1
-+++ b/docs/valgrind.1
-@@ -2149,7 +2149,7 @@
- callgrind_control \-i on\&.
- .sp
- Note that the resulting call graph will most probably not contain
--\fBmain\fR, but will contain all the functions executed after instrumentation was enabled\&. Instrumentation can also programatically enabled/disabled\&. See the Callgrind include file
-+\fBmain\fR, but will contain all the functions executed after instrumentation was enabled\&. Instrumentation can also programmatically enabled/disabled\&. See the Callgrind include file
- callgrind\&.h
- for the macro you have to use in your source code\&.
- .sp
+--- a/docs/xml/manual-core-adv.xml
++++ b/docs/xml/manual-core-adv.xml
+@@ -1227,7 +1227,7 @@
+     <term><option>--port=&lt;portnr&gt;</option></term>
+     <listitem><para>Instructs vgdb to
+     use tcp/ip and listen for GDB on the specified port nr rather than
+-    to use a pipe to communicate with GDB. Using tcp/ip allows to have
++    to use a pipe to communicate with GDB. Using tcp/ip allows one to have
+     GDB running on one computer and debugging a Valgrind process
+     running on another target computer.
+     Example: 
