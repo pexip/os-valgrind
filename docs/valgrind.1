@@ -2,12 +2,12 @@
 .\"     Title: VALGRIND
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/22/2020
+.\"      Date: 10/15/2021
 .\"    Manual: valgrind
-.\"    Source: Release 3.16.1
+.\"    Source: Release 3.18.0
 .\"  Language: English
 .\"
-.TH "VALGRIND" "1" "06/22/2020" "Release 3\&.16\&.1" "valgrind"
+.TH "VALGRIND" "1" "10/15/2021" "Release 3\&.18\&.0" "valgrind"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -212,10 +212,16 @@ for the empty set\&.
 .RE
 .RE
 .PP
-\fB\-\-track\-fds=<yes|no> [default: no] \fR
+\fB\-\-track\-fds=<yes|no|all> [default: no] \fR
 .RS 4
 When enabled, Valgrind will print out a list of open file descriptors on exit or on request, via the gdbserver monitor command
-\fIv\&.info open_fds\fR\&. Along with each file descriptor is printed a stack backtrace of where the file was opened and any details relating to the file descriptor such as the file name or socket details\&.
+\fIv\&.info open_fds\fR\&. Along with each file descriptor is printed a stack backtrace of where the file was opened and any details relating to the file descriptor such as the file name or socket details\&. Use
+\fBall\fR
+to include reporting on
+stdin,
+stdout
+and
+stderr\&.
 .RE
 .PP
 \fB\-\-time\-stamp=<yes|no> [default: no] \fR
@@ -548,6 +554,8 @@ By default the Valgrind build system will build
 valgrind\-di\-server
 for the target platform, which is almost certainly not what you want\&. So far we have been unable to find out how to get automake/autoconf to build it for the build platform\&. If you want to use it, you will have to recompile it by hand using the command shown at the top of
 auxprogs/valgrind\-di\-server\&.c\&.
+.sp
+Valgrind can also download debuginfo via debuginfod\&. See the DEBUGINFOD section for more information\&.
 .RE
 .PP
 \fB\-\-allow\-mismatched\-debuginfo=no|yes [no] \fR
@@ -2844,6 +2852,22 @@ Changes the function for which calls are counted when
 \fB\-\-basic\-counts=yes\fR
 is specified\&.
 .RE
+.SH "DEBUGINFOD"
+.PP
+Valgrind supports the downloading of debuginfo files via debuginfod, an HTTP server for distributing ELF/DWARF debugging information\&. When a debuginfo file cannot be found locally, Valgrind is able to query debuginfod servers for the file using its build\-id\&.
+.PP
+In order to use this feature
+debuginfod\-find
+must be installed and
+$DEBUGINFOD_URLS
+must contain URLs of debuginfod servers\&. Valgrind does not support
+debuginfod\-find
+verbose output that is normally enabled with
+$DEBUGINFOD_PROGRESS
+and
+$DEBUGINFOD_VERBOSE\&. These environment variables will be ignored\&.
+.PP
+For more information regarding debuginfod, see https://sourceware\&.org/elfutils/Debuginfod\&.html
 .SH "SEE ALSO"
 .PP
 cg_annotate(1), callgrind_annotate(1), callgrind_control(1), ms_print(1),

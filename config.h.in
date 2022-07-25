@@ -45,6 +45,30 @@
 /* configured to build with lto link time optimisation */
 #undef ENABLE_LTO
 
+/* FREEBSD_VERS value for FreeBSD 10.x */
+#undef FREEBSD_10
+
+/* FREEBSD_VERS value for FreeBSD 11.x */
+#undef FREEBSD_11
+
+/* FREEBSD_VERS value for FreeBSD 12.0 to 12.1 */
+#undef FREEBSD_12
+
+/* FREEBSD_VERS value for FreeBSD 12.2 */
+#undef FREEBSD_12_2
+
+/* FREEBSD_VERS value for FreeBSD 13.x */
+#undef FREEBSD_13
+
+/* FREEBSD_VERS value for FreeBSD 14.x */
+#undef FREEBSD_14
+
+/* Define to 1 if you're using FreeBSD */
+#undef FREEBSD_LIBC
+
+/* FreeBSD version */
+#undef FREEBSD_VERS
+
 /* path to GDB */
 #undef GDB_PATH
 
@@ -140,6 +164,9 @@
 
 /* Define to 1 if you have the `memchr' function. */
 #undef HAVE_MEMCHR
+
+/* Define to 1 if you have the `memfd_create' function. */
+#undef HAVE_MEMFD_CREATE
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -238,6 +265,9 @@
 /* Define to 1 if you have the `semtimedop' function. */
 #undef HAVE_SEMTIMEDOP
 
+/* Define to 1 if you have the `setcontext' function. */
+#undef HAVE_SETCONTEXT
+
 /* Define to 1 if libstd++ supports annotating shared pointers */
 #undef HAVE_SHARED_POINTER_ANNOTATION
 
@@ -273,6 +303,9 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
+
+/* Define to 1 if you have the `swapcontext' function. */
+#undef HAVE_SWAPCONTEXT
 
 /* Define to 1 if you have the `syscall' function. */
 #undef HAVE_SYSCALL

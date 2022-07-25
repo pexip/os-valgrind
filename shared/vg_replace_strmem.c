@@ -35,12 +35,13 @@
 #include "pub_tool_clreq.h"
 
 /* ---------------------------------------------------------------------
-   We have our own versions of these functions for two reasons:
+   We have our own versions of these functions for multiple reasons:
    (a) it allows us to do overlap checking
-   (b) some of the normal versions are hyper-optimised, which fools
+   (b) it allows us to do copy tracking
+   (c) some of the normal versions are hyper-optimised, which fools
        Memcheck and cause spurious value warnings.  Our versions are
        simpler.
-   (c) the glibc SSE-variants can read past the end of the input data
+   (d) the glibc SSE-variants can read past the end of the input data
        ranges. This can cause false-positive Memcheck / Helgrind / DRD
        reports.
 
@@ -173,6 +174,15 @@ static inline void my_exit ( int x )
 #ifndef RECORD_OVERLAP_ERROR
 #define RECORD_OVERLAP_ERROR(s, src, dst, len) do { } while (0)
 #endif
+
+// Used for tools that record bulk copies: memcpy, strcpy, etc.
+#ifndef RECORD_COPY
+#define RECORD_COPY(len) do { } while (0)
+#define FOR_COPY(x)
+#else
+#define FOR_COPY(x) x
+#endif
+
 #ifndef VALGRIND_CHECK_VALUE_IS_DEFINED
 #define VALGRIND_CHECK_VALUE_IS_DEFINED(__lvalue) 1
 #endif
@@ -207,6 +217,12 @@ static inline void my_exit ( int x )
     || defined(VGPV_mips32_linux_android)
   STRRCHR(NONE, __dl_strrchr); /* in /system/bin/linker */
 #endif
+
+#elif defined(VGO_freebsd)
+ STRRCHR(VG_Z_LIBC_SONAME,   strrchr)
+ STRRCHR(VG_Z_LIBC_SONAME,   rindex)
+ STRRCHR(VG_Z_LD_ELF_SO_1,   strrchr)
+ STRRCHR(VG_Z_LD_ELF32_SO_1, strrchr)
 
 #elif defined(VGO_darwin)
  //STRRCHR(VG_Z_LIBC_SONAME,   strrchr)
@@ -259,6 +275,12 @@ static inline void my_exit ( int x )
   STRCHR(NONE,        __dl_strchr)
 #endif
 
+#elif defined(VGO_freebsd)
+ STRCHR(VG_Z_LIBC_SONAME,          strchr)
+ STRCHR(VG_Z_LIBC_SONAME,          index)
+ STRCHR(VG_Z_LD_ELF_SO_1,          strchr)
+ STRCHR(VG_Z_LD_ELF32_SO_1,        strchr)
+
 #elif defined(VGO_darwin)
  STRCHR(VG_Z_LIBC_SONAME, strchr)
 # if DARWIN_VERS == DARWIN_10_9
@@ -308,6 +330,11 @@ static inline void my_exit ( int x )
  STRCAT(VG_Z_LIBC_SONAME, strcat)
  STRCAT(VG_Z_LIBC_SONAME, __GI_strcat)
 
+#elif defined(VGO_freebsd)
+ STRCAT(VG_Z_LIBC_SONAME,   strcat)
+ STRCAT(VG_Z_LD_ELF_SO_1,   strcat)
+ STRCAT(VG_Z_LD_ELF32_SO_1, strcat)
+
 #elif defined(VGO_darwin)
  //STRCAT(VG_Z_LIBC_SONAME, strcat)
 
@@ -346,6 +373,9 @@ static inline void my_exit ( int x )
    }
 
 #if defined(VGO_linux)
+ STRNCAT(VG_Z_LIBC_SONAME, strncat)
+
+#elif defined(VGO_freebsd)
  STRNCAT(VG_Z_LIBC_SONAME, strncat)
 
 #elif defined(VGO_darwin)
@@ -397,6 +427,11 @@ static inline void my_exit ( int x )
    }
 
 #if defined(VGO_linux)
+
+#elif defined(VGO_freebsd)
+ STRLCAT(VG_Z_LD_ELF_SO_1,   strlcat)
+ STRLCAT(VG_Z_LIBC_SONAME,   strlcat)
+ STRLCAT(VG_Z_LD_ELF32_SO_1, strlcat)
 
 #elif defined(VGO_darwin)
  //STRLCAT(VG_Z_LIBC_SONAME, strlcat)
@@ -469,6 +504,11 @@ static inline void my_exit ( int x )
   STRLEN(NONE, __dl_strlen); /* in /system/bin/linker */
 # endif
 
+#elif defined(VGO_freebsd)
+ STRLEN(VG_Z_LIBC_SONAME,   strlen)
+ STRLEN(VG_Z_LD_ELF_SO_1,   strlen)
+ STRLEN(VG_Z_LD_ELF32_SO_1, strlen)
+
 #elif defined(VGO_darwin)
  STRLEN(VG_Z_LIBC_SONAME, strlen)
 # if DARWIN_VERS >= DARWIN_10_9
@@ -496,12 +536,14 @@ static inline void my_exit ( int x )
       while (*src) *dst++ = *src++; \
       *dst = 0; \
       \
-      /* This checks for overlap after copying, unavoidable without */ \
+      /* This happens after copying, unavoidable without */ \
       /* pre-counting length... should be ok */ \
+      SizeT srclen = (Addr)src-(Addr)src_orig+1; \
+      RECORD_COPY(srclen); \
       if (is_overlap(dst_orig,  \
                      src_orig,  \
                      (Addr)dst-(Addr)dst_orig+1, \
-                     (Addr)src-(Addr)src_orig+1)) \
+                     srclen)) \
          RECORD_OVERLAP_ERROR("strcpy", dst_orig, src_orig, 0); \
       \
       return dst_orig; \
@@ -510,6 +552,11 @@ static inline void my_exit ( int x )
 #if defined(VGO_linux)
  STRCPY(VG_Z_LIBC_SONAME, strcpy)
  STRCPY(VG_Z_LIBC_SONAME, __GI_strcpy)
+
+#elif defined(VGO_freebsd)
+ STRCPY(VG_Z_LIBC_SONAME,   strcpy)
+ STRCPY(VG_Z_LD_ELF_SO_1,   strcpy)
+ STRCPY(VG_Z_LD_ELF32_SO_1, strcpy)
 
 #elif defined(VGO_darwin)
  STRCPY(VG_Z_LIBC_SONAME, strcpy)
@@ -539,7 +586,9 @@ static inline void my_exit ( int x )
       while (m   < n && *src) { m++; *dst++ = *src++; } \
       /* Check for overlap after copying; all n bytes of dst are relevant, */ \
       /* but only m+1 bytes of src if terminator was found */ \
-      if (is_overlap(dst_orig, src_orig, n, (m < n) ? m+1 : n)) \
+      SizeT srclen = (m < n) ? m+1 : n; \
+      RECORD_COPY(srclen); \
+      if (is_overlap(dst_orig, src_orig, n, srclen)) \
          RECORD_OVERLAP_ERROR("strncpy", dst, src, n); \
       while (m++ < n) *dst++ = 0;         /* must pad remainder with nulls */ \
       \
@@ -551,6 +600,11 @@ static inline void my_exit ( int x )
  STRNCPY(VG_Z_LIBC_SONAME, __GI_strncpy)
  STRNCPY(VG_Z_LIBC_SONAME, __strncpy_sse2)
  STRNCPY(VG_Z_LIBC_SONAME, __strncpy_sse2_unaligned)
+
+#elif defined(VGO_freebsd)
+ STRNCPY(VG_Z_LIBC_SONAME,   strncpy)
+ STRNCPY(VG_Z_LD_ELF_SO_1,   strncpy)
+ STRNCPY(VG_Z_LD_ELF32_SO_1, strncpy)
 
 #elif defined(VGO_darwin)
  STRNCPY(VG_Z_LIBC_SONAME, strncpy)
@@ -585,7 +639,9 @@ static inline void my_exit ( int x )
       /* m non-nul bytes have now been copied, and m <= n-1. */ \
       /* Check for overlap after copying; all n bytes of dst are relevant, */ \
       /* but only m+1 bytes of src if terminator was found */ \
-      if (is_overlap(dst_orig, src_orig, n, (m < n) ? m+1 : n)) \
+      SizeT srclen = (m < n) ? m+1 : n; \
+      RECORD_COPY(srclen); \
+      if (is_overlap(dst_orig, src_orig, n, srclen)) \
           RECORD_OVERLAP_ERROR("strlcpy", dst, src, n); \
       /* Nul-terminate dst. */ \
       if (n > 0) *dst = 0; \
@@ -601,6 +657,12 @@ static inline void my_exit ( int x )
  #define STRLCPY_CHECK_FOR_DSTSIZE_ZERO
  STRLCPY(VG_Z_LIBC_SONAME, strlcpy);
 #endif
+
+#elif defined(VGO_freebsd)
+ #define STRLCPY_CHECK_FOR_DSTSIZE_ZERO
+ STRLCPY(VG_Z_LD_ELF_SO_1,   strlcpy)
+ STRLCPY(VG_Z_LD_ELF32_SO_1, strlcpy)
+ STRLCPY(VG_Z_LIBC_SONAME,   strlcpy)
 
 #elif defined(VGO_darwin)
  #define STRLCPY_CHECK_FOR_DSTSIZE_ZERO
@@ -649,6 +711,11 @@ static inline void my_exit ( int x )
  STRNCMP(VG_Z_LIBC_SONAME, __strncmp_sse2)
  STRNCMP(VG_Z_LIBC_SONAME, __strncmp_sse42)
 
+#elif defined(VGO_freebsd)
+ STRNCMP(VG_Z_LIBC_SONAME, strncmp)
+ STRNCMP(VG_Z_LD_ELF_SO_1, strncmp)
+ STRNCMP(VG_Z_LD_ELF32_SO_1, strncmp)
+
 #elif defined(VGO_darwin)
  STRNCMP(VG_Z_LIBC_SONAME,        strncmp)
 # if DARWIN_VERS >= DARWIN_10_9
@@ -693,6 +760,11 @@ static inline void my_exit ( int x )
   STRCASECMP(VG_Z_LIBC_SONAME, __GI_strcasecmp)
 # endif
 
+#elif defined(VGO_freebsd)
+ STRCASECMP(VG_Z_LIBC_SONAME, strcasecmp)
+ STRNCMP(VG_Z_LD_ELF_SO_1, strcasecmp)
+ STRNCMP(VG_Z_LD_ELF32_SO_1, strcasecmp)
+
 #elif defined(VGO_darwin)
  //STRCASECMP(VG_Z_LIBC_SONAME, strcasecmp)
 
@@ -735,6 +807,11 @@ static inline void my_exit ( int x )
   STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
   STRNCASECMP(VG_Z_LIBC_SONAME, __GI_strncasecmp)
 # endif
+
+#elif defined(VGO_freebsd)
+ STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
+ STRNCASECMP(VG_Z_LD_ELF_SO_1, strncasecmp)
+ STRNCASECMP(VG_Z_LD_ELF32_SO_1, strncasecmp)
 
 #elif defined(VGO_darwin)
  //STRNCASECMP(VG_Z_LIBC_SONAME, strncasecmp)
@@ -855,6 +932,11 @@ static inline void my_exit ( int x )
   STRCMP(NONE, __dl_strcmp); /* in /system/bin/linker */
 # endif
 
+#elif defined(VGO_freebsd)
+ STRCMP(VG_Z_LIBC_SONAME, strcmp)
+ STRCMP(VG_Z_LD_ELF_SO_1, strcmp)
+ STRCMP(VG_Z_LD_ELF32_SO_1, strcmp)
+
 #elif defined(VGO_darwin)
  STRCMP(VG_Z_LIBC_SONAME, strcmp)
 # if DARWIN_VERS >= DARWIN_10_9
@@ -926,6 +1008,9 @@ static inline void my_exit ( int x )
 #if defined(VGO_linux)
  MEMRCHR(VG_Z_LIBC_SONAME, memrchr)
 
+#elif defined(VGO_freebsd)
+ MEMRCHR(VG_Z_LIBC_SONAME, memrchr)
+
 #elif defined(VGO_darwin)
  //MEMRCHR(VG_Z_LIBC_SONAME, memrchr)
  //MEMRCHR(VG_Z_DYLD,        memrchr)
@@ -943,6 +1028,7 @@ static inline void my_exit ( int x )
    void* VG_REPLACE_FUNCTION_EZZ(becTag,soname,fnname) \
             ( void *dst, const void *src, SizeT len ) \
    { \
+      RECORD_COPY(len); \
       if (do_ol_check && is_overlap(dst, src, len, len)) \
          RECORD_OVERLAP_ERROR("memcpy", dst, src, len); \
       \
@@ -1034,6 +1120,7 @@ static inline void my_exit ( int x )
  MEMCPY(VG_Z_LIBC_SONAME,  memcpy) /* fallback case */
  MEMCPY(VG_Z_LIBC_SONAME,    __GI_memcpy)
  MEMCPY(VG_Z_LIBC_SONAME,    __memcpy_sse2)
+ MEMCPY(VG_Z_LIBC_SONAME, __memcpy_avx_unaligned_erms)
  MEMCPY(VG_Z_LD_SO_1,      memcpy) /* ld.so.1 */
  MEMCPY(VG_Z_LD64_SO_1,    memcpy) /* ld64.so.1 */
  /* icc9 blats these around all over the place.  Not only in the main
@@ -1045,6 +1132,11 @@ static inline void my_exit ( int x )
     http://bugs.kde.org/show_bug.cgi?id=139776
  */
  MEMCPY(NONE, ZuintelZufastZumemcpy)
+
+#elif defined(VGO_freebsd)
+ MEMCPY(VG_Z_LIBC_SONAME,  memcpy)
+ MEMCPY(VG_Z_LD_ELF_SO_1, memcpy)
+ MEMCPY(VG_Z_LD_ELF32_SO_1, memcpy)
 
 #elif defined(VGO_darwin)
 # if DARWIN_VERS <= DARWIN_10_6
@@ -1111,6 +1203,10 @@ static inline void my_exit ( int x )
  MEMCMP(VG_Z_LIBC_SONAME, bcmp)
  MEMCMP(VG_Z_LD_SO_1,     bcmp)
 
+#elif defined(VGO_freebsd)
+ MEMCMP(VG_Z_LIBC_SONAME,  memcmp)
+ MEMCMP(VG_Z_LIBC_SONAME,  bcmp)
+
 #elif defined(VGO_darwin)
 # if DARWIN_VERS >= DARWIN_10_9
   MEMCMP(libsystemZuplatformZddylib, _platform_memcmp)
@@ -1142,10 +1238,12 @@ static inline void my_exit ( int x )
       \
       /* This checks for overlap after copying, unavoidable without */ \
       /* pre-counting length... should be ok */ \
+      SizeT srclen = (Addr)src-(Addr)src_orig+1; \
+      RECORD_COPY(srclen); \
       if (is_overlap(dst_orig,  \
                      src_orig,  \
                      (Addr)dst-(Addr)dst_orig+1,  \
-                     (Addr)src-(Addr)src_orig+1)) \
+                     srclen)) \
          RECORD_OVERLAP_ERROR("stpcpy", dst_orig, src_orig, 0); \
       \
       return dst; \
@@ -1159,6 +1257,16 @@ static inline void my_exit ( int x )
  STPCPY(VG_Z_LD_LINUX_SO_2,        stpcpy)
  STPCPY(VG_Z_LD_LINUX_X86_64_SO_2, stpcpy)
  STPCPY(VG_Z_LD_LINUX_AARCH64_SO_1,stpcpy)
+
+#elif defined(VGO_freebsd)
+ STPCPY(VG_Z_LD_ELF_SO_1,          stpcpy)
+ STPCPY(VG_Z_LD_ELF32_SO_1,        stpcpy)
+ STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
+
+#elif defined(VGO_freebsd)
+ STPCPY(VG_Z_LD_ELF_SO_1,          stpcpy)
+ STPCPY(VG_Z_LD_ELF32_SO_1,        stpcpy)
+ STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
 
 #elif defined(VGO_darwin)
  //STPCPY(VG_Z_LIBC_SONAME,          stpcpy)
@@ -1185,7 +1293,9 @@ static inline void my_exit ( int x )
       while (m   < n && *src) { m++; *dst++ = *src++; } \
       /* Check for overlap after copying; all n bytes of dst are relevant, */ \
       /* but only m+1 bytes of src if terminator was found */ \
-      if (is_overlap(dst_str, src_orig, n, (m < n) ? m+1 : n)) \
+      SizeT srclen = (m < n) ? m+1 : n; \
+      RECORD_COPY(srclen); \
+      if (is_overlap(dst_str, src_orig, n, srclen)) \
          RECORD_OVERLAP_ERROR("stpncpy", dst, src, n); \
       dst_str = dst; \
       while (m++ < n) *dst++ = 0;         /* must pad remainder with nulls */ \
@@ -1193,15 +1303,12 @@ static inline void my_exit ( int x )
       return dst_str; \
    }
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
  STPNCPY(VG_Z_LIBC_SONAME, stpncpy)
 #endif
 
 
 /*---------------------- memset ----------------------*/
-
-/* Why are we bothering to intercept this?  It seems entirely
-   pointless. */
 
 #define MEMSET(soname, fnname) \
    void* VG_REPLACE_FUNCTION_EZZ(20210,soname,fnname) \
@@ -1250,6 +1357,11 @@ static inline void my_exit ( int x )
 #if defined(VGO_linux)
  MEMSET(VG_Z_LIBC_SONAME, memset)
 
+#elif defined(VGO_freebsd)
+ MEMSET(VG_Z_LIBC_SONAME,   memset)
+ MEMSET(VG_Z_LD_ELF_SO_1,   memset)
+ MEMSET(VG_Z_LD_ELF32_SO_1, memset)
+
 #elif defined(VGO_darwin)
  //MEMSET(VG_Z_LIBC_SONAME, memset)
  //MEMSET(VG_Z_DYLD,        memset)
@@ -1273,6 +1385,11 @@ static inline void my_exit ( int x )
     arches MEMCPY_OK_FOR_FORWARD_MEMMOVE is set, which might cause memmove
     to call memcpy.  */
  MEMMOVE(VG_Z_LD64_SO_1, memmove)
+
+#elif defined(VGO_freebsd)
+ MEMMOVE(VG_Z_LD_ELF_SO_1,   memmove)
+ MEMMOVE(VG_Z_LD_ELF32_SO_1, memmove)
+ MEMMOVE(VG_Z_LIBC_SONAME,   memmove)
 
 #elif defined(VGO_darwin)
 # if DARWIN_VERS <= DARWIN_10_6
@@ -1301,6 +1418,7 @@ static inline void my_exit ( int x )
    void VG_REPLACE_FUNCTION_EZU(20230,soname,fnname) \
             (const void *srcV, void *dstV, SizeT n) \
    { \
+      RECORD_COPY(n); \
       SizeT i; \
       HChar* dst = dstV; \
       const HChar* src = srcV; \
@@ -1317,6 +1435,11 @@ static inline void my_exit ( int x )
 
 #if defined(VGO_linux)
  BCOPY(VG_Z_LIBC_SONAME, bcopy)
+
+#elif defined(VGO_freebsd)
+ BCOPY(VG_Z_LIBC_SONAME,   bcopy)
+ BCOPY(VG_Z_LD_ELF_SO_1,   bcopy)
+ BCOPY(VG_Z_LD_ELF32_SO_1, bcopy)
 
 #elif defined(VGO_darwin)
  //BCOPY(VG_Z_LIBC_SONAME, bcopy)
@@ -1338,6 +1461,7 @@ static inline void my_exit ( int x )
    void* VG_REPLACE_FUNCTION_EZU(20240,soname,fnname) \
             (void *dstV, const void *srcV, SizeT n, SizeT destlen) \
    { \
+      RECORD_COPY(n); \
       SizeT i; \
       HChar* dst = dstV;        \
       const HChar* src = srcV; \
@@ -1393,6 +1517,9 @@ static inline void my_exit ( int x )
 #if defined(VGO_linux)
  GLIBC232_STRCHRNUL(VG_Z_LIBC_SONAME, strchrnul)
 
+#elif defined(VGO_freebsd)
+ GLIBC232_STRCHRNUL(VG_Z_LIBC_SONAME, strchrnul)
+
 #elif defined(VGO_darwin)
 
 #elif defined(VGO_solaris)
@@ -1438,12 +1565,14 @@ static inline void my_exit ( int x )
    char* VG_REPLACE_FUNCTION_EZU(20270,soname,fnname) \
             (char* dst, const char* src, SizeT len) \
    { \
+      FOR_COPY(const HChar* src_orig = src); \
       HChar* ret = dst; \
       if (! len) \
          goto badness; \
       while ((*dst++ = *src++) != '\0') \
          if (--len == 0) \
             goto badness; \
+      RECORD_COPY((Addr)src-(Addr)src_orig); \
       return ret; \
      badness: \
       VALGRIND_PRINTF_BACKTRACE( \
@@ -1474,11 +1603,13 @@ static inline void my_exit ( int x )
    char* VG_REPLACE_FUNCTION_EZU(20280,soname,fnname) \
             (char* dst, const char* src, SizeT len) \
    { \
+      FOR_COPY(const HChar* src_orig = src); \
       if (! len) \
          goto badness; \
       while ((*dst++ = *src++) != '\0') \
          if (--len == 0) \
             goto badness; \
+      RECORD_COPY((Addr)src-(Addr)src_orig); \
       return dst - 1; \
      badness: \
       VALGRIND_PRINTF_BACKTRACE( \
@@ -1508,6 +1639,7 @@ static inline void my_exit ( int x )
    void* VG_REPLACE_FUNCTION_EZU(20290,soname,fnname) \
             ( void *dst, const void *src, SizeT len ) \
    { \
+      RECORD_COPY(len); \
       SizeT len_saved = len; \
       \
       if (len == 0) \
@@ -1557,15 +1689,13 @@ static inline void my_exit ( int x )
    { \
       register HChar *d; \
       register const HChar *s; \
-      \
-      if (dstlen < len) goto badness; \
-      \
+      if (dstlen < len) \
+         goto badness; \
+      RECORD_COPY(len); \
       if (len == 0) \
          return dst; \
-      \
       if (is_overlap(dst, src, len, len)) \
          RECORD_OVERLAP_ERROR("memcpy_chk", dst, src, len); \
-      \
       if ( dst > src ) { \
          d = (HChar *)dst + len - 1; \
          s = (const HChar *)src + len - 1; \
@@ -1643,6 +1773,9 @@ static inline void my_exit ( int x )
  STRSTR(VG_Z_LIBC_SONAME,          __strstr_sse2)
  STRSTR(VG_Z_LIBC_SONAME,          __strstr_sse42)
 
+#elif defined(VGO_freebsd)
+ STRSTR(VG_Z_LIBC_SONAME,          strstr)
+
 #elif defined(VGO_darwin)
 
 #elif defined(VGO_solaris)
@@ -1686,6 +1819,9 @@ static inline void my_exit ( int x )
    }
 
 #if defined(VGO_linux)
+ STRPBRK(VG_Z_LIBC_SONAME,          strpbrk)
+
+#elif defined(VGO_freebsd)
  STRPBRK(VG_Z_LIBC_SONAME,          strpbrk)
 
 #elif defined(VGO_darwin)
@@ -1735,6 +1871,9 @@ static inline void my_exit ( int x )
  STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
  STRCSPN(VG_Z_LIBC_SONAME,          __GI_strcspn)
 
+#elif defined(VGO_freebsd)
+ STRCSPN(VG_Z_LIBC_SONAME,          strcspn)
+
 #elif defined(VGO_darwin)
 
 #elif defined(VGO_solaris)
@@ -1780,6 +1919,9 @@ static inline void my_exit ( int x )
    }
 
 #if defined(VGO_linux)
+ STRSPN(VG_Z_LIBC_SONAME,          strspn)
+
+#elif defined(VGO_freebsd)
  STRSPN(VG_Z_LIBC_SONAME,          strspn)
 
 #elif defined(VGO_darwin)
@@ -1838,6 +1980,9 @@ static inline void my_exit ( int x )
   STRCASESTR(VG_Z_LIBC_SONAME,      strcasestr)
 # endif
 
+#elif defined(VGO_freebsd)
+  STRCASESTR(VG_Z_LIBC_SONAME,      strcasestr)
+
 #elif defined(VGO_darwin)
 
 #elif defined(VGO_solaris)
@@ -1864,12 +2009,7 @@ static inline void my_exit ( int x )
       return i; \
    }
 
-#if defined(VGO_linux)
- WCSLEN(VG_Z_LIBC_SONAME,          wcslen)
-
-#elif defined(VGO_darwin)
-
-#elif defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_freebsd) || defined(VGO_solaris)
  WCSLEN(VG_Z_LIBC_SONAME,          wcslen)
 
 #endif
@@ -1891,7 +2031,7 @@ static inline void my_exit ( int x )
       return i;                          \
    }
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
  WCSNLEN(VG_Z_LIBC_SONAME, wcsnlen)
  WCSNLEN(VG_Z_LIBC_SONAME, __GI_wcsnlen)
 #endif
@@ -1923,7 +2063,7 @@ static inline void my_exit ( int x )
       return 0; \
    }
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
  WCSCMP(VG_Z_LIBC_SONAME,          wcscmp)
 #endif
 
@@ -1953,7 +2093,7 @@ static inline void my_exit ( int x )
          s1++; s2++; n++; \
       } \
    }
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
  WCSNCMP(VG_Z_LIBC_SONAME,          wcsncmp)
 #endif
 
@@ -1977,16 +2117,20 @@ static inline void my_exit ( int x )
       \
       /* This checks for overlap after copying, unavoidable without */ \
       /* pre-counting length... should be ok */ \
+      /* +4 because sizeof(wchar_t) == 4 */ \
+      SizeT srclen = (Addr)src-(Addr)src_orig+4; \
+      RECORD_COPY(srclen); \
       if (is_overlap(dst_orig,  \
                      src_orig,  \
-                     (Addr)dst-(Addr)dst_orig+1, \
-                     (Addr)src-(Addr)src_orig+1)) \
+                     /* +4 because sizeof(wchar_t) == 4 */ \
+                     (Addr)dst-(Addr)dst_orig+4, \
+                     srclen)) \
          RECORD_OVERLAP_ERROR("wcscpy", dst_orig, src_orig, 0); \
       \
       return dst_orig; \
    }
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
  WCSCPY(VG_Z_LIBC_SONAME, wcscpy)
 #endif
 
@@ -2009,7 +2153,7 @@ static inline void my_exit ( int x )
       } \
    }
 
-#if defined(VGO_linux)
+#if defined(VGO_linux)  || defined(VGO_freebsd)
  WCSCHR(VG_Z_LIBC_SONAME,          wcschr)
 #endif
 /*---------------------- wcsrchr ----------------------*/
@@ -2031,7 +2175,7 @@ static inline void my_exit ( int x )
       } \
    }
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
  WCSRCHR(VG_Z_LIBC_SONAME, wcsrchr)
 #endif
 
@@ -2061,11 +2205,14 @@ static inline void my_exit ( int x )
  WMEMCHR(VG_Z_LIBC_SONAME, __GI_wmemchr)
 #endif
 
+#if defined(VGO_freebsd)
+ WMEMCHR(VG_Z_LIBC_SONAME, wmemchr)
+#endif
 /*------------------------------------------------------------*/
 /*--- Improve definedness checking of process environment  ---*/
 /*------------------------------------------------------------*/
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
 
 /* If these wind up getting generated via a macro, so that multiple
    versions of each function exist (as above), use the _EZU variants

@@ -28,7 +28,7 @@
    The GNU General Public License is contained in the file COPYING.
 */
 
-#if defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
@@ -64,7 +64,6 @@
 #include "priv_syswrap-generic.h"
 
 #include "config.h"
-
 
 void ML_(guess_and_register_stack) (Addr sp, ThreadState* tst)
 {
@@ -824,11 +823,28 @@ getsockdetails(Int fd)
 /* Dump out a summary, and a more detailed list, of open file descriptors. */
 void VG_(show_open_fds) (const HChar* when)
 {
-   OpenFd *i = allocated_fds;
+   OpenFd *i;
+   int non_std = 0;
 
-   VG_(message)(Vg_UserMsg, "FILE DESCRIPTORS: %d open %s.\n", fd_count, when);
+   for (i = allocated_fds; i; i = i->next) {
+      if (i->fd > 2)
+         non_std++;
+   }
 
-   while (i) {
+   /* If we are running quiet and there are either no open file descriptors
+      or not tracking all fds, then don't report anything.  */
+   if ((fd_count == 0
+        || ((non_std == 0) && (VG_(clo_track_fds) < 2)))
+       && (VG_(clo_verbosity) == 0))
+      return;
+
+   VG_(message)(Vg_UserMsg, "FILE DESCRIPTORS: %d open (%d std) %s.\n",
+                fd_count, fd_count - non_std, when);
+
+   for (i = allocated_fds; i; i = i->next) {
+      if (i->fd <= 2 && VG_(clo_track_fds) < 2)
+          continue;
+
       if (i->pathname) {
          VG_(message)(Vg_UserMsg, "Open file descriptor %d: %s\n", i->fd,
                       i->pathname);
@@ -851,8 +867,6 @@ void VG_(show_open_fds) (const HChar* when)
          VG_(message)(Vg_UserMsg, "   <inherited from parent>\n");
          VG_(message)(Vg_UserMsg, "\n");
       }
-
-      i = i->next;
    }
 
    VG_(message)(Vg_UserMsg, "\n");
@@ -924,7 +938,7 @@ void VG_(init_preopened_fds)(void)
   out:
    VG_(close)(sr_Res(f));
 
-#elif defined(VGO_darwin)
+#elif defined(VGO_darwin) || defined(VGO_freebsd)
    init_preopened_fds_without_proc_self_fd();
 
 #elif defined(VGO_solaris)
@@ -1128,6 +1142,10 @@ void pre_mem_read_sockaddr ( ThreadId tid,
 
    VG_(sprintf) ( outmsg, description, "sa_family" );
    PRE_MEM_READ( outmsg, (Addr) &sa->sa_family, sizeof(vki_sa_family_t));
+#if defined(VGO_freebsd)
+   VG_(sprintf) ( outmsg, description, "sa_len" );
+   PRE_MEM_READ( outmsg, (Addr) &sa->sa_len, sizeof(char));
+#endif
 
    /* Don't do any extra checking if we cannot determine the sa_family. */
    if (! ML_(safe_to_deref) (&sa->sa_family, sizeof(vki_sa_family_t)))
@@ -1805,7 +1823,15 @@ UInt get_sem_count( Int semid )
       return 0;
 
    return buf.sem_nsems;
+#  elif defined(__NR___semctl) /* FreeBSD */
+   struct vki_semid_ds buf;
+   arg.buf = &buf;
+   res = VG_(do_syscall4)(__NR___semctl, semid, 0, VKI_IPC_STAT, *(UWord *)&arg);
 
+   if (sr_isError(res))
+      return 0;
+
+   return buf.sem_nsems;
 #  elif defined(__NR_semsys) /* Solaris */
    struct vki_semid_ds buf;
    arg.buf = &buf;
@@ -1840,10 +1866,17 @@ ML_(generic_PRE_sys_semctl) ( ThreadId tid,
 #if defined(VKI_IPC_INFO)
    case VKI_IPC_INFO:
    case VKI_SEM_INFO:
+#if defined(VKI_IPC_64)
    case VKI_IPC_INFO|VKI_IPC_64:
    case VKI_SEM_INFO|VKI_IPC_64:
+#endif
+#if defined(VGO_freebsd)
+      PRE_MEM_WRITE( "semctl(IPC_INFO, arg.buf)",
+                     (Addr)arg.buf, sizeof(struct vki_semid_ds) );
+#else
       PRE_MEM_WRITE( "semctl(IPC_INFO, arg.buf)",
                      (Addr)arg.buf, sizeof(struct vki_seminfo) );
+#endif
       break;
 #endif
 
@@ -1919,9 +1952,15 @@ ML_(generic_POST_sys_semctl) ( ThreadId tid,
 #if defined(VKI_IPC_INFO)
    case VKI_IPC_INFO:
    case VKI_SEM_INFO:
+#if defined(VKI_IPC_64)
    case VKI_IPC_INFO|VKI_IPC_64:
    case VKI_SEM_INFO|VKI_IPC_64:
+#endif
+#if defined(VGO_freebsd)
+      POST_MEM_WRITE( (Addr)arg.buf, sizeof(struct vki_semid_ds) );
+#else
       POST_MEM_WRITE( (Addr)arg.buf, sizeof(struct vki_seminfo) );
+#endif
       break;
 #endif
 
@@ -1961,11 +2000,27 @@ ML_(generic_POST_sys_semctl) ( ThreadId tid,
 static
 SizeT get_shm_size ( Int shmid )
 {
-#if defined(__NR_shmctl)
+   /*
+    * The excluded platforms below gained direct shmctl in Linux 5.1. Keep
+    * using ipc-multiplexed shmctl to keep compatibility with older kernel
+    * versions.
+    */
+#if defined(__NR_shmctl) && \
+    !defined(VGP_x86_linux) && !defined(VGP_mips32_linux) && \
+    !defined(VGP_ppc32_linux) && !defined(VGP_ppc64be_linux) && \
+    !defined(VGP_ppc64le_linux) && !defined(VGP_s390x_linux)
 #  ifdef VKI_IPC_64
    struct vki_shmid64_ds buf;
-#    if defined(VGP_amd64_linux) || defined(VGP_arm64_linux)
-     /* See bug 222545 comment 7 */
+     /*
+      * On Linux, the following ABIs use old shmid_ds by default with direct
+      * shmctl and require IPC_64 for shmid64_ds (i.e. the direct syscall is
+      * mapped to sys_old_shmctl):
+      *    alpha, arm, microblaze, mips n32/n64, xtensa
+      * Other Linux ABIs use shmid64_ds by default and do not recognize IPC_64
+      * with the direct shmctl syscall (but still recognize it for the
+      * ipc-multiplexed version if that exists for the ABI).
+      */
+#    if defined(VGO_linux) && !defined(VGP_arm_linux) && !defined(VGP_mips64_linux)
      SysRes __res = VG_(do_syscall3)(__NR_shmctl, shmid, 
                                      VKI_IPC_STAT, (UWord)&buf);
 #    else
@@ -2102,8 +2157,13 @@ ML_(generic_PRE_sys_shmctl) ( ThreadId tid,
    switch (arg1 /* cmd */) {
 #if defined(VKI_IPC_INFO)
    case VKI_IPC_INFO:
+#   if defined(VGO_freebsd)
+      PRE_MEM_WRITE( "shmctl(IPC_INFO, buf)",
+                     arg2, sizeof(struct vki_shmid_ds) );
+#   else
       PRE_MEM_WRITE( "shmctl(IPC_INFO, buf)",
                      arg2, sizeof(struct vki_shminfo) );
+#   endif
       break;
 #if defined(VKI_IPC_64)
    case VKI_IPC_INFO|VKI_IPC_64:
@@ -2161,11 +2221,17 @@ ML_(generic_POST_sys_shmctl) ( ThreadId tid,
    switch (arg1 /* cmd */) {
 #if defined(VKI_IPC_INFO)
    case VKI_IPC_INFO:
+#   if defined(VGO_freebsd)
+      POST_MEM_WRITE( arg2, sizeof(struct vki_shmid_ds) );
+#   else
       POST_MEM_WRITE( arg2, sizeof(struct vki_shminfo) );
+#   endif
       break;
+#if defined(VKI_IPC_64)
    case VKI_IPC_INFO|VKI_IPC_64:
       POST_MEM_WRITE( arg2, sizeof(struct vki_shminfo64) );
       break;
+#endif
 #endif
 
 #if defined(VKI_SHM_INFO)
@@ -2705,6 +2771,7 @@ PRE(sys_getpriority)
    PRE_REG_READ2(long, "getpriority", int, which, int, who);
 }
 
+#if !defined(VGO_freebsd)
 PRE(sys_pwrite64)
 {
    *flags |= SfMayBlock;
@@ -2725,6 +2792,7 @@ PRE(sys_pwrite64)
 #endif
    PRE_MEM_READ( "pwrite64(buf)", ARG2, ARG3 );
 }
+#endif
 
 PRE(sys_sync)
 {
@@ -2769,6 +2837,7 @@ PRE(sys_getsid)
    PRE_REG_READ1(long, "getsid", vki_pid_t, pid);
 }
 
+#if !defined(VGO_freebsd)
 PRE(sys_pread64)
 {
    *flags |= SfMayBlock;
@@ -2796,6 +2865,7 @@ POST(sys_pread64)
       POST_MEM_WRITE( ARG2, RES );
    }
 }
+#endif
 
 PRE(sys_mknod)
 {
@@ -2847,9 +2917,10 @@ void VG_(reap_threads)(ThreadId self)
    vg_assert(i_am_the_only_thread());
 }
 
-// XXX: prototype here seemingly doesn't match the prototype for i386-linux,
-// but it seems to work nonetheless...
-PRE(sys_execve)
+/* This handles the common part of the PRE macro for execve and execveat. */
+void handle_pre_sys_execve(ThreadId tid, SyscallStatus *status, Addr pathname,
+                           Addr arg_2, Addr arg_3, Bool is_execveat,
+                           Bool check_pathptr)
 {
    HChar*       path = NULL;       /* path to executable */
    HChar**      envp = NULL;
@@ -2860,27 +2931,39 @@ PRE(sys_execve)
    Int          i, j, tot_args;
    SysRes       res;
    Bool         setuid_allowed, trace_this_child;
+   const char   *str;
+   char         str2[30], str3[30];
 
-   PRINT("sys_execve ( %#" FMT_REGWORD "x(%s), %#" FMT_REGWORD "x, %#"
-         FMT_REGWORD "x )", ARG1, (HChar*)(Addr)ARG1, ARG2, ARG3);
-   PRE_REG_READ3(vki_off_t, "execve",
-                 char *, filename, char **, argv, char **, envp);
-   PRE_MEM_RASCIIZ( "execve(filename)", ARG1 );
-   if (ARG2 != 0) {
-      /* At least the terminating NULL must be addressable. */
-      if (!ML_(safe_to_deref)((HChar **) (Addr)ARG2, sizeof(HChar *))) {
+   if (is_execveat)
+       str = "execveat";
+   else
+       str = "execve";
+
+   VG_(strcpy)(str2, str);
+   VG_(strcpy)(str3, str);
+
+   if (arg_2 != 0) {
+       /* At least the terminating NULL must be addressable. */
+      if (!ML_(safe_to_deref)((HChar **) (Addr)arg_2, sizeof(HChar *))) {
          SET_STATUS_Failure(VKI_EFAULT);
          return;
       }
-      ML_(pre_argv_envp)( ARG2, tid, "execve(argv)", "execve(argv[i])" );
+      VG_(strcat)(str2, "(argv)");
+      VG_(strcat)(str3, "(argv[i])");
+      ML_(pre_argv_envp)( arg_2, tid, str2, str3 );
    }
-   if (ARG3 != 0) {
+   // Reset helper strings to syscall name.
+   str2[VG_(strlen)(str)] = '\0';
+   str3[VG_(strlen)(str)] = '\0';
+   if (arg_3 != 0) {
       /* At least the terminating NULL must be addressable. */
-      if (!ML_(safe_to_deref)((HChar **) (Addr)ARG3, sizeof(HChar *))) {
+      if (!ML_(safe_to_deref)((HChar **) (Addr)arg_3, sizeof(HChar *))) {
          SET_STATUS_Failure(VKI_EFAULT);
          return;
       }
-      ML_(pre_argv_envp)( ARG3, tid, "execve(envp)", "execve(envp[i])" );
+      VG_(strcat)(str2, "(envp)");
+      VG_(strcat)(str3, "(envp[i])");
+      ML_(pre_argv_envp)( arg_3, tid, str2, str3 );
    }
 
    vg_assert(VG_(is_valid_tid)(tid));
@@ -2893,35 +2976,36 @@ PRE(sys_execve)
       an effort to check that the execve will work before actually
       doing it. */
 
-   /* Check that the name at least begins in client-accessible storage. */
-   if (ARG1 == 0 /* obviously bogus */
-       || !VG_(am_is_valid_for_client)( ARG1, 1, VKI_PROT_READ )) {
-      SET_STATUS_Failure( VKI_EFAULT );
-      return;
+   /* Check that the name at least begins in client-accessible storage.
+      If we didn't create it ourselves in execveat. */
+   if (check_pathptr
+       && !VG_(am_is_valid_for_client)( pathname, 1, VKI_PROT_READ )) {
+       SET_STATUS_Failure( VKI_EFAULT );
+       return;
    }
 
    // debug-only printing
    if (0) {
-      VG_(printf)("ARG1 = %p(%s)\n", (void*)(Addr)ARG1, (HChar*)(Addr)ARG1);
-      if (ARG2) {
-         VG_(printf)("ARG2 = ");
+      VG_(printf)("pathname = %p(%s)\n", (void*)(Addr)pathname, (HChar*)(Addr)pathname);
+      if (arg_2) {
+         VG_(printf)("arg_2 = ");
          Int q;
-         HChar** vec = (HChar**)(Addr)ARG2;
+         HChar** vec = (HChar**)(Addr)arg_2;
          for (q = 0; vec[q]; q++)
             VG_(printf)("%p(%s) ", vec[q], vec[q]);
          VG_(printf)("\n");
       } else {
-         VG_(printf)("ARG2 = null\n");
+         VG_(printf)("arg_2 = null\n");
       }
    }
 
    // Decide whether or not we want to follow along
    { // Make 'child_argv' be a pointer to the child's arg vector
      // (skipping the exe name)
-     const HChar** child_argv = (const HChar**)(Addr)ARG2;
+     const HChar** child_argv = (const HChar**)(Addr)arg_2;
      if (child_argv && child_argv[0] == NULL)
         child_argv = NULL;
-     trace_this_child = VG_(should_we_trace_this_child)( (HChar*)(Addr)ARG1,
+     trace_this_child = VG_(should_we_trace_this_child)( (HChar*)(Addr)pathname,
                                                           child_argv );
    }
 
@@ -2929,7 +3013,7 @@ PRE(sys_execve)
    // ok, etc.  We allow setuid executables to run only in the case when
    // we are not simulating them, that is, they to be run natively.
    setuid_allowed = trace_this_child  ? False  : True;
-   res = VG_(pre_exec_check)((const HChar *)(Addr)ARG1, NULL, setuid_allowed);
+   res = VG_(pre_exec_check)((const HChar *)(Addr)pathname, NULL, setuid_allowed);
    if (sr_isError(res)) {
       SET_STATUS_Failure( sr_Err(res) );
       return;
@@ -2946,7 +3030,7 @@ PRE(sys_execve)
    }
 
    /* After this point, we can't recover if the execve fails. */
-   VG_(debugLog)(1, "syswrap", "Exec of %s\n", (HChar*)(Addr)ARG1);
+   VG_(debugLog)(1, "syswrap", "Exec of %s\n", (HChar*)(Addr)pathname);
 
    
    // Terminate gdbserver if it is active.
@@ -2982,7 +3066,7 @@ PRE(sys_execve)
       }
 
    } else {
-      path = (HChar*)(Addr)ARG1;
+      path = (HChar*)(Addr)pathname;
    }
 
    // Set up the child's environment.
@@ -2996,29 +3080,29 @@ PRE(sys_execve)
    //
    // Then, if tracing the child, set VALGRIND_LIB for it.
    //
-   if (ARG3 == 0) {
+   if (arg_3 == 0) {
       envp = NULL;
    } else {
-      envp = VG_(env_clone)( (HChar**)(Addr)ARG3 );
+      envp = VG_(env_clone)( (HChar**)(Addr)arg_3 );
       if (envp == NULL) goto hosed;
       VG_(env_remove_valgrind_env_stuff)( envp, True /*ro_strings*/, NULL );
    }
 
    if (trace_this_child) {
-      // Set VALGRIND_LIB in ARG3 (the environment)
+      // Set VALGRIND_LIB in arg_3 (the environment)
       VG_(env_setenv)( &envp, VALGRIND_LIB, VG_(libdir));
    }
 
    // Set up the child's args.  If not tracing it, they are
-   // simply ARG2.  Otherwise, they are
+   // simply arg_2.  Otherwise, they are
    //
-   // [launcher_basename] ++ VG_(args_for_valgrind) ++ [ARG1] ++ ARG2[1..]
+   // [launcher_basename] ++ VG_(args_for_valgrind) ++ [pathname] ++ arg_2[1..]
    //
    // except that the first VG_(args_for_valgrind_noexecpass) args
    // are omitted.
    //
    if (!trace_this_child) {
-      argv = (HChar**)(Addr)ARG2;
+      argv = (HChar**)(Addr)arg_2;
    } else {
       vg_assert( VG_(args_for_valgrind) );
       vg_assert( VG_(args_for_valgrind_noexecpass) >= 0 );
@@ -3033,7 +3117,7 @@ PRE(sys_execve)
       // name of client exe
       tot_args++;
       // args for client exe, skipping [0]
-      arg2copy = (HChar**)(Addr)ARG2;
+      arg2copy = (HChar**)(Addr)arg_2;
       if (arg2copy && arg2copy[0]) {
          for (i = 1; arg2copy[i]; i++)
             tot_args++;
@@ -3049,7 +3133,7 @@ PRE(sys_execve)
             continue;
          argv[j++] = * (HChar**) VG_(indexXA)( VG_(args_for_valgrind), i );
       }
-      argv[j++] = (HChar*)(Addr)ARG1;
+      argv[j++] = (HChar*)(Addr)pathname;
       if (arg2copy && arg2copy[0])
          for (i = 1; arg2copy[i]; i++)
             argv[j++] = arg2copy[i];
@@ -3113,9 +3197,9 @@ PRE(sys_execve)
             VG_(printf)("env: %s\n", *cpp);
    }
 
+   // always execute this because it's executing valgrind, not the "target" exe
    SET_STATUS_from_SysRes( 
-      VG_(do_syscall3)(__NR_execve, (UWord)path, (UWord)argv, (UWord)envp) 
-   );
+      VG_(do_syscall3)(__NR_execve, (UWord)path, (UWord)argv, (UWord)envp));
 
    /* If we got here, then the execve failed.  We've already made way
       too much of a mess to continue, so we have to abort. */
@@ -3123,12 +3207,30 @@ PRE(sys_execve)
    vg_assert(FAILURE);
    VG_(message)(Vg_UserMsg, "execve(%#" FMT_REGWORD "x(%s), %#" FMT_REGWORD
                 "x, %#" FMT_REGWORD "x) failed, errno %lu\n",
-                ARG1, (HChar*)(Addr)ARG1, ARG2, ARG3, ERR);
+                pathname, (HChar*)(Addr)pathname, arg_2, arg_3, ERR);
    VG_(message)(Vg_UserMsg, "EXEC FAILED: I can't recover from "
                             "execve() failing, so I'm dying.\n");
    VG_(message)(Vg_UserMsg, "Add more stringent tests in PRE(sys_execve), "
                             "or work out how to recover.\n");
    VG_(exit)(101);
+
+}
+
+// XXX: prototype here seemingly doesn't match the prototype for i386-linux,
+// but it seems to work nonetheless...
+PRE(sys_execve)
+{
+   PRINT("sys_execve ( %#" FMT_REGWORD "x(%s), %#" FMT_REGWORD "x, %#"
+         FMT_REGWORD "x )", ARG1, (HChar*)(Addr)ARG1, ARG2, ARG3);
+   PRE_REG_READ3(vki_off_t, "execve",
+                 char *, filename, char **, argv, char **, envp);
+   PRE_MEM_RASCIIZ( "execve(filename)", ARG1 );
+
+   char *pathname = (char *)ARG1;
+   Addr arg_2 = (Addr)ARG2;
+   Addr arg_3 = (Addr)ARG3;
+
+   handle_pre_sys_execve(tid, status, (Addr)pathname, arg_2, arg_3, 0, True);
 }
 
 PRE(sys_access)
@@ -3301,7 +3403,7 @@ PRE(sys_fchmod)
    PRE_REG_READ2(long, "fchmod", unsigned int, fildes, vki_mode_t, mode);
 }
 
-#if !defined(VGP_nanomips_linux)
+#if !defined(VGP_nanomips_linux) && !defined (VGO_freebsd)
 PRE(sys_newfstat)
 {
    FUSE_COMPATIBLE_MAY_BLOCK();
@@ -3342,7 +3444,7 @@ PRE(sys_fork)
 
    if (!SUCCESS) return;
 
-#if defined(VGO_linux)
+#if defined(VGO_linux) || defined(VGO_freebsd)
    // RES is 0 for child, non-0 (the child's PID) for parent.
    is_child = ( RES == 0 ? True : False );
    child_pid = ( is_child ? -1 : RES );
@@ -3686,7 +3788,7 @@ void ML_(PRE_unknown_ioctl)(ThreadId tid, UWord request, UWord arg)
                unknown_ioctl[i] = request;
                moans--;
                VG_(umsg)("Warning: noted but unhandled ioctl 0x%lx"
-                         " with no size/direction hints.\n", request); 
+                         " with no size/direction hints.\n", request);
                VG_(umsg)("   This could cause spurious value errors to appear.\n");
                VG_(umsg)("   See README_MISSING_SYSCALL_OR_IOCTL for "
                          "guidance on writing a proper wrapper.\n" );
@@ -3822,7 +3924,7 @@ PRE(sys_link)
    PRE_MEM_RASCIIZ( "link(newpath)", ARG2);
 }
 
-#if !defined(VGP_nanomips_linux)
+#if !defined(VGP_nanomips_linux) && !defined(VGO_freebsd)
 PRE(sys_newlstat)
 {
    PRINT("sys_newlstat ( %#" FMT_REGWORD "x(%s), %#" FMT_REGWORD "x )", ARG1,
@@ -3872,7 +3974,11 @@ void handle_sys_mprotect(ThreadId tid, SyscallStatus* status,
                          Addr *addr, SizeT *len, Int *prot)
 {
    if (!ML_(valid_client_addr)(*addr, *len, tid, "mprotect")) {
+#if defined(VGO_freebsd)
+      SET_STATUS_Failure( VKI_EINVAL );
+#else
       SET_STATUS_Failure( VKI_ENOMEM );
+#endif
    } 
 #if defined(VKI_PROT_GROWSDOWN)
    else 
@@ -4031,6 +4137,38 @@ Bool ML_(handle_auxv_open)(SyscallStatus *status, const HChar *filename,
 }
 #endif // defined(VGO_linux) || defined(VGO_solaris)
 
+#if defined(VGO_linux)
+Bool ML_(handle_self_exe_open)(SyscallStatus *status, const HChar *filename,
+                               int flags)
+{
+   HChar  name[30];   // large enough for /proc/<int>/exe
+
+   if (!ML_(safe_to_deref)((const void *) filename, 1))
+      return False;
+
+   /* Opening /proc/<pid>/exe or /proc/self/exe? */
+   VG_(sprintf)(name, "/proc/%d/exe", VG_(getpid)());
+   if (!VG_STREQ(filename, name) && !VG_STREQ(filename, "/proc/self/exe"))
+      return False;
+
+   /* Allow to open the file only for reading. */
+   if (flags & (VKI_O_WRONLY | VKI_O_RDWR)) {
+      SET_STATUS_Failure(VKI_EACCES);
+      return True;
+   }
+
+   SysRes sres = VG_(dup)(VG_(cl_exec_fd));
+   SET_STATUS_from_SysRes(sres);
+   if (!sr_isError(sres)) {
+      OffT off = VG_(lseek)(sr_Res(sres), 0, VKI_SEEK_SET);
+      if (off < 0)
+         SET_STATUS_Failure(VKI_EMFILE);
+   }
+
+   return True;
+}
+#endif // defined(VGO_linux)
+
 PRE(sys_open)
 {
    if (ARG2 & VKI_O_CREAT) {
@@ -4072,8 +4210,10 @@ PRE(sys_open)
       }
    }
 
-   /* Handle also the case of /proc/self/auxv or /proc/<pid>/auxv. */
-   if (ML_(handle_auxv_open)(status, (const HChar *)(Addr)ARG1, ARG2))
+   /* Handle also the case of /proc/self/auxv or /proc/<pid>/auxv
+      or /proc/self/exe or /proc/<pid>/exe. */
+   if (ML_(handle_auxv_open)(status, (const HChar *)(Addr)ARG1, ARG2)
+       || ML_(handle_self_exe_open)(status, (const HChar *)(Addr)ARG1, ARG2))
       return;
 #endif // defined(VGO_linux)
 
@@ -4099,7 +4239,7 @@ PRE(sys_read)
    PRINT("sys_read ( %" FMT_REGWORD "u, %#" FMT_REGWORD "x, %"
          FMT_REGWORD "u )", ARG1, ARG2, ARG3);
    PRE_REG_READ3(ssize_t, "read",
-                 unsigned int, fd, char *, buf, vki_size_t, count);
+                 int, fd, char *, buf, vki_size_t, count);
 
    if (!ML_(fd_allowed)(ARG1, "read", tid, False))
       SET_STATUS_Failure( VKI_EBADF );
@@ -4188,7 +4328,8 @@ PRE(sys_poll)
 
 POST(sys_poll)
 {
-   if (RES >= 0) {
+   // RES is UWord so always >= 0
+   if (SUCCESS && RES >= 0) {
       UInt i;
       struct vki_pollfd* ufds = (struct vki_pollfd *)(Addr)ARG1;
       for (i = 0; i < ARG2; i++)
@@ -4260,8 +4401,7 @@ PRE(sys_readv)
       if ((Int)ARG3 >= 0)
          PRE_MEM_READ( "readv(vector)", ARG2, ARG3 * sizeof(struct vki_iovec) );
 
-      if (ARG2 != 0) {
-         /* ToDo: don't do any of the following if the vector is invalid */
+      if (ML_(safe_to_deref)((const void*)ARG2, ARG3*sizeof(struct vki_iovec *))) {
          vec = (struct vki_iovec *)(Addr)ARG2;
          for (i = 0; i < (Int)ARG3; i++)
             PRE_MEM_WRITE( "readv(vector[...])",
@@ -4388,7 +4528,11 @@ PRE(sys_setrlimit)
    }
    else if (((struct vki_rlimit *)(Addr)ARG2)->rlim_cur
             > ((struct vki_rlimit *)(Addr)ARG2)->rlim_max) {
+#if defined(VGO_freebsd)
+      SET_STATUS_Failure( VKI_EPERM );
+#else
       SET_STATUS_Failure( VKI_EINVAL );
+#endif
    }
    else if (arg1 == VKI_RLIMIT_NOFILE) {
       if (((struct vki_rlimit *)(Addr)ARG2)->rlim_cur > VG_(fd_hard_limit) ||
@@ -4441,7 +4585,7 @@ PRE(sys_setuid)
    PRE_REG_READ1(long, "setuid", vki_uid_t, uid);
 }
 
-#if !defined(VGP_nanomips_linux)
+#if !defined(VGP_nanomips_linux) && !defined(VGO_freebsd)
 PRE(sys_newstat)
 {
    FUSE_COMPATIBLE_MAY_BLOCK();
@@ -4456,7 +4600,9 @@ POST(sys_newstat)
 {
    POST_MEM_WRITE( ARG2, sizeof(struct vki_stat) );
 }
+#endif
 
+#if !defined(VGP_nanomips_linux)
 PRE(sys_statfs)
 {
    FUSE_COMPATIBLE_MAY_BLOCK();
@@ -4543,6 +4689,7 @@ PRE(sys_unlink)
    PRE_MEM_RASCIIZ( "unlink(pathname)", ARG1 );
 }
 
+#if !defined(VGO_freebsd)
 PRE(sys_newuname)
 {
    PRINT("sys_newuname ( %#" FMT_REGWORD "x )", ARG1);
@@ -4556,6 +4703,7 @@ POST(sys_newuname)
       POST_MEM_WRITE( ARG1, sizeof(struct vki_new_utsname) );
    }
 }
+#endif
 
 PRE(sys_waitpid)
 {
@@ -4613,8 +4761,8 @@ PRE(sys_writev)
       if ((Int)ARG3 >= 0)
          PRE_MEM_READ( "writev(vector)", 
                        ARG2, ARG3 * sizeof(struct vki_iovec) );
-      if (ARG2 != 0) {
-         /* ToDo: don't do any of the following if the vector is invalid */
+
+      if (ML_(safe_to_deref)((const void*)ARG2, ARG3*sizeof(struct vki_iovec *))) {
          vec = (struct vki_iovec *)(Addr)ARG2;
          for (i = 0; i < (Int)ARG3; i++)
             PRE_MEM_READ( "writev(vector[...])",
@@ -4698,7 +4846,7 @@ PRE(sys_sethostname)
 #undef PRE
 #undef POST
 
-#endif // defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_solaris)
+#endif // defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 /*--------------------------------------------------------------------*/
 /*--- end                                                          ---*/

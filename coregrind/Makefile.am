@@ -11,12 +11,12 @@ include $(top_srcdir)/Makefile.all.am
 
 AM_CPPFLAGS_@VGCONF_PLATFORM_PRI_CAPS@ += \
 	-I$(top_srcdir)/coregrind \
-	-DVG_LIBDIR="\"$(pkglibdir)"\" \
+	-DVG_LIBDIR="\"$(pkglibexecdir)"\" \
 	-DVG_PLATFORM="\"@VGCONF_ARCH_PRI@-@VGCONF_OS@\""
 if VGCONF_HAVE_PLATFORM_SEC
 AM_CPPFLAGS_@VGCONF_PLATFORM_SEC_CAPS@ += \
 	-I$(top_srcdir)/coregrind \
-	-DVG_LIBDIR="\"$(pkglibdir)"\" \
+	-DVG_LIBDIR="\"$(pkglibexecdir)"\" \
 	-DVG_PLATFORM="\"@VGCONF_ARCH_SEC@-@VGCONF_OS@\""
 endif
 
@@ -47,6 +47,11 @@ endif
 if VGCONF_OS_IS_SOLARIS
 valgrind_SOURCES = \
 	launcher-linux.c \
+	m_debuglog.c
+endif
+if VGCONF_OS_IS_FREEBSD
+valgrind_SOURCES = \
+	launcher-freebsd.c \
 	m_debuglog.c
 endif
 
@@ -91,6 +96,12 @@ vgdb_SOURCES += vgdb-invoker-none.c
 endif
 if VGCONF_OS_IS_SOLARIS
 vgdb_SOURCES += vgdb-invoker-solaris.c
+endif
+if VGCONF_OS_IS_FREEBSD
+# As with Darwin, we don't have ptrace PTRACE_PEEKTEXT
+# so we can't use vgdb-invoker-ptrace.c
+# Need to find an alternative, like Solaris
+vgdb_SOURCES += vgdb-invoker-none.c
 endif
 
 vgdb_CPPFLAGS  = $(AM_CPPFLAGS_PRI)
@@ -212,6 +223,7 @@ noinst_HEADERS = \
 	pub_core_mallocfree.h	\
 	pub_core_options.h	\
 	pub_core_oset.h		\
+	pub_core_pathscan.h     \
 	pub_core_poolalloc.h	\
 	pub_core_rangemap.h	\
 	pub_core_redir.h	\
@@ -267,7 +279,6 @@ noinst_HEADERS = \
 	m_gdbserver/target.h \
 	m_gdbserver/valgrind_low.h \
 	m_gdbserver/gdb/signals.h \
-	m_initimg/priv_initimg_pathscan.h \
 	m_scheduler/priv_sema.h \
 	m_scheduler/priv_sched-lock.h \
 	m_scheduler/priv_sched-lock-impl.h \
@@ -276,6 +287,7 @@ noinst_HEADERS = \
 	m_syswrap/priv_syswrap-generic.h \
 	m_syswrap/priv_syswrap-linux.h \
 	m_syswrap/priv_syswrap-linux-variants.h \
+	m_syswrap/priv_syswrap-freebsd.h \
 	m_syswrap/priv_syswrap-darwin.h \
 	m_syswrap/priv_syswrap-solaris.h \
 	m_syswrap/priv_syswrap-main.h \
@@ -317,6 +329,7 @@ COREGRIND_SOURCES_COMMON = \
 	m_mallocfree.c \
 	m_options.c \
 	m_oset.c \
+	m_pathscan.c \
 	m_poolalloc.c \
 	m_rangemap.c \
 	m_redir.c \
@@ -377,6 +390,8 @@ COREGRIND_SOURCES_COMMON = \
 	m_dispatch/dispatch-mips32-linux.S \
 	m_dispatch/dispatch-mips64-linux.S \
 	m_dispatch/dispatch-nanomips-linux.S \
+	m_dispatch/dispatch-x86-freebsd.S \
+	m_dispatch/dispatch-amd64-freebsd.S \
 	m_dispatch/dispatch-x86-darwin.S \
 	m_dispatch/dispatch-amd64-darwin.S \
 	m_dispatch/dispatch-x86-solaris.S \
@@ -401,9 +416,9 @@ COREGRIND_SOURCES_COMMON = \
 	m_gdbserver/valgrind-low-nanomips.c \
 	m_gdbserver/version.c \
 	m_initimg/initimg-linux.c \
+	m_initimg/initimg-freebsd.c \
 	m_initimg/initimg-darwin.c \
 	m_initimg/initimg-solaris.c \
-	m_initimg/initimg-pathscan.c \
 	m_mach/mach_basics.c \
 	m_mach/mach_msg.c \
 	m_mach/mach_traps-x86-darwin.S \
@@ -416,6 +431,8 @@ COREGRIND_SOURCES_COMMON = \
 	m_sigframe/sigframe-common.c \
 	m_sigframe/sigframe-x86-linux.c \
 	m_sigframe/sigframe-amd64-linux.c \
+	m_sigframe/sigframe-x86-freebsd.c \
+	m_sigframe/sigframe-amd64-freebsd.c \
 	m_sigframe/sigframe-ppc32-linux.c \
 	m_sigframe/sigframe-ppc64-linux.c \
 	m_sigframe/sigframe-arm-linux.c \
@@ -438,6 +455,8 @@ COREGRIND_SOURCES_COMMON = \
 	m_syswrap/syscall-mips32-linux.S \
 	m_syswrap/syscall-mips64-linux.S \
 	m_syswrap/syscall-nanomips-linux.S \
+	m_syswrap/syscall-x86-freebsd.S \
+	m_syswrap/syscall-amd64-freebsd.S \
 	m_syswrap/syscall-x86-darwin.S \
 	m_syswrap/syscall-amd64-darwin.S \
 	m_syswrap/syscall-x86-solaris.S \
@@ -446,12 +465,15 @@ COREGRIND_SOURCES_COMMON = \
 	m_syswrap/syswrap-generic.c \
 	m_syswrap/syswrap-linux.c \
 	m_syswrap/syswrap-linux-variants.c \
+	m_syswrap/syswrap-freebsd.c \
 	m_syswrap/syswrap-darwin.c \
 	m_syswrap/syswrap-solaris.c \
 	m_syswrap/syswrap-x86-linux.c \
 	m_syswrap/syswrap-amd64-linux.c \
 	m_syswrap/syswrap-ppc32-linux.c \
 	m_syswrap/syswrap-ppc64-linux.c \
+	m_syswrap/syswrap-x86-freebsd.c \
+	m_syswrap/syswrap-amd64-freebsd.c \
 	m_syswrap/syswrap-arm-linux.c \
 	m_syswrap/syswrap-arm64-linux.c \
 	m_syswrap/syswrap-s390x-linux.c \
@@ -745,7 +767,7 @@ GDBSERVER_XML_FILES = \
 	m_gdbserver/mips64-fpu.xml
 
 # so as to make sure these get copied into the install tree
-vglibdir = $(pkglibdir)
+vglibdir = $(pkglibexecdir)
 vglib_DATA  = $(GDBSERVER_XML_FILES)
 
 # so as to make sure these get copied into the tarball

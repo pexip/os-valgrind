@@ -1,8 +1,8 @@
 
 
 Valgrind FAQ
-Release 3.16.1 22 June 2020
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Release 3.17.0 19 Mar 2021
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Table of Contents
 1. Background

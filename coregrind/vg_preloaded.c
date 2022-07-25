@@ -45,7 +45,7 @@
 #include "pub_core_debuginfo.h"  // Needed for pub_core_redir.h
 #include "pub_core_redir.h"      // For VG_NOTIFY_ON_LOAD
 
-#if defined(VGO_linux) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 /* ---------------------------------------------------------------------
    Hook for running __gnu_cxx::__freeres() and __libc_freeres() once
@@ -68,13 +68,12 @@ void VG_NOTIFY_ON_LOAD(freeres)(Vg_FreeresToRun to_run)
       _ZN9__gnu_cxx9__freeresEv();
    }
 
-#  if defined(VGO_linux)
-   /* __libc_freeres() not yet available on Solaris. */
-   extern void __libc_freeres(void);
-   if ((to_run & VG_RUN__LIBC_FREERES) != 0) {
+   extern void __libc_freeres(void) __attribute__((weak));
+   if (((to_run & VG_RUN__LIBC_FREERES) != 0) &&
+       (__libc_freeres != NULL)) {
       __libc_freeres();
    }
-#  endif
+
 #  endif
 
    VALGRIND_DO_CLIENT_REQUEST_STMT(VG_USERREQ__FREERES_DONE, 0, 0, 0, 0, 0);
@@ -207,6 +206,10 @@ void VG_REPLACE_FUNCTION_ZU(libSystemZdZaZddylib, arc4random_addrandom)(unsigned
     // GrP fixme ought to check [dat..dat+datlen) is defined
     // but don't care if it's initialized
 }
+
+#elif defined(VGO_freebsd)
+
+// nothing specific currently
 
 #elif defined(VGO_solaris)
 

@@ -1,3 +1,0 @@
-# http://bugs.launchpad.net/bugs/1556765
-Test-Command: valgrind /bin/true
-Restrictions: allow-stderr

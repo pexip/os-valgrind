@@ -14,9 +14,10 @@
 }
 
 {
-   <insert_a_suppression_name_here>
+   FreeBSD GCC i386
    Memcheck:Jump
    obj:*
-   fun:generic_start_main.isra.0
+   fun:_start1
    fun:(below main)
 }
+

@@ -27,7 +27,7 @@
    The GNU General Public License is contained in the file COPYING.
 */
 
-#if defined(VGO_linux) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 #include "pub_core_basics.h"
 #include "pub_core_vki.h"
@@ -36,12 +36,16 @@
 #include "pub_core_libcbase.h"
 #include "pub_core_libcprint.h"
 #include "pub_core_libcassert.h"
+#include "pub_core_libcfile.h"
+#include "pub_core_libcproc.h"
 #include "pub_core_machine.h"      /* VG_ELF_CLASS */
 #include "pub_core_options.h"
 #include "pub_core_oset.h"
+#include "pub_core_pathscan.h"     /* find_executable */
 #include "pub_core_syscall.h"
 #include "pub_core_tooliface.h"    /* VG_(needs) */
 #include "pub_core_xarray.h"
+#include "pub_core_libcproc.h"
 #include "priv_misc.h"             /* dinfo_zalloc/free/strdup */
 #include "priv_image.h"
 #include "priv_d3basics.h"
@@ -1115,6 +1119,80 @@ void read_elf_symtab__ppc64be_linux(
    VG_(OSetGen_Destroy)( oset );
 }
 
+#if defined(VGO_freebsd)
+
+/**
+ * read_and_set_osrel
+ *
+ * "osrel" is in an Elf note. It has values such as 1201000 for FreeBSD 12.1
+ * Some of the behaviour related to SIGSEGV and SIGBUS signals depends on the
+ * kernel reading this value.
+ *
+ * However in the case of Valgrind, the host is strictly statically linked and
+ * does not contain the NT_FREEBSD_ABI_TAG note. And even if it did, we want to
+ * override the value with that of the guest.
+ *
+ * At some later date we might want to look at the value of "fctl0" (note with the
+ * NT_FREEBSD_FEATURE_CTL type). This seems to be related to Address Space Layout
+ * Randomization. No hurry at the moment.
+ *
+ * See /usr/src/sys/kern/imgact_elf.c for details on how the kernel reads these
+ * notes.
+ */
+static
+void read_and_set_osrel(DiImage* img)
+{
+    if (is_elf_object_file_by_DiImage(img, False)) {
+       Word i;
+
+       ElfXX_Ehdr ehdr;
+       ML_(img_get)(&ehdr, img, 0, sizeof(ehdr));
+       /* Skip the phdrs when we have to search the shdrs. In separate
+          .debug files the phdrs might not be valid (they are a copy of
+          the main ELF file) and might trigger assertions when getting
+          image notes based on them. */
+       for (i = 0; i < ehdr.e_phnum; i++) {
+          ElfXX_Phdr phdr;
+          ML_(img_get)(&phdr, img,
+                       ehdr.e_phoff + i * ehdr.e_phentsize, sizeof(phdr));
+
+          if (phdr.p_type == PT_NOTE) {
+             ElfXX_Off note_ioff = phdr.p_offset;
+
+             while (note_ioff < phdr.p_offset + phdr.p_filesz) {
+                ElfXX_Nhdr note[2];
+                ML_(img_get)(note, img, (DiOffT)note_ioff, sizeof(note));
+                DiOffT name_ioff = note_ioff + sizeof(ElfXX_Nhdr);
+                //DiOffT desc_ioff = name_ioff + ((note[0].n_namesz + 3) & ~3);
+                if (ML_(img_strcmp_c)(img, name_ioff, "FreeBSD") == 0
+                    && note[0].n_type == NT_FREEBSD_ABI_TAG) {
+
+                    u_int32_t osrel = note[1].n_type;
+                    int name[4];
+                    name[0] = CTL_KERN;
+                    name[1] = KERN_PROC;
+                    name[2] = KERN_PROC_OSREL;
+                    name[3] = VG_(getpid)();
+                    SizeT newlen = sizeof(osrel);
+                    Int error = VG_(sysctl)(name, 4, NULL, NULL, &osrel, newlen);
+                    if (error == -1) {
+                        VG_(message)(Vg_DebugMsg, "Warning: failed to set osrel for current process with value %d\n", osrel);
+                    } else {
+                        if (VG_(clo_verbosity) > 1) {
+                            VG_(message)(Vg_DebugMsg, "Set osrel for current process with value %d\n", osrel);
+                        }
+                    }
+                }
+                note_ioff = note_ioff + sizeof(ElfXX_Nhdr)
+                                      + ((note[0].n_namesz + 3) & ~3)
+                                      + ((note[0].n_descsz + 3) & ~3);
+             }
+          }
+       }
+    }
+
+}
+#endif
 
 /*
  * Look for a build-id in an ELF image. The build-id specification
@@ -1281,6 +1359,135 @@ DiImage* open_debug_file( const HChar* name, const HChar* buildid, UInt crc,
    return dimg;
 }
 
+#if defined(VGO_linux)
+/* Return the path of the debuginfod-find executable. */
+static
+const HChar* debuginfod_find_path( void )
+{
+  static const HChar* path = (const HChar*) -1;
+
+  if (path == (const HChar*) -1) {
+     if (VG_(getenv)("DEBUGINFOD_URLS") == NULL
+         || VG_(strcmp)("", VG_(getenv("DEBUGINFOD_URLS"))) == 0)
+        path = NULL;
+     else
+        path = VG_(find_executable)("debuginfod-find");
+  }
+
+  return path;
+}
+
+/* Try to find a separate debug file with |buildid| via debuginfod. If found,
+   return its DiImage. Searches for a local debuginfod-find executable and
+   runs it in a child process in order to download the debug file. */
+static
+DiImage* find_debug_file_debuginfod( const HChar* objpath,
+                                     HChar** debugpath,
+                                     const HChar* buildid,
+                                     const UInt crc, Bool rel_ok )
+{
+#  define BUF_SIZE 4096
+   Int          out_fds[2], err_fds[2]; /* pipe fds */
+   DiImage*     dimg = NULL;            /* the img we found */
+   HChar        buf[BUF_SIZE];          /* executable output buffer */
+   const HChar* path;                   /* executable path */
+   SizeT        len;                    /* number of bytes read int buf */
+   Int          ret;                    /* result of read call */
+
+   if (buildid == NULL)
+      return NULL;
+
+   if ((path = debuginfod_find_path()) == NULL)
+      return NULL;
+
+   if (VG_(pipe)(out_fds) != 0
+       || VG_(pipe)(err_fds) != 0)
+      return NULL;
+
+   if (VG_(clo_verbosity) > 1)
+      VG_(umsg)("Downloading debug info for %s...\n", objpath);
+
+   /* Run debuginfod-find to query servers for the debuginfo. */
+   Int pid = VG_(fork)();
+   if (pid == 0) {
+      const HChar *argv[4] = { path, "debuginfo", buildid, (HChar*)0 };
+
+      /* Redirect stdout and stderr */
+      SysRes res = VG_(dup2)(out_fds[1], 1);
+      if (sr_Res(res) < 0)
+         VG_(exit)(1);
+
+      res = VG_(dup2)(err_fds[1], 2);
+      if (sr_Res(res) < 0)
+         VG_(exit)(1);
+
+      /* Disable extra stderr output since it does not play well with umesg */
+      VG_(env_unsetenv)(VG_(client_envp), "DEBUGINFOD_VERBOSE", NULL);
+      VG_(env_unsetenv)(VG_(client_envp), "DEBUGINFOD_PROGRESS", NULL);
+
+      VG_(close)(out_fds[0]);
+      VG_(close)(err_fds[0]);
+      VG_(execv)(argv[0], argv);
+
+      /* If we are still alive here, execv failed. */
+      VG_(exit)(1);
+   }
+
+   VG_(close)(out_fds[1]);
+   VG_(close)(err_fds[1]);
+
+   if (pid < 0) {
+      if (VG_(clo_verbosity) > 1)
+         VG_(umsg)("Server Error\n");
+      goto out;
+   }
+   VG_(waitpid)(pid, NULL, 0);
+
+   /* Set dimg if download was successful. */
+   len = 0;
+   ret = -1;
+   while (len >= 0 && len < BUF_SIZE) {
+      ret = VG_(read)(out_fds[0], buf + len, BUF_SIZE - len);
+      if (ret <= 0)
+         break;
+      len += ret;
+   }
+   if (ret >= 0 && len > 0
+       && buf[0] == '/' && buf[len-1] == '\n') {
+
+      /* Remove newline from filename before trying to open debug file */
+      buf[len-1] = '\0';
+      dimg = open_debug_file(buf, buildid, crc, rel_ok, NULL);
+      if (dimg != NULL) {
+         /* Success */
+         if (*debugpath)
+            ML_(dinfo_free)(*debugpath);
+
+         *debugpath = ML_(dinfo_strdup)("di.fdfd.1", buf);
+         if (VG_(clo_verbosity) > 1)
+            VG_(umsg)("Successfully downloaded debug file for %s\n",
+                      objpath);
+         goto out;
+      }
+   }
+
+   /* Download failed so try to print error message. */
+   HChar* nl;
+   if (VG_(read)(err_fds[0], buf, BUF_SIZE) > 0
+       && (nl = VG_(strchr)(buf, '\n'))) {
+      *nl = '\0';
+      if (VG_(clo_verbosity) > 1)
+         VG_(umsg)("%s\n", buf);
+   } else
+      if (VG_(clo_verbosity) > 1)
+         VG_(umsg)("Server Error\n");
+
+out:
+   VG_(close)(out_fds[0]);
+   VG_(close)(err_fds[0]);
+   return dimg;
+}
+#endif
 
 /* Try to find a separate debug file for a given object file.  If
    found, return its DiImage, which should be freed by the caller.  If
@@ -1380,6 +1587,11 @@ DiImage* find_debug_file( struct _DebugInfo* di,
 
       ML_(dinfo_free)(objdir);
    }
+
+#  if defined(VGO_linux)
+   if (dimg == NULL)
+      dimg = find_debug_file_debuginfod(objpath, &debugpath, buildid, crc, rel_ok);
+#  endif
 
    if (dimg != NULL) {
       vg_assert(debugpath);
@@ -1564,7 +1776,7 @@ static HChar* readlink_path (const HChar *path)
 #if defined(VGP_arm64_linux) || defined(VGP_nanomips_linux)
       res = VG_(do_syscall4)(__NR_readlinkat, VKI_AT_FDCWD,
                                               (UWord)path, (UWord)buf, bufsiz);
-#elif defined(VGO_linux) || defined(VGO_darwin)
+#elif defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_freebsd)
       res = VG_(do_syscall3)(__NR_readlink, (UWord)path, (UWord)buf, bufsiz);
 #elif defined(VGO_solaris)
       res = VG_(do_syscall4)(__NR_readlinkat, VKI_AT_FDCWD, (UWord)path,
@@ -1802,14 +2014,14 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
    for (i = 0; i < VG_(sizeXA)(di->fsm.maps); i++) {
       const DebugInfoMapping* map = VG_(indexXA)(di->fsm.maps, i);
       if (map->rx)
-         TRACE_SYMTAB("rx_map:  avma %#lx   size %lu  foff %ld\n",
-                      map->avma, map->size, map->foff);
+         TRACE_SYMTAB("rx_map:  avma %#lx   size %lu  foff %lld\n",
+                      map->avma, map->size, (Long)map->foff);
    }
    for (i = 0; i < VG_(sizeXA)(di->fsm.maps); i++) {
       const DebugInfoMapping* map = VG_(indexXA)(di->fsm.maps, i);
       if (map->rw)
-         TRACE_SYMTAB("rw_map:  avma %#lx   size %lu  foff %ld\n",
-                      map->avma, map->size, map->foff);
+         TRACE_SYMTAB("rw_map:  avma %#lx   size %lu  foff %lld\n",
+                      map->avma, map->size, (Long)map->foff);
    }
 
    if (phdr_mnent == 0
@@ -1902,6 +2114,11 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
                      item.svma_limit = a_phdr.p_vaddr + a_phdr.p_memsz;
                      item.bias       = map->avma - map->foff
                                        + a_phdr.p_offset - a_phdr.p_vaddr;
+#if (FREEBSD_VERS >= FREEBSD_12_2)
+                     if ((long long int)item.bias < 0LL) {
+                        item.bias = 0;
+                     }
+#endif
                      if (map->rw
                          && (a_phdr.p_flags & (PF_R | PF_W))
                             == (PF_R | PF_W)) {
@@ -2029,8 +2246,8 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
    for (i = 0; i < VG_(sizeXA)(di->fsm.maps); i++) {
       const DebugInfoMapping* map = VG_(indexXA)(di->fsm.maps, i);
       if (map->rx)
-         TRACE_SYMTAB("rx: at %#lx are mapped foffsets %ld .. %lu\n",
-                      map->avma, map->foff, map->foff + map->size - 1 );
+         TRACE_SYMTAB("rx: at %#lx are mapped foffsets %lld .. %lld\n",
+                      map->avma, (Long)map->foff, (Long)(map->foff + map->size - 1) );
    }
    TRACE_SYMTAB("rx: contains these svma regions:\n");
    for (i = 0; i < VG_(sizeXA)(svma_ranges); i++) {
@@ -2042,8 +2259,8 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
    for (i = 0; i < VG_(sizeXA)(di->fsm.maps); i++) {
       const DebugInfoMapping* map = VG_(indexXA)(di->fsm.maps, i);
       if (map->rw)
-         TRACE_SYMTAB("rw: at %#lx are mapped foffsets %ld .. %lu\n",
-                      map->avma, map->foff, map->foff + map->size - 1 );
+         TRACE_SYMTAB("rw: at %#lx are mapped foffsets %lld .. %lld\n",
+                      map->avma, (Long)map->foff, (Long)(map->foff + map->size - 1) );
    }
    TRACE_SYMTAB("rw: contains these svma regions:\n");
    for (i = 0; i < VG_(sizeXA)(svma_ranges); i++) {
@@ -2085,10 +2302,11 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
          }
       }
 
-      TRACE_SYMTAB(" [sec %2ld]  %s %s  al%4u  foff %6ld .. %6lu  "
+      TRACE_SYMTAB(" [sec %2ld]  %s %s  al%4u  foff %6lld .. %6lld  "
                    "  svma %p  name \"%s\"\n", 
                    i, inrx ? "rx" : "  ", inrw ? "rw" : "  ", alyn,
-                   foff, (size == 0) ? foff : foff+size-1, (void *) svma, name);
+                   (Long) foff, (size == 0) ? (Long)foff : (Long)(foff+size-1),
+                   (void *) svma, name);
 
       /* Check for sane-sized segments.  SHT_NOBITS sections have zero
          size in the file and their offsets are just conceptual. */
@@ -2403,7 +2621,8 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
          || defined(VGP_arm_linux) || defined (VGP_s390x_linux) \
          || defined(VGP_mips32_linux) || defined(VGP_mips64_linux) \
          || defined(VGP_arm64_linux) || defined(VGP_nanomips_linux) \
-         || defined(VGP_x86_solaris) || defined(VGP_amd64_solaris)
+         || defined(VGP_x86_solaris) || defined(VGP_amd64_solaris) \
+         || defined(VGP_x86_freebsd) || defined(VGP_amd64_freebsd)
       /* Accept .plt where mapped as rx (code) */
       if (0 == VG_(strcmp)(name, ".plt")) {
          if (inrx && !di->plt_present) {
@@ -2577,7 +2796,10 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
       DiSlice debug_types_escn    = DiSlice_INVALID; // .debug_types  (dwarf4)
       DiSlice debug_abbv_escn     = DiSlice_INVALID; // .debug_abbrev (dwarf2)
       DiSlice debug_str_escn      = DiSlice_INVALID; // .debug_str    (dwarf2)
+      DiSlice debug_line_str_escn = DiSlice_INVALID; // .debug_line_str(dwarf5)
       DiSlice debug_ranges_escn   = DiSlice_INVALID; // .debug_ranges (dwarf2)
+      DiSlice debug_rnglists_escn = DiSlice_INVALID; // .debug_rnglists(dwarf5)
+      DiSlice debug_loclists_escn = DiSlice_INVALID; // .debug_loclists(dwarf5)
       DiSlice debug_loc_escn      = DiSlice_INVALID; // .debug_loc    (dwarf2)
       DiSlice debug_frame_escn    = DiSlice_INVALID; // .debug_frame  (dwarf2)
       DiSlice debug_line_alt_escn = DiSlice_INVALID; // .debug_line   (alt)
@@ -2683,9 +2905,21 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
          if (!ML_(sli_is_valid)(debug_str_escn))
             FIND(".zdebug_str",        debug_str_escn)
 
+         FIND(   ".debug_line_str",    debug_line_str_escn)
+         if (!ML_(sli_is_valid)(debug_line_str_escn))
+            FIND(".zdebug_str",        debug_line_str_escn)
+
          FIND(   ".debug_ranges",      debug_ranges_escn)
          if (!ML_(sli_is_valid)(debug_ranges_escn))
             FIND(".zdebug_ranges",     debug_ranges_escn)
+
+         FIND(   ".debug_rnglists",    debug_rnglists_escn)
+         if (!ML_(sli_is_valid)(debug_rnglists_escn))
+            FIND(".zdebug_rnglists",   debug_rnglists_escn)
+
+         FIND(   ".debug_loclists",    debug_loclists_escn)
+         if (!ML_(sli_is_valid)(debug_loclists_escn))
+            FIND(".zdebug_loclists",   debug_loclists_escn)
 
          FIND(   ".debug_loc",         debug_loc_escn)
          if (!ML_(sli_is_valid)(debug_loc_escn))
@@ -2724,16 +2958,24 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
          |dimg| to it. */
       vg_assert(dimg == NULL && aimg == NULL);
 
+#if defined(VGO_freebsd)
+      /*  */
+      read_and_set_osrel(mimg);
+
+#endif
+
       /* Look for a build-id */
       HChar* buildid = find_buildid(mimg, False, False);
 
-      /* Look for a debug image that matches either the build-id or
+      /* If we don't have a .debug_info section in the main image then
+         look for a debug image that matches either the build-id or
          the debuglink-CRC32 in the main image.  If the main image
          doesn't contain either of those then this won't even bother
          to try looking.  This looks in all known places, including
          the --extra-debuginfo-path if specified and on the
          --debuginfo-server if specified. */
-      if (buildid != NULL || debuglink_escn.img != NULL) {
+      if (debug_info_escn.img == NULL &&
+          (buildid != NULL || debuglink_escn.img != NULL)) {
          /* Do have a debuglink section? */
          if (debuglink_escn.img != NULL) {
             UInt crc_offset 
@@ -2994,9 +3236,21 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
             if (!ML_(sli_is_valid)(debug_str_escn))
                FIND(need_dwarf2,     ".zdebug_str",       debug_str_escn)
 
+            FIND(   need_dwarf2,     ".debug_line_str",   debug_line_str_escn)
+            if (!ML_(sli_is_valid)(debug_line_str_escn))
+               FIND(need_dwarf2,     ".zdebug_line_str",  debug_line_str_escn)
+
             FIND(   need_dwarf2,     ".debug_ranges",     debug_ranges_escn)
             if (!ML_(sli_is_valid)(debug_ranges_escn))
                FIND(need_dwarf2,     ".zdebug_ranges",    debug_ranges_escn)
+
+            FIND(   need_dwarf2,     ".debug_rnglists",   debug_rnglists_escn)
+            if (!ML_(sli_is_valid)(debug_rnglists_escn))
+               FIND(need_dwarf2,     ".zdebug_rnglists",  debug_rnglists_escn)
+
+            FIND(   need_dwarf2,     ".debug_loclists",   debug_loclists_escn)
+            if (!ML_(sli_is_valid)(debug_loclists_escn))
+               FIND(need_dwarf2,     ".zdebug_loclists",  debug_loclists_escn)
 
             FIND(   need_dwarf2,     ".debug_loc",        debug_loc_escn)
             if (!ML_(sli_is_valid)(debug_loc_escn))
@@ -3006,7 +3260,8 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
             if (!ML_(sli_is_valid)(debug_frame_escn))
                FIND(need_dwarf2,     ".zdebug_frame",     debug_frame_escn)
 
-            FIND(   need_dwarf2,     ".gnu_debugaltlink", debugaltlink_escn)
+            if (!ML_(sli_is_valid)(debugaltlink_escn))
+               FIND(   need_dwarf2,     ".gnu_debugaltlink", debugaltlink_escn)
 
             FIND(   need_dwarf1,     ".debug",            dwarf1d_escn)
             FIND(   need_dwarf1,     ".line",             dwarf1l_escn)
@@ -3231,7 +3486,8 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
                                       debug_abbv_escn,
                                       debug_line_escn,
                                       debug_str_escn,
-                                      debug_str_alt_escn );
+                                      debug_str_alt_escn,
+                                      debug_line_str_escn);
          /* The new reader: read the DIEs in .debug_info to acquire
             information on variable types and locations or inline info.
             But only if the tool asks for it, or the user requests it on
@@ -3242,9 +3498,10 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
                di, debug_info_escn,     debug_types_escn,
                    debug_abbv_escn,     debug_line_escn,
                    debug_str_escn,      debug_ranges_escn,
+                   debug_rnglists_escn, debug_loclists_escn,
                    debug_loc_escn,      debug_info_alt_escn,
                    debug_abbv_alt_escn, debug_line_alt_escn,
-                   debug_str_alt_escn
+                   debug_str_alt_escn,  debug_line_str_escn
             );
          }
       }
@@ -3343,7 +3600,7 @@ Bool ML_(read_elf_debug_info) ( struct _DebugInfo* di )
    /* NOTREACHED */
 }
 
-#endif // defined(VGO_linux) || defined(VGO_solaris)
+#endif // defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 /*--------------------------------------------------------------------*/
 /*--- end                                                          ---*/

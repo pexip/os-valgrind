@@ -18,16 +18,18 @@ EXTRA_DIST = \
 # libmpiwrap-<platform>.so
 #----------------------------------------------------------------------------
 
-noinst_PROGRAMS  =
+# These are really real libraries, so they should go to libdir, not libexec.
+mpidir = $(pkglibdir)
+mpi_PROGRAMS  =
 if BUILD_MPIWRAP_PRI
-noinst_PROGRAMS += libmpiwrap-@VGCONF_ARCH_PRI@-@VGCONF_OS@.so
+mpi_PROGRAMS += libmpiwrap-@VGCONF_ARCH_PRI@-@VGCONF_OS@.so
 endif
 if BUILD_MPIWRAP_SEC
-noinst_PROGRAMS += libmpiwrap-@VGCONF_ARCH_SEC@-@VGCONF_OS@.so
+mpi_PROGRAMS += libmpiwrap-@VGCONF_ARCH_SEC@-@VGCONF_OS@.so
 endif
 
 if VGCONF_OS_IS_DARWIN
-noinst_DSYMS = $(noinst_PROGRAMS)
+mpi_DSYMS = $(mpi_PROGRAMS)
 endif
 
 
@@ -35,6 +37,10 @@ endif
 ## mflag_primary/mflag_secondary logic in ../configure.in unfortunately all need
 ## to be kept in sync with each other
 if VGCONF_OS_IS_LINUX
+ MPI_FLAG_M3264_PRI = $(AM_FLAG_M3264_PRI)
+ MPI_FLAG_M3264_SEC = $(AM_FLAG_M3264_SEC)
+endif
+if VGCONF_OS_IS_FREEBSD
  MPI_FLAG_M3264_PRI = $(AM_FLAG_M3264_PRI)
  MPI_FLAG_M3264_SEC = $(AM_FLAG_M3264_SEC)
 endif

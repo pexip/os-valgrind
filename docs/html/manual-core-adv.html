@@ -219,7 +219,7 @@ tool-specific macros).</p>
     </p></dd>
 <dt><span class="term"><span class="command"><strong><code class="computeroutput">VALGRIND_CLO_CHANGE(option)</code>:</strong></span></span></dt>
 <dd><p>Changes the value of a dynamically changeable option (a string).
-       See <a class="xref" href="manual-core.html#manual-core.dynopts" title="2.6.8. Dynamically Changing Options">Dynamically Change Options</a>.
+       See <a class="xref" href="manual-core.html#manual-core.dynopts" title="2.7.8. Dynamically Changing Options">Dynamically Change Options</a>.
     </p></dd>
 <dt><span class="term"><span class="command"><strong><code class="computeroutput">VALGRIND_STACK_REGISTER(start, end)</code>:</strong></span></span></dt>
 <dd>
@@ -1191,12 +1191,16 @@ client request.
     </p></li>
 <li class="listitem"><p><code class="varname">v.info open_fds</code> shows the list of open file
     descriptors and details related to the file descriptor.
-    This only works if <code class="option">--track-fds=yes</code>
-    was given at Valgrind startup.</p></li>
+    This only works if <code class="option">--track-fds=yes</code> or
+    <code class="option">--track-fds=all</code> (to include
+    <code class="computeroutput">stdin</code>,
+    <code class="computeroutput">stdout</code> and
+    <code class="computeroutput">stderr</code>) was given at Valgrindr
+    startup.</p></li>
 <li class="listitem"><p><code class="varname">v.clo &lt;clo_option&gt;...</code> changes one or more
         dynamic command line options. If no clo_option is given, lists the
         dynamically changeable options. See
-        <a class="xref" href="manual-core.html#manual-core.dynopts" title="2.6.8. Dynamically Changing Options">Dynamically Change Options</a>.
+        <a class="xref" href="manual-core.html#manual-core.dynopts" title="2.7.8. Dynamically Changing Options">Dynamically Change Options</a>.
       </p></li>
 <li class="listitem">
 <p><code class="varname">v.set {gdb_output | log_output |
@@ -1236,7 +1240,7 @@ client request.
     to a huge value and continue execution.</p></li>
 <li class="listitem"><p><code class="varname">xtmemory [&lt;filename&gt; default xtmemory.kcg.%p.%n]</code>
       requests the tool (Memcheck, Massif, Helgrind) to produce an xtree heap memory report. 
-      See <a class="xref" href="manual-core.html#manual-core.xtree" title="2.9. Execution Trees">Execution Trees</a> for
+      See <a class="xref" href="manual-core.html#manual-core.xtree" title="2.10. Execution Trees">Execution Trees</a> for
       a detailed explanation about execution trees. </p></li>
 </ul></div>
 <p>The following Valgrind monitor commands are useful for

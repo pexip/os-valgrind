@@ -241,7 +241,7 @@
 
 /* --- Soname of the standard C library. --- */
 
-#if defined(VGO_linux) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
 # if defined(MUSL_LIBC)
 #  define  VG_Z_LIBC_SONAME  libcZdZa              // libc.*
 #else
@@ -269,19 +269,22 @@
 
 #endif
 
-/* --- Soname of the GNU C++ library. --- */
+/* --- Sonames of the GNU C++ library. --- */
 
 // Valid on all platforms(?)
 #define  VG_Z_LIBSTDCXX_SONAME  libstdcZpZpZa           // libstdc++*
 
+/* --- Soname of the clang C++ library. --- */
+
+#define  VG_Z_LIBCXX_SONAME     libcZpZpZa              // libc++*
+
+
 /* --- Soname of the pthreads library. --- */
 
 #if defined(VGO_linux)
-# if defined(MUSL_LIBC)
-#  define  VG_Z_LIBPTHREAD_SONAME  libcZdZa              // libc.*
-#else
 #  define  VG_Z_LIBPTHREAD_SONAME  libpthreadZdsoZd0     // libpthread.so.0
-#endif
+#elif defined(VGO_freebsd)
+#  define  VG_Z_LIBPTHREAD_SONAME  libthrZdsoZa          // libthr.so*
 #elif defined(VGO_darwin)
 #  define  VG_Z_LIBPTHREAD_SONAME  libSystemZdZaZddylib  // libSystem.*.dylib
 #elif defined(VGO_solaris)
@@ -317,6 +320,18 @@
 #define  VG_U_LD_LINUX_ARMHF_SO_3   "ld-linux-armhf.so.3"
 
 #define  VG_U_LD_LINUX_MIPSN8_S0_1  "ld-linux-mipsn8.so.1"
+
+#endif
+
+/* --- Sonames for FreeBSD ELF linkers, plus unencoded versions. --- */
+
+#if defined(VGO_freebsd)
+
+#define  VG_Z_LD_ELF_SO_1           ldZhelfZdsoZd1           // ld-elf.so.1
+#define  VG_U_LD_ELF_SO_1           "ld-elf.so.1"
+
+#define  VG_Z_LD_ELF32_SO_1         ldZhelf32ZdsoZd1         // ld-elf32.so.1
+#define  VG_U_LD_ELF32_SO_1         "ld-elf32.so.1"
 
 #endif
 
@@ -363,6 +378,42 @@
 #define SO_SYN_MALLOC_NAME "VgSoSynsomalloc"
 
 Bool VG_(is_soname_ld_so) (const HChar *soname);
+
+// Some macros to help decide which libraries (libc or libpthread
+// or some platform-specific variation of these) should be used
+// for wrapping pthread/semaphore functions with DRD and Helgrind
+// The possibilities are
+// a) only in libpthread
+// b) mabye in both libpthread and libc or
+// c) only in libc
+
+// Linux GNU libc is moving from a) to c)
+// Fedora 33 has pthread functions in both libc and libpthread
+// and at least glibc 2.32 (Fedora 34) has an implementation of all pthread
+// functions in both libc and libpthread. Older glibc versions only have an
+// implementation of the pthread functions in libpthread.
+
+// Linux MUSL libc is c) it provides a single library that includes
+// pthreads functions.
+
+// Darwin is a)
+
+// Solaris is c) libpthread is just a filter library on top of libc.
+// Threading and synchronization functions in runtime linker are not
+// intercepted.
+
+// FreeBSD is b) pthread functions are lin libthr but semaphore
+// functions are lin libc
+
+#if defined(VGO_darwin) || defined(VGO_freebsd)
+#define VG_WRAP_THREAD_FUNCTION_LIBPTHREAD_ONLY
+#elif defined(VGO_solaris) || (defined(VGO_linux) && defined(MUSL_LIBC))
+#define VG_WRAP_THREAD_FUNCTION_LIBC_ONLY
+#elif defined(VGO_linux)
+#define VG_WRAP_THREAD_FUNCTION_LIBC_AND_LIBPTHREAD
+#else
+#  error "Unknown platform"
+#endif
 
 #endif   // __PUB_TOOL_REDIR_H
 

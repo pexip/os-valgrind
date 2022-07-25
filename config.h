@@ -46,6 +46,30 @@
 /* configured to build with lto link time optimisation */
 /* #undef ENABLE_LTO */
 
+/* FREEBSD_VERS value for FreeBSD 10.x */
+/* #undef FREEBSD_10 */
+
+/* FREEBSD_VERS value for FreeBSD 11.x */
+/* #undef FREEBSD_11 */
+
+/* FREEBSD_VERS value for FreeBSD 12.0 to 12.1 */
+/* #undef FREEBSD_12 */
+
+/* FREEBSD_VERS value for FreeBSD 12.2 */
+/* #undef FREEBSD_12_2 */
+
+/* FREEBSD_VERS value for FreeBSD 13.x */
+/* #undef FREEBSD_13 */
+
+/* FREEBSD_VERS value for FreeBSD 14.x */
+/* #undef FREEBSD_14 */
+
+/* Define to 1 if you're using FreeBSD */
+/* #undef FREEBSD_LIBC */
+
+/* FreeBSD version */
+/* #undef FREEBSD_VERS */
+
 /* path to GDB */
 #define GDB_PATH "/usr/bin/gdb"
 
@@ -141,6 +165,9 @@
 
 /* Define to 1 if you have the `memchr' function. */
 #define HAVE_MEMCHR 1
+
+/* Define to 1 if you have the `memfd_create' function. */
+#define HAVE_MEMFD_CREATE 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -239,6 +266,9 @@
 /* Define to 1 if you have the `semtimedop' function. */
 #define HAVE_SEMTIMEDOP 1
 
+/* Define to 1 if you have the `setcontext' function. */
+#define HAVE_SETCONTEXT 1
+
 /* Define to 1 if libstd++ supports annotating shared pointers */
 #define HAVE_SHARED_POINTER_ANNOTATION 1
 
@@ -274,6 +304,9 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #define HAVE_STRSTR 1
+
+/* Define to 1 if you have the `swapcontext' function. */
+#define HAVE_SWAPCONTEXT 1
 
 /* Define to 1 if you have the `syscall' function. */
 #define HAVE_SYSCALL 1
@@ -351,7 +384,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.16.1"
+#define PACKAGE_STRING "Valgrind 3.18.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -360,7 +393,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.16.1"
+#define PACKAGE_VERSION "3.18.1"
 
 /* Define to 1 if you have the `A_GETSTAT' and `A_SETSTAT' constants. */
 /* #undef SOLARIS_AUDITON_STAT */
@@ -474,7 +507,7 @@
 #define TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "3.16.1"
+#define VERSION "3.18.1"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"

@@ -82,6 +82,7 @@ EXTRA_DIST = \
 	pcmpxstrx64w.vgtest \
 	rcl-amd64.vgtest rcl-amd64.stdout.exp rcl-amd64.stderr.exp \
 	rdrand.vgtest rdrand.stdout.exp rdrand.stderr.exp \
+	rdseed.vgtest rdseed.stdout.exp rdseed.stderr.exp \
 	redundantRexW.vgtest redundantRexW.stdout.exp \
 	redundantRexW.stderr.exp \
 	smc1.stderr.exp smc1.stdout.exp smc1.vgtest \
@@ -96,7 +97,8 @@ EXTRA_DIST = \
 	tm1.vgtest tm1.stderr.exp tm1.stdout.exp \
 	x87trigOOR.vgtest x87trigOOR.stderr.exp x87trigOOR.stdout.exp \
 	xacq_xrel.stderr.exp xacq_xrel.stdout.exp xacq_xrel.vgtest \
-	xadd.stderr.exp xadd.stdout.exp xadd.vgtest
+	xadd.stderr.exp xadd.stdout.exp xadd.vgtest \
+	sse4-64.stdout.exp.freebsd sse4-64.stdout.exp-freebsd-clang
 
 check_PROGRAMS = \
 	allexec \
@@ -168,6 +170,9 @@ endif
 if BUILD_RDRAND_TESTS
  check_PROGRAMS += rdrand
 endif
+if BUILD_RDSEED_TESTS
+ check_PROGRAMS += rdseed
+endif
 
 
 # DDD: these need to be made to work on Darwin like the x86/ ones were.
@@ -226,5 +231,5 @@ looper_CFLAGS		= $(AM_CFLAGS) @FLAG_NO_PIE@
 sbbmisc_CFLAGS		= $(AM_CFLAGS) @FLAG_NO_PIE@
 shrld_CFLAGS		= $(AM_CFLAGS) @FLAG_NO_PIE@
 
-.def.c: $(srcdir)/gen_insn_test.pl
+.def.c:
 	$(PERL) $(srcdir)/gen_insn_test.pl < $< > $@

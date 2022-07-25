@@ -2,7 +2,9 @@
 
 dir=`dirname $0`
 
-sed -e "s:_pthread_start (in /usr/lib/libSystem.B.dylib):(within libpthread-?.?.so):" |
+SED=/usr/bin/sed
+
+$SED -e "s:_pthread_start (in /usr/lib/libSystem.B.dylib):(within libpthread-?.?.so):" |
 
 $dir/../../tests/filter_stderr_basic |
 
@@ -17,7 +19,8 @@ fi |
 # Remove line numbers referring to drd's source code.
 # Remove libpthread's version number.
 # Remove line numbers from stack traces.
-sed \
+# Extract start_thread because it can be in libpthread or libc.
+$SED \
 -e "/^drd, a thread error detector$/d" \
 -e "s/^Allocation context: stack of thread \([0-9]*\), offset -[0-9]*$/Allocation context: stack of thread \1, offset .../" \
 -e "/^warning: evaluate_Dwarf3_Expr: unhandled DW_OP_.*/d" \
@@ -27,10 +30,14 @@ sed \
 -e "s/, in frame #[0-9]* of thread /, in frame #? of thread /" \
 -e "s/(\(functional\|thread\):[0-9]*)/(\1:...)/" \
 -e "s/(tc20_verifywrap.c:261)/(tc20_verifywrap.c:262)/" \
--e "/^Copyright (C) 2006-201., and GNU GPL'd, by Bart Van Assche.$/d" \
+-e "/^Copyright (C) 2006-20.., and GNU GPL'd, by Bart Van Assche.$/d" \
+-e "s/start_thread ([^)]*)/start_thread/" \
 -e "s/\([A-Za-z_]*\) (clone.S:[0-9]*)/\1 (in \/...libc...)/" \
+-e "s/\([A-Za-z_]*\) (swapcontext.S:[0-9]*)/\1 (in \/...libc...)/" \
+-e "s/_swapcontext/swapcontext/" \
 -e "s/[A-Za-z_]* (pthread_create.c:[0-9]*)/(within libpthread-?.?.so)/" \
 -e "s/[A-Za-z_]* (in [^ ]*libpthread-[0-9.]*\.so)/(within libpthread-?.?.so)/" \
+-e "s/... (in \/lib\/libthr.so.3)/start_thread/" \
 -e "s:(within /lib[0-9]*/ld-[0-9.]*\.so):(within ld-?.?.so):" \
 -e "s/was held during [0-9][0-9]*/was held during .../" \
 -e "s: BSS section of [^<]*/: BSS section of :g" \

@@ -8,7 +8,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright IBM Corp. 2010-2017
+   Copyright IBM Corp. 2010-2021
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -248,6 +248,13 @@ typedef enum {
 #define VRS_d2(insn) (((insn) >> 32) & 0xfff)
 #define VRS_m4(insn) (((insn) >> 28) & 0xf)
 #define VRS_rxb(insn) (((insn) >> 24) & 0xf)
+#define VRSd_v1(insn) (((insn) >> 28) & 0xf)
+#define VRSd_r3(insn) (((insn) >> 48) & 0xf)
+#define VSI_i3(insn) (((insn) >> 48) & 0xff)
+#define VSI_b2(insn) (((insn) >> 44) & 0xf)
+#define VSI_d2(insn) (((insn) >> 32) & 0xfff)
+#define VSI_v1(insn) (((insn) >> 28) & 0xf)
+#define VSI_rxb(insn) (((insn) >> 24) & 0xf)
 
 
 /*------------------------------------------------------------*/
@@ -367,6 +374,13 @@ static __inline__ IRExpr *
 mkU64(ULong value)
 {
    return IRExpr_Const(IRConst_U64(value));
+}
+
+/* Create an expression node for a 128-bit vector constant */
+static __inline__ IRExpr *
+mkV128(UShort value)
+{
+   return IRExpr_Const(IRConst_V128(value));
 }
 
 /* Create an expression node for a 32-bit floating point constant
@@ -741,6 +755,9 @@ s390_cc_widen(IRTemp v, Bool sign_extend)
       break;
    case Ity_I8:
       expr = unop(sign_extend ? Iop_8Sto64 : Iop_8Uto64, expr);
+      break;
+   case Ity_I1:
+      expr = unop(sign_extend ? Iop_1Sto64 : Iop_1Uto64, expr);
       break;
    default:
       vpanic("s390_cc_widen");
@@ -1934,6 +1951,26 @@ s390_vr_get_type(const UChar m)
    return results[m];
 }
 
+/* Determine IRType from instruction's floating-point format field */
+static IRType
+s390_vr_get_ftype(const UChar m)
+{
+   static const IRType results[] = {Ity_F32, Ity_F64, Ity_F128};
+   if (m >= 2 && m <= 4)
+      return results[m - 2];
+   return Ity_INVALID;
+}
+
+/* Determine number of elements from instruction's floating-point format
+   field */
+static UChar
+s390_vr_get_n_elem(const UChar m)
+{
+   if (m >= 2 && m <= 4)
+      return 1 << (4 - m);
+   return 0;
+}
+
 /* Determine if Condition Code Set (CS) flag is set in m field */
 #define s390_vr_is_cs_set(m) (((m) & 0x1) != 0)
 
@@ -2188,12 +2225,15 @@ s390_vr_offset_by_index(UInt archreg,IRType type, UChar index)
          goto invalidIndex;
       }
       return vr_offset(archreg) + sizeof(ULong) * index;
+
    case Ity_V128:
+   case Ity_F128:
       if(index == 0) {
          return vr_qw_offset(archreg);
       } else {
          goto invalidIndex;
       }
+
    default:
       vpanic("s390_vr_offset_by_index: unknown type");
    }
@@ -2211,7 +2251,14 @@ put_vr(UInt archreg, IRType type, UChar index, IRExpr *expr)
    UInt offset = s390_vr_offset_by_index(archreg, type, index);
    vassert(typeOfIRExpr(irsb->tyenv, expr) == type);
 
-   stmt(IRStmt_Put(offset, expr));
+   if (type == Ity_F128) {
+      IRTemp val = newTemp(Ity_F128);
+      assign(val, expr);
+      stmt(IRStmt_Put(offset, unop(Iop_F128HItoF64, mkexpr(val))));
+      stmt(IRStmt_Put(offset + 8, unop(Iop_F128LOtoF64, mkexpr(val))));
+   } else {
+      stmt(IRStmt_Put(offset, expr));
+   }
 }
 
 /* Read type sized part specified by index of a vr register. */
@@ -2219,6 +2266,11 @@ static IRExpr *
 get_vr(UInt archreg, IRType type, UChar index)
 {
    UInt offset = s390_vr_offset_by_index(archreg, type, index);
+   if (type == Ity_F128) {
+      return binop(Iop_F64HLtoF128,
+                   IRExpr_Get(offset, Ity_F64),
+                   IRExpr_Get(offset + 8, Ity_F64));
+   }
    return IRExpr_Get(offset, type);
 }
 
@@ -2247,9 +2299,12 @@ s390_vr_fill(UChar v1, IRExpr *o2)
    case Ity_I32:
       put_vr_qw(v1, unop(Iop_Dup32x4, o2));
       break;
-   case Ity_I64:
-      put_vr_qw(v1, binop(Iop_64HLtoV128, o2, o2));
+   case Ity_I64: {
+      IRTemp val = newTemp(Ity_I64);
+      assign(val, o2);
+      put_vr_qw(v1, binop(Iop_64HLtoV128, mkexpr(val), mkexpr(val)));
       break;
+   }
    default:
       ppIRType(o2type);
       vpanic("s390_vr_fill: invalid IRType");
@@ -2294,11 +2349,11 @@ s390_getCountToBlockBoundary(IRTemp op2addr, UChar m)
    return mkexpr(output);
 }
 
-/* Load bytes into v1.
-   maxIndex specifies max index to load and must be Ity_I32.
-   If maxIndex >= 15, all 16 bytes are loaded.
-   All bytes after maxIndex are zeroed. */
-static void s390_vr_loadWithLength(UChar v1, IRTemp addr, IRExpr *maxIndex)
+/* Starting from addr, load at most maxIndex + 1 bytes into v1.  Fill the
+   leftmost or rightmost bytes of v1, depending on whether `rightmost' is set.
+   If maxIndex >= 15, load all 16 bytes; otherwise clear the remaining bytes. */
+static void
+s390_vr_loadWithLength(UChar v1, IRTemp addr, IRExpr *maxIndex, Bool rightmost)
 {
    IRTemp maxIdx = newTemp(Ity_I32);
    IRTemp cappedMax = newTemp(Ity_I64);
@@ -2311,8 +2366,8 @@ static void s390_vr_loadWithLength(UChar v1, IRTemp addr, IRExpr *maxIndex)
       crossed if and only if the real insn would have crossed it as well.
       Thus, if the bytes to load are fully contained in an aligned 16-byte
       chunk, load the whole 16-byte aligned chunk, and otherwise load 16 bytes
-      from the unaligned address.  Then shift the loaded data left-aligned
-      into the target vector register. */
+      from the unaligned address.  Then shift the loaded data left- or
+      right-aligned into the target vector register. */
 
    assign(maxIdx, maxIndex);
    assign(cappedMax, mkite(binop(Iop_CmpLT32U, mkexpr(maxIdx), mkU32(15)),
@@ -2325,20 +2380,60 @@ static void s390_vr_loadWithLength(UChar v1, IRTemp addr, IRExpr *maxIndex)
    assign(back, mkite(binop(Iop_CmpLE64U, mkexpr(offset), mkexpr(zeroed)),
                       mkexpr(offset), mkU64(0)));
 
-   /* How much to shift the loaded 16-byte vector to the right, and then to
-      the left.  Since both 'zeroed' and 'back' range from 0 to 15, the shift
-      amounts range from 0 to 120. */
-   IRExpr *shrAmount = binop(Iop_Shl64,
-                             binop(Iop_Sub64, mkexpr(zeroed), mkexpr(back)),
-                             mkU8(3));
-   IRExpr *shlAmount = binop(Iop_Shl64, mkexpr(zeroed), mkU8(3));
+   IRExpr* chunk = load(Ity_V128, binop(Iop_Sub64, mkexpr(addr), mkexpr(back)));
 
-   put_vr_qw(v1, binop(Iop_ShlV128,
-                       binop(Iop_ShrV128,
-                             load(Ity_V128,
-                                  binop(Iop_Sub64, mkexpr(addr), mkexpr(back))),
-                             unop(Iop_64to8, shrAmount)),
-                       unop(Iop_64to8, shlAmount)));
+   /* Shift the loaded 16-byte vector to the right, then to the left, or vice
+      versa, where each shift amount ranges from 0 to 120. */
+   IRExpr* shift1;
+   IRExpr* shift2 = unop(Iop_64to8, binop(Iop_Shl64, mkexpr(zeroed), mkU8(3)));
+
+   if (rightmost) {
+      shift1 = unop(Iop_64to8, binop(Iop_Shl64, mkexpr(back), mkU8(3)));
+      put_vr_qw(v1, binop(Iop_ShrV128,
+                          binop(Iop_ShlV128, chunk, shift1),
+                          shift2));
+   } else {
+      shift1 = unop(Iop_64to8,
+                    binop(Iop_Shl64,
+                          binop(Iop_Sub64, mkexpr(zeroed), mkexpr(back)),
+                          mkU8(3)));
+      put_vr_qw(v1, binop(Iop_ShlV128,
+                          binop(Iop_ShrV128, chunk, shift1),
+                          shift2));
+   }
+}
+
+/* Store at most maxIndex + 1 bytes from v1 to addr.  Store the leftmost or
+   rightmost bytes of v1, depending on whether `rightmost' is set.  If maxIndex
+   >= 15, store all 16 bytes. */
+static void
+s390_vr_storeWithLength(UChar v1, IRTemp addr, IRExpr *maxIndex, Bool rightmost)
+{
+   IRTemp maxIdx = newTemp(Ity_I32);
+   IRTemp cappedMax = newTemp(Ity_I64);
+   IRTemp counter = newTemp(Ity_I64);
+   IRExpr* offset;
+
+   assign(maxIdx, maxIndex);
+   assign(cappedMax, mkite(binop(Iop_CmpLT32U, mkexpr(maxIdx), mkU32(15)),
+                           unop(Iop_32Uto64, mkexpr(maxIdx)), mkU64(15)));
+
+   assign(counter, get_counter_dw0());
+
+   if (rightmost)
+      offset = binop(Iop_Add64,
+                     binop(Iop_Sub64, mkU64(15), mkexpr(cappedMax)),
+                     mkexpr(counter));
+   else
+      offset = mkexpr(counter);
+
+   store(binop(Iop_Add64, mkexpr(addr), mkexpr(counter)),
+         binop(Iop_GetElem8x16, get_vr_qw(v1), unop(Iop_64to8, offset)));
+
+   /* Check for end of field */
+   put_counter_dw0(binop(Iop_Add64, mkexpr(counter), mkU64(1)));
+   iterate_if(binop(Iop_CmpNE64, mkexpr(counter), mkexpr(cappedMax)));
+   put_counter_dw0(mkU64(0));
 }
 
 /* Bitwise vCond ? v1 : v2
@@ -2979,6 +3074,20 @@ s390_format_RRF_U0RR(const HChar *(*irgen)(UChar m3, UChar r1, UChar r2),
 }
 
 static void
+s390_format_RRFa_U0RR(const HChar *(*irgen)(UChar m3, UChar r1, UChar r2),
+                      UChar m3, UChar r1, UChar r2)
+{
+   const HChar *mnm = irgen(m3, r1, r2);
+
+   if (UNLIKELY(vex_traceflags & VEX_TRACE_FE)) {
+      if (m3 != 0)
+         s390_disasm(ENC4(MNM, GPR, GPR, UINT), mnm, r1, r2, m3);
+      else
+         s390_disasm(ENC3(MNM, GPR, GPR), mnm, r1, r2);
+   }
+}
+
+static void
 s390_format_RRF_F0FF2(const HChar *(*irgen)(UChar, UChar, UChar),
                       UChar r3, UChar r1, UChar r2)
 {
@@ -3016,6 +3125,16 @@ s390_format_RRF_FUFF2(const HChar *(*irgen)(UChar, UChar, UChar, UChar),
 
    if (UNLIKELY(vex_traceflags & VEX_TRACE_FE))
       s390_disasm(ENC5(MNM, FPR, FPR, FPR, UINT), mnm, r1, r2, r3, m4);
+}
+
+static void
+s390_format_RRF_RURR(const HChar *(*irgen)(UChar, UChar, UChar, UChar),
+                     UChar r3, UChar m4, UChar r1, UChar r2)
+{
+   const HChar *mnm = irgen(r3, m4, r1, r2);
+
+   if (UNLIKELY(vex_traceflags & VEX_TRACE_FE))
+      s390_disasm(ENC5(MNM, GPR, GPR, GPR, UINT), mnm, r1, r3, r2, m4);
 }
 
 static void
@@ -3444,6 +3563,25 @@ s390_format_SS_L0RDRD(const HChar *(*irgen)(UChar, IRTemp, IRTemp),
 }
 
 static void
+s390_format_SSE_RDRD(const HChar *(*irgen)(IRTemp, IRTemp),
+                     UChar b1, UShort d1, UChar b2, UShort d2)
+{
+   const HChar *mnm;
+   IRTemp op1addr = newTemp(Ity_I64);
+   IRTemp op2addr = newTemp(Ity_I64);
+
+   assign(op1addr, binop(Iop_Add64, mkU64(d1), b1 != 0 ? get_gpr_dw0(b1) :
+          mkU64(0)));
+   assign(op2addr, binop(Iop_Add64, mkU64(d2), b2 != 0 ? get_gpr_dw0(b2) :
+          mkU64(0)));
+
+   mnm = irgen(op1addr, op2addr);
+
+   if (UNLIKELY(vex_traceflags & VEX_TRACE_FE))
+      s390_disasm(ENC2(UDXB, UDXB), mnm, d1, 0, b1, d2, 0, b2);
+}
+
+static void
 s390_format_SIL_RDI(const HChar *(*irgen)(UShort i2, IRTemp op1addr),
                     UChar b1, UShort d1, UShort i2)
 {
@@ -3747,6 +3885,28 @@ s390_format_VRS_RRDVM(const HChar *(*irgen)(UChar r1, IRTemp op2addr, UChar v3,
 
    if (UNLIKELY(vex_traceflags & VEX_TRACE_FE))
       s390_disasm(ENC5(MNM, GPR, UDXB, VR, UINT), mnm, r1, d2, 0, b2, v3, m4);
+}
+
+static void
+s390_format_VRS_RRDV(const HChar *(*irgen)(UChar v1, UChar r3, IRTemp op2addr),
+                     UChar v1, UChar r3, UChar b2, UShort d2, UChar rxb)
+{
+   const HChar *mnm;
+   IRTemp op2addr = newTemp(Ity_I64);
+
+   if (! s390_host_has_vx) {
+      emulation_failure(EmFail_S390X_vx);
+      return;
+   }
+
+   assign(op2addr, binop(Iop_Add64, mkU64(d2), b2 != 0 ? get_gpr_dw0(b2) :
+          mkU64(0)));
+
+   v1  = s390_vr_getVRindex(v1, 4, rxb);
+   mnm = irgen(v1, r3, op2addr);
+
+   if (UNLIKELY(vex_traceflags & VEX_TRACE_FE))
+      s390_disasm(ENC4(MNM, VR, GPR, UDXB), mnm, v1, r3, d2, 0, b2);
 }
 
 
@@ -4079,6 +4239,29 @@ s390_format_VRRa_VVVMMM(const HChar *(*irgen)(UChar v1, UChar v2, UChar v3,
    if (vex_traceflags & VEX_TRACE_FE)
       s390_disasm(ENC6(MNM, VR, VR, VR, UINT, UINT),
                   mnm, v1, v2, v3, m4, m5, m6);
+}
+
+static void
+s390_format_VSI_URDV(const HChar *(*irgen)(UChar v1, IRTemp op2addr, UChar i3),
+                     UChar v1, UChar b2, UChar d2, UChar i3, UChar rxb)
+{
+   const HChar *mnm;
+   IRTemp op2addr = newTemp(Ity_I64);
+
+   if (!s390_host_has_vx) {
+      emulation_failure(EmFail_S390X_vx);
+      return;
+   }
+
+   v1 = s390_vr_getVRindex(v1, 4, rxb);
+
+   assign(op2addr, binop(Iop_Add64, mkU64(d2), b2 != 0 ? get_gpr_dw0(b2) :
+          mkU64(0)));
+
+   mnm = irgen(v1, op2addr, i3);
+
+   if (vex_traceflags & VEX_TRACE_FE)
+      s390_disasm(ENC4(MNM, VR, UDXB, UINT), mnm, v1, d2, 0, b2, i3);
 }
 
 /*------------------------------------------------------------*/
@@ -4882,8 +5065,12 @@ s390_irgen_NGR(UChar r1, UChar r2)
    return "ngr";
 }
 
+/* Helper for bitwise logical instructions with two 32-bit input operands and a
+   32-bit output operand.  `inv3' and `inv' indicate whether to invert (build
+   bitwise complement of) operand 3 or the result, respectively. */
 static const HChar *
-s390_irgen_NRK(UChar r3, UChar r1, UChar r2)
+s390_irgen_logicalK32(UChar r3, UChar r1, UChar r2,
+                      const HChar *mnem, IROp op, Bool inv3, Bool inv)
 {
    IRTemp op2 = newTemp(Ity_I32);
    IRTemp op3 = newTemp(Ity_I32);
@@ -4891,15 +5078,19 @@ s390_irgen_NRK(UChar r3, UChar r1, UChar r2)
 
    assign(op2, get_gpr_w1(r2));
    assign(op3, get_gpr_w1(r3));
-   assign(result, binop(Iop_And32, mkexpr(op2), mkexpr(op3)));
+   IRExpr* tmp = binop(op, mkexpr(op2),
+                       inv3 ? unop(Iop_Not32, mkexpr(op3)) : mkexpr(op3));
+   assign(result, inv ? unop(Iop_Not32, tmp) : tmp);
    s390_cc_thunk_putZ(S390_CC_OP_BITWISE, result);
    put_gpr_w1(r1, mkexpr(result));
 
-   return "nrk";
+   return mnem;
 }
 
+/* Same as s390_irgen_logicalK32, but for 64-bit operands. */
 static const HChar *
-s390_irgen_NGRK(UChar r3, UChar r1, UChar r2)
+s390_irgen_logicalK64(UChar r3, UChar r1, UChar r2,
+                      const HChar *mnem, IROp op, Bool inv3, Bool inv)
 {
    IRTemp op2 = newTemp(Ity_I64);
    IRTemp op3 = newTemp(Ity_I64);
@@ -4907,11 +5098,49 @@ s390_irgen_NGRK(UChar r3, UChar r1, UChar r2)
 
    assign(op2, get_gpr_dw0(r2));
    assign(op3, get_gpr_dw0(r3));
-   assign(result, binop(Iop_And64, mkexpr(op2), mkexpr(op3)));
+   IRExpr* tmp = binop(op, mkexpr(op2),
+                       inv3 ? unop(Iop_Not64, mkexpr(op3)) : mkexpr(op3));
+   assign(result, inv ? unop(Iop_Not64, tmp) : tmp);
    s390_cc_thunk_putZ(S390_CC_OP_BITWISE, result);
    put_gpr_dw0(r1, mkexpr(result));
 
-   return "ngrk";
+   return mnem;
+}
+
+static const HChar *
+s390_irgen_NRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK32(r3, r1, r2, "nrk", Iop_And32, False, False);
+}
+
+static const HChar *
+s390_irgen_NGRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK64(r3, r1, r2, "ngrk", Iop_And64, False, False);
+}
+
+static const HChar *
+s390_irgen_NCRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK32(r3, r1, r2, "ncrk", Iop_And32, True, False);
+}
+
+static const HChar *
+s390_irgen_NCGRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK64(r3, r1, r2, "ncgrk", Iop_And64, True, False);
+}
+
+static const HChar *
+s390_irgen_NNRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK32(r3, r1, r2, "nnrk", Iop_And32, False, True);
+}
+
+static const HChar *
+s390_irgen_NNGRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK64(r3, r1, r2, "nngrk", Iop_And64, False, True);
 }
 
 static const HChar *
@@ -6931,33 +7160,25 @@ s390_irgen_XGR(UChar r1, UChar r2)
 static const HChar *
 s390_irgen_XRK(UChar r3, UChar r1, UChar r2)
 {
-   IRTemp op2 = newTemp(Ity_I32);
-   IRTemp op3 = newTemp(Ity_I32);
-   IRTemp result = newTemp(Ity_I32);
-
-   assign(op2, get_gpr_w1(r2));
-   assign(op3, get_gpr_w1(r3));
-   assign(result, binop(Iop_Xor32, mkexpr(op2), mkexpr(op3)));
-   s390_cc_thunk_putZ(S390_CC_OP_BITWISE, result);
-   put_gpr_w1(r1, mkexpr(result));
-
-   return "xrk";
+   return s390_irgen_logicalK32(r3, r1, r2, "xrk", Iop_Xor32, False, False);
 }
 
 static const HChar *
 s390_irgen_XGRK(UChar r3, UChar r1, UChar r2)
 {
-   IRTemp op2 = newTemp(Ity_I64);
-   IRTemp op3 = newTemp(Ity_I64);
-   IRTemp result = newTemp(Ity_I64);
+   return s390_irgen_logicalK64(r3, r1, r2, "xgrk", Iop_Xor64, False, False);
+}
 
-   assign(op2, get_gpr_dw0(r2));
-   assign(op3, get_gpr_dw0(r3));
-   assign(result, binop(Iop_Xor64, mkexpr(op2), mkexpr(op3)));
-   s390_cc_thunk_putZ(S390_CC_OP_BITWISE, result);
-   put_gpr_dw0(r1, mkexpr(result));
+static const HChar *
+s390_irgen_NXRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK32(r3, r1, r2, "nxrk", Iop_Xor32, False, True);
+}
 
-   return "xgrk";
+static const HChar *
+s390_irgen_NXGRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK64(r3, r1, r2, "nxgrk", Iop_Xor64, False, True);
 }
 
 static const HChar *
@@ -7417,7 +7638,7 @@ s390_irgen_load_and_add32(UChar r1, UChar r3, IRTemp op2addr, Bool is_signed)
 
    /* If old_mem contains the expected value, then the CAS succeeded.
       Otherwise, it did not */
-   yield_if(binop(Iop_CmpNE32, mkexpr(old_mem), mkexpr(op2)));
+   yield_if(binop(Iop_CasCmpNE32, mkexpr(old_mem), mkexpr(op2)));
    put_gpr_w1(r1, mkexpr(old_mem));
 }
 
@@ -7451,7 +7672,7 @@ s390_irgen_load_and_add64(UChar r1, UChar r3, IRTemp op2addr, Bool is_signed)
 
    /* If old_mem contains the expected value, then the CAS succeeded.
       Otherwise, it did not */
-   yield_if(binop(Iop_CmpNE64, mkexpr(old_mem), mkexpr(op2)));
+   yield_if(binop(Iop_CasCmpNE64, mkexpr(old_mem), mkexpr(op2)));
    put_gpr_dw0(r1, mkexpr(old_mem));
 }
 
@@ -7481,7 +7702,7 @@ s390_irgen_load_and_bitwise32(UChar r1, UChar r3, IRTemp op2addr, IROp op)
 
    /* If old_mem contains the expected value, then the CAS succeeded.
       Otherwise, it did not */
-   yield_if(binop(Iop_CmpNE32, mkexpr(old_mem), mkexpr(op2)));
+   yield_if(binop(Iop_CasCmpNE32, mkexpr(old_mem), mkexpr(op2)));
    put_gpr_w1(r1, mkexpr(old_mem));
 }
 
@@ -8780,33 +9001,37 @@ s390_irgen_OGR(UChar r1, UChar r2)
 static const HChar *
 s390_irgen_ORK(UChar r3, UChar r1, UChar r2)
 {
-   IRTemp op2 = newTemp(Ity_I32);
-   IRTemp op3 = newTemp(Ity_I32);
-   IRTemp result = newTemp(Ity_I32);
-
-   assign(op2, get_gpr_w1(r2));
-   assign(op3, get_gpr_w1(r3));
-   assign(result, binop(Iop_Or32, mkexpr(op2), mkexpr(op3)));
-   s390_cc_thunk_putZ(S390_CC_OP_BITWISE, result);
-   put_gpr_w1(r1, mkexpr(result));
-
-   return "ork";
+   return s390_irgen_logicalK32(r3, r1, r2, "ork", Iop_Or32, False, False);
 }
 
 static const HChar *
 s390_irgen_OGRK(UChar r3, UChar r1, UChar r2)
 {
-   IRTemp op2 = newTemp(Ity_I64);
-   IRTemp op3 = newTemp(Ity_I64);
-   IRTemp result = newTemp(Ity_I64);
+   return s390_irgen_logicalK64(r3, r1, r2, "ogrk", Iop_Or64, False, False);
+}
 
-   assign(op2, get_gpr_dw0(r2));
-   assign(op3, get_gpr_dw0(r3));
-   assign(result, binop(Iop_Or64, mkexpr(op2), mkexpr(op3)));
-   s390_cc_thunk_putZ(S390_CC_OP_BITWISE, result);
-   put_gpr_dw0(r1, mkexpr(result));
+static const HChar *
+s390_irgen_OCRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK32(r3, r1, r2, "ocrk", Iop_Or32, True, False);
+}
 
-   return "ogrk";
+static const HChar *
+s390_irgen_OCGRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK64(r3, r1, r2, "ocgrk", Iop_Or64, True, False);
+}
+
+static const HChar *
+s390_irgen_NORK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK32(r3, r1, r2, "nork", Iop_Or32, False, True);
+}
+
+static const HChar *
+s390_irgen_NOGRK(UChar r3, UChar r1, UChar r2)
+{
+   return s390_irgen_logicalK64(r3, r1, r2, "nogrk", Iop_Or64, False, True);
 }
 
 static const HChar *
@@ -13462,6 +13687,31 @@ s390_irgen_MVCIN(UChar length, IRTemp start1, IRTemp start2)
 }
 
 static const HChar *
+s390_irgen_MVCRL(IRTemp op1addr, IRTemp op2addr)
+{
+   IRTemp counter = newTemp(Ity_I64);
+   IRTemp offset = newTemp(Ity_I64);
+
+   assign(counter, get_counter_dw0());
+   /* offset = length - 1 - counter, where length-1 is specified in r0 */
+   assign(offset,
+          binop(Iop_Sub64,
+                unop(Iop_16Uto64,
+                     binop(Iop_And16, get_gpr_hw3(0), mkU16(0xfff))),
+                mkexpr(counter)));
+
+   store(binop(Iop_Add64, mkexpr(op1addr), mkexpr(offset)),
+         load(Ity_I8, binop(Iop_Add64, mkexpr(op2addr), mkexpr(offset))));
+
+   /* Check for end of field */
+   put_counter_dw0(binop(Iop_Add64, mkexpr(counter), mkU64(1)));
+   iterate_if(binop(Iop_CmpNE64, mkexpr(offset), mkU64(0)));
+   put_counter_dw0(mkU64(0));
+
+   return "mvcrl";
+}
+
+static const HChar *
 s390_irgen_MVCL(UChar r1, UChar r2)
 {
    IRTemp addr1 = newTemp(Ity_I64);
@@ -13864,7 +14114,6 @@ s390_irgen_cas_32(UChar r1, UChar r3, IRTemp op2addr)
    IRTemp op1 = newTemp(Ity_I32);
    IRTemp old_mem = newTemp(Ity_I32);
    IRTemp op3 = newTemp(Ity_I32);
-   IRTemp result = newTemp(Ity_I32);
    IRTemp nequal = newTemp(Ity_I1);
 
    assign(op1, get_gpr_w1(r1));
@@ -13879,12 +14128,11 @@ s390_irgen_cas_32(UChar r1, UChar r3, IRTemp op2addr)
    stmt(IRStmt_CAS(cas));
 
    /* Set CC. Operands compared equal -> 0, else 1. */
-   assign(result, binop(Iop_Sub32, mkexpr(op1), mkexpr(old_mem)));
-   s390_cc_thunk_put1(S390_CC_OP_BITWISE, result, False);
+   assign(nequal, binop(Iop_CasCmpNE32, mkexpr(op1), mkexpr(old_mem)));
+   s390_cc_thunk_put1(S390_CC_OP_BITWISE, nequal, True);
 
    /* If operands were equal (cc == 0) just store the old value op1 in r1.
       Otherwise, store the old_value from memory in r1 and yield. */
-   assign(nequal, binop(Iop_CmpNE32, s390_call_calculate_cc(), mkU32(0)));
    put_gpr_w1(r1, mkite(mkexpr(nequal), mkexpr(old_mem), mkexpr(op1)));
    yield_if(mkexpr(nequal));
 }
@@ -13912,7 +14160,6 @@ s390_irgen_CSG(UChar r1, UChar r3, IRTemp op2addr)
    IRTemp op1 = newTemp(Ity_I64);
    IRTemp old_mem = newTemp(Ity_I64);
    IRTemp op3 = newTemp(Ity_I64);
-   IRTemp result = newTemp(Ity_I64);
    IRTemp nequal = newTemp(Ity_I1);
 
    assign(op1, get_gpr_dw0(r1));
@@ -13927,12 +14174,11 @@ s390_irgen_CSG(UChar r1, UChar r3, IRTemp op2addr)
    stmt(IRStmt_CAS(cas));
 
    /* Set CC. Operands compared equal -> 0, else 1. */
-   assign(result, binop(Iop_Sub64, mkexpr(op1), mkexpr(old_mem)));
-   s390_cc_thunk_put1(S390_CC_OP_BITWISE, result, False);
+   assign(nequal, binop(Iop_CasCmpNE64, mkexpr(op1), mkexpr(old_mem)));
+   s390_cc_thunk_put1(S390_CC_OP_BITWISE, nequal, True);
 
    /* If operands were equal (cc == 0) just store the old value op1 in r1.
       Otherwise, store the old_value from memory in r1 and yield. */
-   assign(nequal, binop(Iop_CmpNE32, s390_call_calculate_cc(), mkU32(0)));
    put_gpr_dw0(r1, mkite(mkexpr(nequal), mkexpr(old_mem), mkexpr(op1)));
    yield_if(mkexpr(nequal));
 
@@ -13950,7 +14196,6 @@ s390_irgen_cdas_32(UChar r1, UChar r3, IRTemp op2addr)
    IRTemp old_mem_low  = newTemp(Ity_I32);
    IRTemp op3_high = newTemp(Ity_I32);
    IRTemp op3_low  = newTemp(Ity_I32);
-   IRTemp result = newTemp(Ity_I32);
    IRTemp nequal = newTemp(Ity_I1);
 
    assign(op1_high, get_gpr_w1(r1));
@@ -13967,18 +14212,17 @@ s390_irgen_cdas_32(UChar r1, UChar r3, IRTemp op2addr)
    stmt(IRStmt_CAS(cas));
 
    /* Set CC. Operands compared equal -> 0, else 1. */
-   assign(result, unop(Iop_1Uto32,
-          binop(Iop_CmpNE32,
+   assign(nequal,
+          binop(Iop_CasCmpNE32,
                 binop(Iop_Or32,
                       binop(Iop_Xor32, mkexpr(op1_high), mkexpr(old_mem_high)),
                       binop(Iop_Xor32, mkexpr(op1_low), mkexpr(old_mem_low))),
-                mkU32(0))));
+                mkU32(0)));
 
-   s390_cc_thunk_put1(S390_CC_OP_BITWISE, result, False);
+   s390_cc_thunk_put1(S390_CC_OP_BITWISE, nequal, True);
 
    /* If operands were equal (cc == 0) just store the old value op1 in r1.
       Otherwise, store the old_value from memory in r1 and yield. */
-   assign(nequal, binop(Iop_CmpNE32, s390_call_calculate_cc(), mkU32(0)));
    put_gpr_w1(r1,   mkite(mkexpr(nequal), mkexpr(old_mem_high), mkexpr(op1_high)));
    put_gpr_w1(r1+1, mkite(mkexpr(nequal), mkexpr(old_mem_low),  mkexpr(op1_low)));
    yield_if(mkexpr(nequal));
@@ -14926,30 +15170,32 @@ s390_irgen_FLOGR(UChar r1, UChar r2)
 }
 
 static const HChar *
-s390_irgen_POPCNT(UChar r1, UChar r2)
+s390_irgen_POPCNT(UChar m3, UChar r1, UChar r2)
 {
-   Int i;
+   s390_insn_assert("popcnt", (m3 & 7) == 0);
+
+   static const ULong masks[] = {
+      0x5555555555555555, 0x3333333333333333, 0x0F0F0F0F0F0F0F0F,
+      0x00FF00FF00FF00FF, 0x0000FFFF0000FFFF, 0x00000000FFFFFFFF,
+   };
+   Int i, n;
    IRTemp val = newTemp(Ity_I64);
-   IRTemp mask[3];
 
    assign(val, get_gpr_dw0(r2));
-   for (i = 0; i < 3; i++) {
-      mask[i] = newTemp(Ity_I64);
-   }
-   assign(mask[0], mkU64(0x5555555555555555ULL));
-   assign(mask[1], mkU64(0x3333333333333333ULL));
-   assign(mask[2], mkU64(0x0F0F0F0F0F0F0F0FULL));
-   for (i = 0; i < 3; i++) {
+   n = (m3 & 8) ? 6 : 3;
+   for (i = 0; i < n; i++) {
+      IRTemp mask = newTemp(Ity_I64);
       IRTemp tmp = newTemp(Ity_I64);
 
+      assign (mask, mkU64(masks[i]));
       assign(tmp,
              binop(Iop_Add64,
                    binop(Iop_And64,
                          mkexpr(val),
-                         mkexpr(mask[i])),
+                         mkexpr(mask)),
                    binop(Iop_And64,
                          binop(Iop_Shr64, mkexpr(val), mkU8(1 << i)),
-                         mkexpr(mask[i]))));
+                         mkexpr(mask))));
       val = tmp;
    }
    s390_cc_thunk_putZ(S390_CC_OP_BITWISE, val);
@@ -16125,7 +16371,7 @@ s390_irgen_VLGV(UChar r1, IRTemp op2addr, UChar v3, UChar m4)
 static const HChar *
 s390_irgen_VGBM(UChar v1, UShort i2, UChar m3 __attribute__((unused)))
 {
-   put_vr_qw(v1, IRExpr_Const(IRConst_V128(i2)));
+   put_vr_qw(v1, mkV128(i2));
 
    return "vgbm";
 }
@@ -16186,7 +16432,9 @@ s390_irgen_VGM(UChar v1, UShort i2, UChar m3)
 static const HChar *
 s390_irgen_VLLEZ(UChar v1, IRTemp op2addr, UChar m3)
 {
-   IRType type = s390_vr_get_type(m3);
+   s390_insn_assert("vllez", m3 <= 3 || m3 == 6);
+
+   IRType type = s390_vr_get_type(m3 & 3);
    IRExpr* op2 = load(type, mkexpr(op2addr));
    IRExpr* op2as64bit;
    switch (type) {
@@ -16206,7 +16454,13 @@ s390_irgen_VLLEZ(UChar v1, IRTemp op2addr, UChar m3)
       vpanic("s390_irgen_VLLEZ: unknown type");
    }
 
-   put_vr_dw0(v1, op2as64bit);
+   if (m3 == 6) {
+      /* left-aligned */
+      put_vr_dw0(v1, binop(Iop_Shl64, op2as64bit, mkU8(32)));
+   } else {
+      /* right-aligned */
+      put_vr_dw0(v1, op2as64bit);
+   }
    put_vr_dw1(v1, mkU64(0));
    return "vllez";
 }
@@ -16615,7 +16869,7 @@ s390_irgen_VLBB(UChar v1, IRTemp addr, UChar m3)
                             s390_getCountToBlockBoundary(addr, m3),
                             mkU32(1));
 
-   s390_vr_loadWithLength(v1, addr, maxIndex);
+   s390_vr_loadWithLength(v1, addr, maxIndex, False);
 
    return "vlbb";
 }
@@ -16623,39 +16877,48 @@ s390_irgen_VLBB(UChar v1, IRTemp addr, UChar m3)
 static const HChar *
 s390_irgen_VLL(UChar v1, IRTemp addr, UChar r3)
 {
-   s390_vr_loadWithLength(v1, addr, get_gpr_w1(r3));
+   s390_vr_loadWithLength(v1, addr, get_gpr_w1(r3), False);
 
    return "vll";
 }
 
 static const HChar *
+s390_irgen_VLRL(UChar v1, IRTemp addr, UChar i3)
+{
+   s390_insn_assert("vlrl", (i3 & 0xf0) == 0);
+   s390_vr_loadWithLength(v1, addr, mkU32((UInt) i3), True);
+
+   return "vlrl";
+}
+
+static const HChar *
+s390_irgen_VLRLR(UChar v1, UChar r3, IRTemp addr)
+{
+   s390_vr_loadWithLength(v1, addr, get_gpr_w1(r3), True);
+
+   return "vlrlr";
+}
+
+static const HChar *
 s390_irgen_VSTL(UChar v1, IRTemp addr, UChar r3)
 {
-   IRTemp counter = newTemp(Ity_I64);
-   IRTemp maxIndexToStore = newTemp(Ity_I64);
-   IRTemp gpr3 = newTemp(Ity_I64);
-
-   assign(gpr3, unop(Iop_32Uto64, get_gpr_w1(r3)));
-   assign(maxIndexToStore, mkite(binop(Iop_CmpLE64U,
-                                       mkexpr(gpr3),
-                                       mkU64(16)
-                                       ),
-                                 mkexpr(gpr3),
-                                 mkU64(16)
-                                 )
-         );
-
-   assign(counter, get_counter_dw0());
-
-   store(binop(Iop_Add64, mkexpr(addr), mkexpr(counter)),
-         binop(Iop_GetElem8x16, get_vr_qw(v1), unop(Iop_64to8, mkexpr(counter))));
-
-   /* Check for end of field */
-   put_counter_dw0(binop(Iop_Add64, mkexpr(counter), mkU64(1)));
-   iterate_if(binop(Iop_CmpNE64, mkexpr(counter), mkexpr(maxIndexToStore)));
-   put_counter_dw0(mkU64(0));
-
+   s390_vr_storeWithLength(v1, addr, get_gpr_w1(r3), False);
    return "vstl";
+}
+
+static const HChar *
+s390_irgen_VSTRL(UChar v1, IRTemp addr, UChar i3)
+{
+   s390_insn_assert("vstrl", (i3 & 0xf0) == 0);
+   s390_vr_storeWithLength(v1, addr, mkU32((UInt) i3), True);
+   return "vstrl";
+}
+
+static const HChar *
+s390_irgen_VSTRLR(UChar v1, UChar r3, IRTemp addr)
+{
+   s390_vr_storeWithLength(v1, addr, get_gpr_w1(r3), True);
+   return "vstrlr";
 }
 
 static const HChar *
@@ -16683,12 +16946,39 @@ s390_irgen_VO(UChar v1, UChar v2, UChar v3)
 }
 
 static const HChar *
+s390_irgen_VOC(UChar v1, UChar v2, UChar v3)
+{
+   put_vr_qw(v1, binop(Iop_OrV128, get_vr_qw(v2),
+                       unop(Iop_NotV128, get_vr_qw(v3))));
+
+   return "voc";
+}
+
+static const HChar *
+s390_irgen_VNN(UChar v1, UChar v2, UChar v3)
+{
+   put_vr_qw(v1, unop(Iop_NotV128,
+                      binop(Iop_AndV128, get_vr_qw(v2), get_vr_qw(v3))));
+
+   return "vnn";
+}
+
+static const HChar *
 s390_irgen_VNO(UChar v1, UChar v2, UChar v3)
 {
    put_vr_qw(v1, unop(Iop_NotV128,
                       binop(Iop_OrV128, get_vr_qw(v2), get_vr_qw(v3))));
 
    return "vno";
+}
+
+static const HChar *
+s390_irgen_VNX(UChar v1, UChar v2, UChar v3)
+{
+   put_vr_qw(v1, unop(Iop_NotV128,
+                      binop(Iop_XorV128, get_vr_qw(v2), get_vr_qw(v3))));
+
+   return "vnx";
 }
 
 static const HChar *
@@ -16981,298 +17271,433 @@ s390_irgen_PPNO(UChar r1, UChar r2)
    return "ppno";
 }
 
+enum s390_VStrX {
+   s390_VStrX_VSTRC,
+   s390_VStrX_VFAE,
+   s390_VStrX_VFEE
+};
+
+#define S390_VEC_OP3(m, op0, op1, op2)                                  \
+   (m) == 0 ? op0 : (m) == 1 ? op1 : (m) == 2 ? op2 : Iop_INVALID;
+
+/* Helper function for transforming VSTRC, VFAE, or VFEE.  These instructions
+   share much of the same logic. */
+static void
+s390_irgen_VStrX(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5,
+                 UChar m6, enum s390_VStrX which_insn)
+{
+   IRTemp op2 = newTemp(Ity_V128);
+   IRTemp op3 = newTemp(Ity_V128);
+   IRExpr* tmp;
+   IRExpr* match = NULL;
+   UChar bitwidth = 8 << m5;
+   UChar n_elem = 16 >> m5;
+   IROp sub_op = S390_VEC_OP3(m5, Iop_Sub8x16, Iop_Sub16x8, Iop_Sub32x4);
+   IROp sar_op = S390_VEC_OP3(m5, Iop_SarN8x16, Iop_SarN16x8, Iop_SarN32x4);
+   IROp shl_op = S390_VEC_OP3(m5, Iop_ShlN8x16, Iop_ShlN16x8, Iop_ShlN32x4);
+   IROp dup_op = S390_VEC_OP3(m5, Iop_Dup8x16, Iop_Dup16x8, Iop_Dup32x4);
+   IROp cmpeq_op = S390_VEC_OP3(m5, Iop_CmpEQ8x16,
+                                    Iop_CmpEQ16x8, Iop_CmpEQ32x4);
+   IROp cmpgt_op = S390_VEC_OP3(m5, Iop_CmpGT8Ux16,
+                                    Iop_CmpGT16Ux8, Iop_CmpGT32Ux4);
+   IROp getelem_op = S390_VEC_OP3(m5, Iop_GetElem8x16,
+                                      Iop_GetElem16x8, Iop_GetElem32x4);
+
+   assign(op2, get_vr_qw(v2));
+   assign(op3, get_vr_qw(v3));
+
+   switch (which_insn) {
+
+   case s390_VStrX_VSTRC: {
+      IRTemp op4 = newTemp(Ity_V128);
+      assign(op4, get_vr_qw(v4));
+
+      /* Mask off insignificant range boundaries from op3, i.e., all those for
+         which the corresponding field in op4 has all or no bits set ("match
+         always" / "match never"). */
+      IRTemp bounds = newTemp(Ity_V128);
+      tmp = unop(Iop_NotV128,
+                 binop(cmpeq_op, mkV128(0),
+                       binop(sar_op,
+                             binop(sub_op,
+                                   binop(sar_op, mkexpr(op4),
+                                         mkU8(bitwidth - 3)),
+                                   mkV128(-1)),
+                             mkU8(1))));
+      assign(bounds, binop(Iop_AndV128, mkexpr(op3), tmp));
+
+      IRTemp flags_eq = newTemp(Ity_V128);
+      IRTemp flags_lt = newTemp(Ity_V128);
+      IRTemp flags_gt = newTemp(Ity_V128);
+      assign(flags_eq, binop(sar_op, mkexpr(op4), mkU8(bitwidth - 1)));
+      assign(flags_lt, binop(sar_op, binop(shl_op, mkexpr(op4), mkU8(1)),
+                             mkU8(bitwidth - 1)));
+      assign(flags_gt, binop(sar_op, binop(shl_op, mkexpr(op4), mkU8(2)),
+                             mkU8(bitwidth - 1)));
+
+      for (UChar idx = 0; idx < n_elem; idx += 2) {
+         /* Match according to the even/odd pairs in op3 and op4 at idx */
+         IRTemp part[2];
+
+         for (UChar j = 0; j < 2; j++) {
+            IRTemp a = newTemp(Ity_V128);
+            assign(a, unop(dup_op,
+                           binop(getelem_op, mkexpr(bounds), mkU8(idx + j))));
+
+            IRExpr* m[] = {
+               binop(cmpeq_op, mkexpr(op2), mkexpr(a)),
+               binop(cmpgt_op, mkexpr(a), mkexpr(op2)),
+               binop(cmpgt_op, mkexpr(op2), mkexpr(a))
+            };
+            IRExpr* f[] = {
+               unop(dup_op, binop(getelem_op, mkexpr(flags_eq), mkU8(idx + j))),
+               unop(dup_op, binop(getelem_op, mkexpr(flags_lt), mkU8(idx + j))),
+               unop(dup_op, binop(getelem_op, mkexpr(flags_gt), mkU8(idx + j)))
+            };
+            part[j] = newTemp(Ity_V128);
+            assign(part[j], binop(Iop_OrV128,
+                                  binop(Iop_OrV128,
+                                        binop(Iop_AndV128, f[0], m[0]),
+                                        binop(Iop_AndV128, f[1], m[1])),
+                                  binop(Iop_AndV128, f[2], m[2])));
+         }
+         tmp = binop(Iop_AndV128, mkexpr(part[0]), mkexpr(part[1]));
+         match = idx == 0 ? tmp : binop(Iop_OrV128, match, tmp);
+      }
+      break;
+   }
+
+   case s390_VStrX_VFAE:
+      for (UChar idx = 0; idx < n_elem; idx++) {
+         IRTemp a = newTemp(Ity_V128);
+         assign(a, binop(cmpeq_op, mkexpr(op2),
+                         unop(dup_op,
+                              binop(getelem_op, mkexpr(op3), mkU8(idx)))));
+         match = idx == 0 ? mkexpr(a) : binop(Iop_OrV128, match, mkexpr(a));
+      }
+      break;
+
+   case s390_VStrX_VFEE:
+      match = binop(cmpeq_op, mkexpr(op2), mkexpr(op3));
+      break;
+
+   default:
+      vpanic("s390_irgen_VStrX: unknown insn");
+   }
+
+   /* Invert first intermediate result if requested */
+   if (m6 & 8)
+      match = unop(Iop_NotV128, match);
+
+   IRTemp inter1 = newTemp(Ity_V128);
+   IRTemp inter2 = newTemp(Ity_V128);
+   IRTemp accu = newTemp(Ity_V128);
+   assign(inter1, match);
+
+   /* Determine second intermediate and accumulated result */
+   if (s390_vr_is_zs_set(m6)) {
+      assign(inter2, binop(cmpeq_op, mkexpr(op2), mkV128(0)));
+      assign(accu, binop(Iop_OrV128, mkexpr(inter1), mkexpr(inter2)));
+   } else {
+      assign(inter2, mkV128(0));
+      assign(accu, mkexpr(inter1));
+   }
+
+   IRTemp accu0 = newTemp(Ity_I64);
+   IRTemp is_match0 = newTemp(Ity_I1);
+   IRTemp mismatch_bits = newTemp(Ity_I64);
+
+   assign(accu0, unop(Iop_V128HIto64, mkexpr(accu)));
+   assign(is_match0, binop(Iop_ExpCmpNE64, mkexpr(accu0), mkU64(0)));
+   assign(mismatch_bits, unop(Iop_ClzNat64,
+                              mkite(mkexpr(is_match0), mkexpr(accu0),
+                                    unop(Iop_V128to64, mkexpr(accu)))));
+
+   if (m6 & 4) {
+      put_vr_qw(v1, mkexpr(inter1));
+   } else {
+      /* Determine byte position of first match */
+      tmp = binop(Iop_Add64,
+                  binop(Iop_Shr64, mkexpr(mismatch_bits), mkU8(3)),
+                  mkite(mkexpr(is_match0), mkU64(0), mkU64(8)));
+      put_vr_qw(v1, binop(Iop_64HLtoV128, tmp, mkU64(0)));
+   }
+
+   if (s390_vr_is_cs_set(m6)) {
+      /* Set condition code depending on...
+                   zero found
+                      n  y
+                    +------
+         match    n | 3  0
+          found   y | 1  2   */
+
+      IRTemp cc = newTemp(Ity_I64);
+
+      tmp = binop(Iop_Shr64,
+                  mkite(mkexpr(is_match0),
+                        unop(Iop_V128HIto64, mkexpr(inter1)),
+                        unop(Iop_V128to64, mkexpr(inter1))),
+                  unop(Iop_64to8,
+                       binop(Iop_Sub64, mkU64(63), mkexpr(mismatch_bits))));
+      tmp = binop(Iop_Shl64, tmp, mkU8(1));
+      if (s390_vr_is_zs_set(m6)) {
+         tmp = binop(Iop_Xor64, tmp,
+                     mkite(binop(Iop_ExpCmpNE64, mkU64(0),
+                                 binop(Iop_Or64,
+                                       unop(Iop_V128HIto64, mkexpr(inter2)),
+                                       unop(Iop_V128to64, mkexpr(inter2)))),
+                           mkU64(0),
+                           mkU64(3)));
+      } else {
+         tmp = binop(Iop_Xor64, tmp, mkU64(3));
+      }
+      assign(cc, tmp);
+      s390_cc_set(cc);
+   }
+   dis_res->hint = Dis_HintVerbose;
+}
+
 static const HChar *
 s390_irgen_VFAE(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   IRDirty* d;
-   IRTemp cc = newTemp(Ity_I64);
-
-   /* Check for specification exception */
-   vassert(m4 < 3);
-
-   s390x_vec_op_details_t details = { .serialized = 0ULL };
-   details.op = S390_VEC_OP_VFAE;
-   details.v1 = v1;
-   details.v2 = v2;
-   details.v3 = v3;
-   details.m4 = m4;
-   details.m5 = m5;
-
-   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                         &s390x_dirtyhelper_vec_op,
-                         mkIRExprVec_2(IRExpr_GSPTR(),
-                                       mkU64(details.serialized)));
-
-   d->nFxState = 3;
-   vex_bzero(&d->fxState, sizeof(d->fxState));
-   d->fxState[0].fx     = Ifx_Read;
-   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-   d->fxState[0].size   = sizeof(V128);
-   d->fxState[1].fx     = Ifx_Read;
-   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
-   d->fxState[1].size   = sizeof(V128);
-   d->fxState[2].fx     = Ifx_Write;
-   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-   d->fxState[2].size   = sizeof(V128);
-
-   stmt(IRStmt_Dirty(d));
-
-   if (s390_vr_is_cs_set(m5)) {
-      s390_cc_set(cc);
-   }
-
+   s390_insn_assert("vfae", m4 <= 2);
+   s390_irgen_VStrX(v1, v2, v3, 255, m4, m5, s390_VStrX_VFAE);
    return "vfae";
 }
 
 static const HChar *
 s390_irgen_VFEE(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   IRDirty* d;
-   IRTemp cc = newTemp(Ity_I64);
-
-   /* Check for specification exception */
-   vassert(m4 < 3);
-   vassert((m5 & 0b1100) == 0);
-
-   s390x_vec_op_details_t details = { .serialized = 0ULL };
-   details.op = S390_VEC_OP_VFEE;
-   details.v1 = v1;
-   details.v2 = v2;
-   details.v3 = v3;
-   details.m4 = m4;
-   details.m5 = m5;
-
-   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                         &s390x_dirtyhelper_vec_op,
-                         mkIRExprVec_2(IRExpr_GSPTR(),
-                                       mkU64(details.serialized)));
-
-   d->nFxState = 3;
-   vex_bzero(&d->fxState, sizeof(d->fxState));
-   d->fxState[0].fx     = Ifx_Read;
-   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-   d->fxState[0].size   = sizeof(V128);
-   d->fxState[1].fx     = Ifx_Read;
-   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
-   d->fxState[1].size   = sizeof(V128);
-   d->fxState[2].fx     = Ifx_Write;
-   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-   d->fxState[2].size   = sizeof(V128);
-
-   stmt(IRStmt_Dirty(d));
-
-   if (s390_vr_is_cs_set(m5)) {
-      s390_cc_set(cc);
-   }
-
+   s390_insn_assert("vfee", m4 < 3 && m5 == (m5 & 3));
+   s390_irgen_VStrX(v1, v2, v3, 255, m4, m5, s390_VStrX_VFEE);
    return "vfee";
 }
 
 static const HChar *
 s390_irgen_VFENE(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   const Bool negateComparison = True;
-   const IRType type = s390_vr_get_type(m4);
+   s390_insn_assert("vfene", m4 < 3 && m5 == (m5 & 3));
 
-   /* Check for specification exception */
-   vassert(m4 < 3);
-   vassert((m5 & 0b1100) == 0);
-
-   static const IROp elementGetters[] = {
-      Iop_GetElem8x16, Iop_GetElem16x8, Iop_GetElem32x4
+   static const IROp compare_op[3] = {
+      Iop_CmpEQ8x16, Iop_CmpEQ16x8, Iop_CmpEQ32x4
    };
-   IROp getter = elementGetters[m4];
-
-   static const IROp elementComparators[] = {
-      Iop_CmpEQ8, Iop_CmpEQ16, Iop_CmpEQ32
+   static const IROp abs_op[3] = {
+      Iop_Abs8x16, Iop_Abs16x8, Iop_Abs32x4
    };
-   IROp comparator = elementComparators[m4];
+   IRTemp op2 = newTemp(Ity_V128);
+   IRTemp op3 = newTemp(Ity_V128);
+   IRTemp op2zero = newTemp(Ity_V128);
+   IRTemp diff = newTemp(Ity_V128);
+   IRTemp diff0 = newTemp(Ity_I64);
+   IRTemp neq0 = newTemp(Ity_I1);
+   IRTemp samebits = newTemp(Ity_I64);
+   IRExpr* tmp;
 
-   static const IROp resultConverter[] = {Iop_64to8, Iop_64to16, Iop_64to32};
-   IROp converter = resultConverter[m4];
+   assign(op2, get_vr_qw(v2));
+   assign(op3, get_vr_qw(v3));
 
-   IRTemp isZeroElem;
-
-   IRTemp counter = newTemp(Ity_I64);
-   assign(counter, get_counter_dw0());
-
-   IRTemp arg1 = newTemp(type);
-   assign(arg1, binop(getter, get_vr_qw(v2), unop(Iop_64to8, mkexpr(counter))));
-   IRTemp arg2 = newTemp(type);
-   assign(arg2, binop(getter, get_vr_qw(v3), unop(Iop_64to8, mkexpr(counter))));
-
-   IRTemp isGoodPair = newTemp(Ity_I1);
-   if(negateComparison) {
-      assign(isGoodPair, unop(Iop_Not1, binop(comparator, mkexpr(arg1),
-                                              mkexpr(arg2))));
-   } else {
-      assign(isGoodPair, binop(comparator, mkexpr(arg1), mkexpr(arg2)));
+   tmp = mkV128(0);
+   if (s390_vr_is_zs_set(m5)) {
+      tmp = binop(compare_op[m4], mkexpr(op2), tmp);
+      if (s390_vr_is_cs_set(m5) && v3 != v2) {
+         /* Count leading equal bits in the terminating element too */
+         tmp = unop(abs_op[m4], tmp);
+      }
+      assign(op2zero, tmp);
+      tmp = mkexpr(op2zero);
+   }
+   if (v3 != v2) {
+      tmp = binop(Iop_XorV128, mkexpr(op2), mkexpr(op3));
+      if (s390_vr_is_zs_set(m5))
+         tmp = binop(Iop_OrV128, tmp, mkexpr(op2zero));
    }
 
-   if(s390_vr_is_zs_set(m5)) {
-      isZeroElem = newTemp(Ity_I1);
-      assign(isZeroElem, binop(comparator, mkexpr(arg1),
-                               unop(converter, mkU64(0))));
-   }
+   assign(diff, tmp);
+   assign(diff0, unop(Iop_V128HIto64, mkexpr(diff)));
+   assign(neq0, binop(Iop_ExpCmpNE64, mkexpr(diff0), mkU64(0)));
+   assign(samebits, unop(Iop_ClzNat64,
+                         mkite(mkexpr(neq0), mkexpr(diff0),
+                               unop(Iop_V128to64, mkexpr(diff)))));
 
-   static const UChar invalidIndices[] = {16, 8, 4};
-   const UChar invalidIndex = invalidIndices[m4];
-   IRTemp endOfVectorIsReached = newTemp(Ity_I1);
-   assign(endOfVectorIsReached, binop(Iop_CmpEQ64, mkexpr(counter),
-                                      mkU64(invalidIndex)));
-
-   put_counter_dw0(binop(Iop_Add64, mkexpr(counter), mkU64(1)));
-   IRExpr* shouldBreak = binop(Iop_Or32,
-                               unop(Iop_1Uto32, mkexpr(isGoodPair)),
-                               unop(Iop_1Uto32, mkexpr(endOfVectorIsReached))
-                              );
-   if(s390_vr_is_zs_set(m5)) {
-      shouldBreak = binop(Iop_Or32,
-                          shouldBreak,
-                          unop(Iop_1Uto32, mkexpr(isZeroElem)));
-   }
-   iterate_if(binop(Iop_CmpEQ32, shouldBreak, mkU32(0)));
-
-   IRExpr* foundIndex = binop(Iop_Sub64, get_counter_dw0(), mkU64(1));
-   if(m4 > 0) {
-      /* We should return index of byte but we found index of element in
-         general case.
-            if byte elem (m4 == 0) then indexOfByte = indexOfElement
-            if halfword elem (m4 == 1) then indexOfByte = 2 * indexOfElement
-                                                        = indexOfElement << 1
-            if word elem (m4 == 2) then indexOfByte = 4 * indexOfElement
-                                                    = indexOfElement << 2
-      */
-      foundIndex = binop(Iop_Shl64, foundIndex, mkU8(m4));
-   }
-
-   IRTemp result = newTemp(Ity_I64);
-   assign(result, mkite(mkexpr(endOfVectorIsReached),
-                        mkU64(16),
-                        foundIndex));
-   put_vr_qw(v1, binop(Iop_64HLtoV128, mkexpr(result), mkU64(0)));
-
+   /* Determine the byte size of the initial equal-elements sequence */
+   tmp = binop(Iop_Shr64, mkexpr(samebits), mkU8(m4 + 3));
+   if (m4 != 0)
+      tmp = binop(Iop_Shl64, tmp, mkU8(m4));
+   tmp = binop(Iop_Add64, tmp, mkite(mkexpr(neq0), mkU64(0), mkU64(8)));
+   put_vr_qw(v1, binop(Iop_64HLtoV128, tmp, mkU64(0)));
 
    if (s390_vr_is_cs_set(m5)) {
-      static const IROp to64Converters[] = {Iop_8Uto64, Iop_16Uto64, Iop_32Uto64};
-      IROp to64Converter = to64Converters[m4];
-
-      IRExpr* arg1IsLessThanArg2 = binop(Iop_CmpLT64U,
-                                         unop(to64Converter, mkexpr(arg1)),
-                                         unop(to64Converter, mkexpr(arg2)));
-
-      IRExpr* ccexp = mkite(binop(Iop_CmpEQ32,
-                                  unop(Iop_1Uto32, mkexpr(isGoodPair)),
-                                  mkU32(1)),
-                            mkite(arg1IsLessThanArg2, mkU64(1), mkU64(2)),
-                            mkU64(3));
-
-      if(s390_vr_is_zs_set(m5)) {
-         IRExpr* arg2IsZero = binop(comparator, mkexpr(arg2),
-                                    unop(converter, mkU64(0)));
-         IRExpr* bothArgsAreZero = binop(Iop_And32,
-                                         unop(Iop_1Uto32, mkexpr(isZeroElem)),
-                                         unop(Iop_1Uto32, arg2IsZero));
-         ccexp = mkite(binop(Iop_CmpEQ32, bothArgsAreZero, mkU32(1)),
-                       mkU64(0),
-                       ccexp);
-      }
+      /* Set condition code like follows --
+         0: operands equal up to and including zero element
+         1: op2 < op3    2: op2 > op3    3: op2 = op3 */
       IRTemp cc = newTemp(Ity_I64);
-      assign(cc, ccexp);
-
+      if (v3 == v2) {
+         tmp = mkU64(0);
+      } else {
+         IRTemp shift = newTemp(Ity_I8);
+         IRExpr* op2half = mkite(mkexpr(neq0),
+                                 unop(Iop_V128HIto64, mkexpr(op2)),
+                                 unop(Iop_V128to64, mkexpr(op2)));
+         IRExpr* op3half = mkite(mkexpr(neq0),
+                                 unop(Iop_V128HIto64, mkexpr(op3)),
+                                 unop(Iop_V128to64, mkexpr(op3)));
+         assign(shift, unop(Iop_64to8,
+                            binop(Iop_Sub64, mkU64(63), mkexpr(samebits))));
+         tmp = binop(Iop_Or64,
+                     binop(Iop_Shl64,
+                           binop(Iop_And64, mkU64(1),
+                                 binop(Iop_Shr64, op2half, mkexpr(shift))),
+                           mkU8(1)),
+                     binop(Iop_And64, mkU64(1),
+                           binop(Iop_Shr64, op3half, mkexpr(shift))));
+      }
+      assign(cc, mkite(binop(Iop_CmpEQ64, mkexpr(samebits), mkU64(64)),
+                       mkU64(3), tmp));
       s390_cc_set(cc);
    }
-
-
-   put_counter_dw0(mkU64(0));
+   dis_res->hint = Dis_HintVerbose;
    return "vfene";
 }
 
 static const HChar *
 s390_irgen_VISTR(UChar v1, UChar v2, UChar m3, UChar m5)
 {
-   IRDirty* d;
-   IRTemp cc = newTemp(Ity_I64);
+   s390_insn_assert("vistr", m3 < 3 && m5 == (m5 & 1));
 
-   /* Check for specification exception */
-   vassert(m3 < 3);
-   vassert((m5 & 0b1110) == 0);
+   static const IROp compare_op[3] = {
+      Iop_CmpEQ8x16, Iop_CmpEQ16x8, Iop_CmpEQ32x4
+   };
+   IRExpr* t;
+   IRTemp op2 = newTemp(Ity_V128);
+   IRTemp op2term = newTemp(Ity_V128);
+   IRTemp mask = newTemp(Ity_V128);
 
-   s390x_vec_op_details_t details = { .serialized = 0ULL };
-   details.op = S390_VEC_OP_VISTR;
-   details.v1 = v1;
-   details.v2 = v2;
-   details.m4 = m3;
-   details.m5 = m5;
+   assign(op2, get_vr_qw(v2));
+   assign(op2term, binop(compare_op[m3], mkexpr(op2), mkV128(0)));
+   t = mkexpr(op2term);
 
-   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                         &s390x_dirtyhelper_vec_op,
-                         mkIRExprVec_2(IRExpr_GSPTR(),
-                                       mkU64(details.serialized)));
-
-   d->nFxState = 2;
-   vex_bzero(&d->fxState, sizeof(d->fxState));
-   d->fxState[0].fx     = Ifx_Read;
-   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-   d->fxState[0].size   = sizeof(V128);
-   d->fxState[1].fx     = Ifx_Write;
-   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-   d->fxState[1].size   = sizeof(V128);
-
-   stmt(IRStmt_Dirty(d));
+   for (UChar i = m3; i < 4; i++) {
+      IRTemp s = newTemp(Ity_V128);
+      assign(s, binop(Iop_OrV128, t, binop(Iop_ShrV128, t, mkU8(8 << i))));
+      t = mkexpr(s);
+   }
+   assign(mask, unop(Iop_NotV128, t));
+   put_vr_qw(v1, binop(Iop_AndV128, mkexpr(op2), mkexpr(mask)));
 
    if (s390_vr_is_cs_set(m5)) {
+      IRTemp cc = newTemp(Ity_I64);
+      assign(cc, binop(Iop_And64, mkU64(3), unop(Iop_V128to64, mkexpr(mask))));
       s390_cc_set(cc);
    }
-
+   dis_res->hint = Dis_HintVerbose;
    return "vistr";
 }
 
 static const HChar *
 s390_irgen_VSTRC(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
 {
-   IRDirty* d;
-   IRTemp cc = newTemp(Ity_I64);
-
-   /* Check for specification exception */
-   vassert(m5 < 3);
-
-   s390x_vec_op_details_t details = { .serialized = 0ULL };
-   details.op = S390_VEC_OP_VSTRC;
-   details.v1 = v1;
-   details.v2 = v2;
-   details.v3 = v3;
-   details.v4 = v4;
-   details.m4 = m5;
-   details.m5 = m6;
-
-   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                         &s390x_dirtyhelper_vec_op,
-                         mkIRExprVec_2(IRExpr_GSPTR(),
-                                       mkU64(details.serialized)));
-
-   d->nFxState = 4;
-   vex_bzero(&d->fxState, sizeof(d->fxState));
-   d->fxState[0].fx     = Ifx_Read;
-   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-   d->fxState[0].size   = sizeof(V128);
-   d->fxState[1].fx     = Ifx_Read;
-   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
-   d->fxState[1].size   = sizeof(V128);
-   d->fxState[2].fx     = Ifx_Read;
-   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v4 * sizeof(V128);
-   d->fxState[2].size   = sizeof(V128);
-   d->fxState[3].fx     = Ifx_Write;
-   d->fxState[3].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-   d->fxState[3].size   = sizeof(V128);
-
-   stmt(IRStmt_Dirty(d));
-
-   if (s390_vr_is_cs_set(m6)) {
-      s390_cc_set(cc);
-   }
-
+   s390_insn_assert("vstrc", m5 <= 2);
+   s390_irgen_VStrX(v1, v2, v3, v4, m5, m6, s390_VStrX_VSTRC);
    return "vstrc";
+}
+
+static const HChar *
+s390_irgen_VSTRS(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
+{
+   s390_insn_assert("vstrs", m5 <= 2 && m6 == (m6 & 2));
+
+   IRTemp op2 = newTemp(Ity_V128);
+   IRTemp op3 = newTemp(Ity_V128);
+   IRTemp op4 = newTemp(Ity_I8);
+   IRTemp op2clean = newTemp(Ity_V128);
+   IRTemp op3mask = newTemp(Ity_V128);
+   IRTemp result = newTemp(Ity_V128);
+   IRTemp ccnomatch = newTemp(Ity_I64);
+   IRExpr* tmp;
+   IRExpr* match = NULL;
+   UChar elem_bits = 8 << m5;
+   IROp cmpeq_op = S390_VEC_OP3(m5, Iop_CmpEQ8x16,
+                                Iop_CmpEQ16x8, Iop_CmpEQ32x4);
+
+   assign(op2, get_vr_qw(v2));
+   assign(op3, get_vr_qw(v3));
+   assign(op4, get_vr_b7(v4));
+
+   tmp = unop(Iop_Dup32x4,
+              unop(Iop_1Sto32, binop(Iop_CmpNE8, mkexpr(op4), mkU8(16))));
+   tmp = binop(Iop_ShrV128, tmp, binop(Iop_Shl8, mkexpr(op4), mkU8(3)));
+
+   if (s390_vr_is_zs_set(m6)) {
+      IRTemp op2eos = newTemp(Ity_V128);
+      IRExpr* t;
+      t = binop(cmpeq_op, mkexpr(op2), mkV128(0));
+      for (UChar i = m5; i < 4; i++) {
+         IRTemp s = newTemp(Ity_V128);
+         assign(s, t);
+         t = binop(Iop_OrV128, mkexpr(s), binop(Iop_ShrV128, mkexpr(s),
+                                                mkU8(8 << i)));
+      }
+      assign(op2eos, t);
+      assign(op2clean, binop(Iop_AndV128, mkexpr(op2),
+                             unop(Iop_NotV128, mkexpr(op2eos))));
+      assign(ccnomatch, binop(Iop_And64, mkU64(1),
+                              unop(Iop_V128to64, mkexpr(op2eos))));
+
+      t = binop(cmpeq_op, mkexpr(op3), mkV128(0));
+      for (UChar i = m5; i < 4; i++) {
+         IRTemp s = newTemp(Ity_V128);
+         assign(s, t);
+         t = binop(Iop_OrV128, mkexpr(s), binop(Iop_ShrV128, mkexpr(s),
+                                                mkU8(8 << i)));
+      }
+      tmp = binop(Iop_OrV128, tmp, t);
+   } else {
+      assign(op2clean, mkexpr(op2));
+   }
+   assign(op3mask, unop(Iop_NotV128, tmp));
+
+   for (UChar shift = 0; shift < 128; shift += elem_bits) {
+      IRTemp s = newTemp(Ity_V128);
+      tmp = unop(Iop_NotV128,
+                 binop(cmpeq_op, mkexpr(op2clean),
+                       binop(Iop_ShrV128, mkexpr(op3), mkU8(shift))));
+      assign(s, binop(Iop_CmpEQ64x2, mkV128(0),
+                      binop(Iop_AndV128, mkexpr(op3mask),
+                            binop(Iop_ShlV128, tmp, mkU8(shift)))));
+      tmp = mkexpr(s);
+      if (shift < 64) {
+         tmp = binop(Iop_AndV128, tmp,
+                     unop(Iop_Dup16x8, binop(Iop_GetElem16x8, tmp, mkU8(4))));
+      }
+      tmp = binop(Iop_AndV128, tmp,
+                  unop(Iop_Dup16x8, mkU16(1 << (15 - shift / 8))));
+      if (shift)
+         match = binop(Iop_OrV128, mkexpr(mktemp(Ity_V128, match)), tmp);
+      else
+         match = tmp;
+   }
+   assign(result, unop(Iop_ClzNat64,
+                       binop(Iop_Or64,
+                             unop(Iop_V128HIto64, match),
+                             mkU64((1ULL << 48) - 1))));
+   put_vr_qw(v1, binop(Iop_64HLtoV128, mkexpr(result), mkU64(0)));
+
+   /* Set condition code.
+      0: no match, no string terminator in op2
+      1: no match, string terminator found
+      2: full match
+      3: partial match */
+   IRTemp cc = newTemp(Ity_I64);
+   tmp = binop(Iop_CmpLE64U,
+               binop(Iop_Add64, mkexpr(result), unop(Iop_8Uto64, mkexpr(op4))),
+               mkU64(16));
+   assign(cc, mkite(binop(Iop_CmpEQ64, mkexpr(result), mkU64(16)),
+                    s390_vr_is_zs_set(m6) ? mkexpr(ccnomatch) : mkU64(0),
+                    mkite(tmp, mkU64(2), mkU64(3))));
+   s390_cc_set(cc);
+
+   dis_res->hint = Dis_HintVerbose;
+   return "vstrs";
 }
 
 static const HChar *
@@ -17499,9 +17924,19 @@ s390_irgen_VCTZ(UChar v1, UChar v2, UChar m3)
 static const HChar *
 s390_irgen_VPOPCT(UChar v1, UChar v2, UChar m3)
 {
-   vassert(m3 == 0);
+   s390_insn_assert("vpopct", m3 <= 3);
 
-   put_vr_qw(v1, unop(Iop_Cnt8x16, get_vr_qw(v2)));
+   IRExpr* cnt = unop(Iop_Cnt8x16, get_vr_qw(v2));
+
+   if (m3 >= 1) {
+      cnt = unop(Iop_PwAddL8Ux16, cnt);
+      if (m3 >= 2) {
+         cnt = unop(Iop_PwAddL16Ux8, cnt);
+         if (m3 == 3)
+            cnt = unop(Iop_PwAddL32Ux4, cnt);
+      }
+   }
+   put_vr_qw(v1, cnt);
 
    return "vpopct";
 }
@@ -17647,30 +18082,66 @@ s390_irgen_VERLL(UChar v1, IRTemp op2addr, UChar v3, UChar m4)
 static const HChar *
 s390_irgen_VSL(UChar v1, UChar v2, UChar v3)
 {
-   IRTemp shift_amount = newTemp(Ity_I8);
-   assign(shift_amount, binop(Iop_And8, get_vr_b7(v3), mkU8(0b00000111)));
+   IRTemp a = newTemp(Ity_V128);
+   IRTemp b = newTemp(Ity_V128);
 
-   put_vr_qw(v1, binop(Iop_ShlV128, get_vr_qw(v2), mkexpr(shift_amount)));
+   assign(a, get_vr_qw(v2));
+   assign(b, get_vr_qw(v3));
+
+   put_vr_qw(v1,
+             binop(Iop_OrV128,
+                   binop(Iop_Shl8x16, mkexpr(a), mkexpr(b)),
+                   binop(Iop_Shr8x16,
+                         binop(Iop_Shr8x16,
+                               binop(Iop_ShlV128, mkexpr(a), mkU8(8)),
+                               unop(Iop_NotV128, mkexpr(b))),
+                         unop(Iop_Dup8x16, mkU8(1)))));
    return "vsl";
 }
 
 static const HChar *
 s390_irgen_VSRL(UChar v1, UChar v2, UChar v3)
 {
-   IRTemp shift_amount = newTemp(Ity_I8);
-   assign(shift_amount, binop(Iop_And8, get_vr_b7(v3), mkU8(0b00000111)));
+   IRTemp a = newTemp(Ity_V128);
+   IRTemp b = newTemp(Ity_V128);
 
-   put_vr_qw(v1, binop(Iop_ShrV128, get_vr_qw(v2), mkexpr(shift_amount)));
+   assign(a, get_vr_qw(v2));
+   assign(b, get_vr_qw(v3));
+
+   put_vr_qw(v1,
+             binop(Iop_OrV128,
+                   binop(Iop_Shr8x16, mkexpr(a), mkexpr(b)),
+                   binop(Iop_Shl8x16,
+                         binop(Iop_Shl8x16,
+                               binop(Iop_ShrV128, mkexpr(a), mkU8(8)),
+                               unop(Iop_NotV128, mkexpr(b))),
+                         unop(Iop_Dup8x16, mkU8(1)))));
    return "vsrl";
 }
 
 static const HChar *
 s390_irgen_VSRA(UChar v1, UChar v2, UChar v3)
 {
-   IRTemp shift_amount = newTemp(Ity_I8);
-   assign(shift_amount, binop(Iop_And8, get_vr_b7(v3), mkU8(0b00000111)));
+   IRTemp a = newTemp(Ity_V128);
+   IRTemp b = newTemp(Ity_V128);
 
-   put_vr_qw(v1, binop(Iop_SarV128, get_vr_qw(v2), mkexpr(shift_amount)));
+   assign(a, get_vr_qw(v2));
+   assign(b, get_vr_qw(v3));
+
+   /* Shift-right: first byte arithmetically, all others logically */
+   IRExpr* elems_shifted =
+      binop(Iop_Sar8x16,
+            binop(Iop_Shr8x16, mkexpr(a),
+                  binop(Iop_AndV128, mkexpr(b), mkV128(0x7fff))),
+            binop(Iop_AndV128, mkexpr(b), mkV128(0x8000)));
+   /* Then OR the appropriate bits from the byte to the left */
+   put_vr_qw(v1,
+             binop(Iop_OrV128, elems_shifted,
+                   binop(Iop_Shl8x16,
+                         binop(Iop_Shl8x16,
+                               binop(Iop_ShrV128, mkexpr(a), mkU8(8)),
+                               unop(Iop_NotV128, mkexpr(b))),
+                         unop(Iop_Dup8x16, mkU8(1)))));
    return "vsra";
 }
 
@@ -17857,6 +18328,48 @@ s390_irgen_VSLDB(UChar v1, UChar v2, UChar v3, UChar i4)
 }
 
 static const HChar *
+s390_irgen_VSLD(UChar v1, UChar v2, UChar v3, UChar i4)
+{
+   s390_insn_assert("vsld", i4 <= 7);
+
+   if (i4 == 0) {
+      /* Just copy v2. */
+      put_vr_qw(v1, get_vr_qw(v2));
+   } else {
+      /* Concatenate v2's tail with v3's head. */
+      put_vr_qw(v1,
+                binop(Iop_OrV128,
+                      binop(Iop_ShlV128, get_vr_qw(v2), mkU8(i4)),
+                      binop(Iop_ShrV128, get_vr_qw(v3), mkU8(128 - i4))
+                     )
+               );
+   }
+
+   return "vsld";
+}
+
+static const HChar *
+s390_irgen_VSRD(UChar v1, UChar v2, UChar v3, UChar i4)
+{
+   s390_insn_assert("vsrd", i4 <= 7);
+
+   if (i4 == 0) {
+      /* Just copy v3. */
+      put_vr_qw(v1, get_vr_qw(v3));
+   } else {
+      /* Concatenate v2's tail with v3's head. */
+      put_vr_qw(v1,
+                binop(Iop_OrV128,
+                      binop(Iop_ShlV128, get_vr_qw(v2), mkU8(128 - i4)),
+                      binop(Iop_ShrV128, get_vr_qw(v3), mkU8(i4))
+                     )
+               );
+   }
+
+   return "vsrd";
+}
+
+static const HChar *
 s390_irgen_VMO(UChar v1, UChar v2, UChar v3, UChar m4)
 {
    const IROp ops[] = { Iop_MullEven8Sx16, Iop_MullEven16Sx8,
@@ -17982,11 +18495,11 @@ s390_irgen_VSUM(UChar v1, UChar v2, UChar v3, UChar m4)
    switch(type) {
    case Ity_I8:
       sum = unop(Iop_PwAddL16Ux8, unop(Iop_PwAddL8Ux16, get_vr_qw(v2)));
-      mask = IRExpr_Const(IRConst_V128(0b0001000100010001));
+      mask = mkV128(0b0001000100010001);
       break;
    case Ity_I16:
       sum = unop(Iop_PwAddL16Ux8, get_vr_qw(v2));
-      mask = IRExpr_Const(IRConst_V128(0b0011001100110011));
+      mask = mkV128(0b0011001100110011);
       break;
    default:
       vpanic("s390_irgen_VSUM: invalid type ");
@@ -18007,11 +18520,11 @@ s390_irgen_VSUMG(UChar v1, UChar v2, UChar v3, UChar m4)
    switch(type) {
    case Ity_I16:
       sum = unop(Iop_PwAddL32Ux4, unop(Iop_PwAddL16Ux8, get_vr_qw(v2)));
-      mask = IRExpr_Const(IRConst_V128(0b0000001100000011));
+      mask = mkV128(0b0000001100000011);
       break;
    case Ity_I32:
       sum = unop(Iop_PwAddL32Ux4, get_vr_qw(v2));
-      mask = IRExpr_Const(IRConst_V128(0b0000111100001111));
+      mask = mkV128(0b0000111100001111);
       break;
    default:
       vpanic("s390_irgen_VSUMG: invalid type ");
@@ -18032,11 +18545,11 @@ s390_irgen_VSUMQ(UChar v1, UChar v2, UChar v3, UChar m4)
    switch(type) {
    case Ity_I32:
       sum = unop(Iop_PwAddL64Ux2, unop(Iop_PwAddL32Ux4, get_vr_qw(v2)));
-      mask = IRExpr_Const(IRConst_V128(0b0000000000001111));
+      mask = mkV128(0b0000000000001111);
       break;
    case Ity_I64:
       sum = unop(Iop_PwAddL64Ux2, get_vr_qw(v2));
-      mask = IRExpr_Const(IRConst_V128(0b0000000011111111));
+      mask = mkV128(0b0000000011111111);
       break;
    default:
       vpanic("s390_irgen_VSUMQ: invalid type ");
@@ -18335,12 +18848,53 @@ s390_irgen_VMALH(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5)
    return "vmalh";
 }
 
+static const HChar *
+s390_irgen_VMSL(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
+{
+   s390_insn_assert("vmsl", m5 == 3 && (m6 & 3) == 0);
+
+   IRDirty* d;
+   IRTemp cc = newTemp(Ity_I64);
+
+   s390x_vec_op_details_t details = { .serialized = 0ULL };
+   details.op = S390_VEC_OP_VMSL;
+   details.v1 = v1;
+   details.v2 = v2;
+   details.v3 = v3;
+   details.v4 = v4;
+   details.m4 = m5;
+   details.m5 = m6;
+
+   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
+                         &s390x_dirtyhelper_vec_op,
+                         mkIRExprVec_2(IRExpr_GSPTR(),
+                                       mkU64(details.serialized)));
+
+   d->nFxState = 4;
+   vex_bzero(&d->fxState, sizeof(d->fxState));
+   d->fxState[0].fx     = Ifx_Read;
+   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
+   d->fxState[0].size   = sizeof(V128);
+   d->fxState[1].fx     = Ifx_Read;
+   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
+   d->fxState[1].size   = sizeof(V128);
+   d->fxState[2].fx     = Ifx_Read;
+   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v4 * sizeof(V128);
+   d->fxState[2].size   = sizeof(V128);
+   d->fxState[3].fx     = Ifx_Write;
+   d->fxState[3].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
+   d->fxState[3].size   = sizeof(V128);
+
+   stmt(IRStmt_Dirty(d));
+
+   return "vmsl";
+}
+
 static void
-s390_vector_fp_convert(IROp op, IRType fromType, IRType toType,
+s390_vector_fp_convert(IROp op, IRType fromType, IRType toType, Bool rounding,
                        UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
    Bool isSingleElementOp = s390_vr_is_single_element_control_set(m4);
-   UChar maxIndex = isSingleElementOp ? 0 : 1;
 
    /* For Iop_F32toF64 we do this:
       f32[0] -> f64[0]
@@ -18353,14 +18907,21 @@ s390_vector_fp_convert(IROp op, IRType fromType, IRType toType,
       The magic below with scaling factors is used to achieve the logic
       described above.
    */
-   const UChar sourceIndexScaleFactor = (op == Iop_F32toF64) ? 2 : 1;
-   const UChar destinationIndexScaleFactor = (op == Iop_F64toF32) ? 2 : 1;
+   Int size_diff = sizeofIRType(toType) - sizeofIRType(fromType);
+   const UChar sourceIndexScaleFactor = size_diff > 0 ? 2 : 1;
+   const UChar destinationIndexScaleFactor = size_diff < 0 ? 2 : 1;
+   UChar n_elem = (isSingleElementOp ? 1 :
+                   16 / (size_diff > 0 ?
+                         sizeofIRType(toType) : sizeofIRType(fromType)));
 
-   const Bool isUnary = (op == Iop_F32toF64);
-   for (UChar i = 0; i <= maxIndex; i++) {
+   for (UChar i = 0; i < n_elem; i++) {
       IRExpr* argument = get_vr(v2, fromType, i * sourceIndexScaleFactor);
       IRExpr* result;
-      if (!isUnary) {
+      if (rounding) {
+         if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
+            emulation_warning(EmWarn_S390X_fpext_rounding);
+            m5 = S390_BFP_ROUND_PER_FPC;
+         }
          result = binop(op,
                         mkexpr(encode_bfp_rounding_mode(m5)),
                         argument);
@@ -18369,315 +18930,315 @@ s390_vector_fp_convert(IROp op, IRType fromType, IRType toType,
       }
       put_vr(v1, toType, i * destinationIndexScaleFactor, result);
    }
-
-   if (isSingleElementOp) {
-      put_vr_dw1(v1, mkU64(0));
-   }
 }
 
 static const HChar *
 s390_irgen_VCDG(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vcdg", m3 == 3);
+   s390_insn_assert("vcdg", m3 == 2 || m3 == 3);
 
-   if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
-      emulation_warning(EmWarn_S390X_fpext_rounding);
-      m5 = S390_BFP_ROUND_PER_FPC;
-   }
-
-   s390_vector_fp_convert(Iop_I64StoF64, Ity_I64, Ity_F64, v1, v2, m3, m4, m5);
-
+   s390_vector_fp_convert(m3 == 2 ? Iop_I32StoF32 : Iop_I64StoF64,
+                          m3 == 2 ? Ity_I32       : Ity_I64,
+                          m3 == 2 ? Ity_F32       : Ity_F64,
+                          True, v1, v2, m3, m4, m5);
    return "vcdg";
 }
 
 static const HChar *
 s390_irgen_VCDLG(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vcdlg", m3 == 3);
+   s390_insn_assert("vcdlg", m3 == 2 || m3 == 3);
 
-   if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
-      emulation_warning(EmWarn_S390X_fpext_rounding);
-      m5 = S390_BFP_ROUND_PER_FPC;
-   }
-
-   s390_vector_fp_convert(Iop_I64UtoF64, Ity_I64, Ity_F64, v1, v2, m3, m4, m5);
-
+   s390_vector_fp_convert(m3 == 2 ? Iop_I32UtoF32 : Iop_I64UtoF64,
+                          m3 == 2 ? Ity_I32       : Ity_I64,
+                          m3 == 2 ? Ity_F32       : Ity_F64,
+                          True, v1, v2, m3, m4, m5);
    return "vcdlg";
 }
 
 static const HChar *
 s390_irgen_VCGD(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vcgd", m3 == 3);
+   s390_insn_assert("vcgd", m3 == 2 || m3 == 3);
 
-   if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
-      emulation_warning(EmWarn_S390X_fpext_rounding);
-      m5 = S390_BFP_ROUND_PER_FPC;
-   }
-
-   s390_vector_fp_convert(Iop_F64toI64S, Ity_F64, Ity_I64, v1, v2, m3, m4, m5);
-
+   s390_vector_fp_convert(m3 == 2 ? Iop_F32toI32S : Iop_F64toI64S,
+                          m3 == 2 ? Ity_F32       : Ity_F64,
+                          m3 == 2 ? Ity_I32       : Ity_I64,
+                          True, v1, v2, m3, m4, m5);
    return "vcgd";
 }
 
 static const HChar *
 s390_irgen_VCLGD(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vclgd", m3 == 3);
+   s390_insn_assert("vclgd", m3 == 2 || m3 == 3);
 
-   if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
-      emulation_warning(EmWarn_S390X_fpext_rounding);
-      m5 = S390_BFP_ROUND_PER_FPC;
-   }
-
-   s390_vector_fp_convert(Iop_F64toI64U, Ity_F64, Ity_I64, v1, v2, m3, m4, m5);
-
+   s390_vector_fp_convert(m3 == 2 ? Iop_F32toI32U : Iop_F64toI64U,
+                          m3 == 2 ? Ity_F32       : Ity_F64,
+                          m3 == 2 ? Ity_I32       : Ity_I64,
+                          True, v1, v2, m3, m4, m5);
    return "vclgd";
 }
 
 static const HChar *
 s390_irgen_VFI(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vfi", m3 == 3);
+   s390_insn_assert("vfi",
+                    (m3 == 3 || (s390_host_has_vxe && m3 >= 2 && m3 <= 4)));
 
-   if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
-      emulation_warning(EmWarn_S390X_fpext_rounding);
-      m5 = S390_BFP_ROUND_PER_FPC;
+   switch (m3) {
+   case 2: s390_vector_fp_convert(Iop_RoundF32toInt, Ity_F32, Ity_F32, True,
+                                  v1, v2, m3, m4, m5); break;
+   case 3: s390_vector_fp_convert(Iop_RoundF64toInt, Ity_F64, Ity_F64, True,
+                                  v1, v2, m3, m4, m5); break;
+   case 4: s390_vector_fp_convert(Iop_RoundF128toInt, Ity_F128, Ity_F128, True,
+                                  v1, v2, m3, m4, m5); break;
    }
 
-   s390_vector_fp_convert(Iop_RoundF64toInt, Ity_F64, Ity_F64,
-                          v1, v2, m3, m4, m5);
-
-   return "vcgld";
+   return "vfi";
 }
 
 static const HChar *
-s390_irgen_VLDE(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
+s390_irgen_VFLL(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vlde", m3 == 2);
+   s390_insn_assert("vfll", m3 == 2 || (s390_host_has_vxe && m3 == 3));
 
-   s390_vector_fp_convert(Iop_F32toF64, Ity_F32, Ity_F64, v1, v2, m3, m4, m5);
+   if (m3 == 2)
+      s390_vector_fp_convert(Iop_F32toF64, Ity_F32, Ity_F64, False,
+                             v1, v2, m3, m4, m5);
+   else
+      s390_vector_fp_convert(Iop_F64toF128, Ity_F64, Ity_F128, False,
+                             v1, v2, m3, m4, m5);
 
-   return "vlde";
+   return "vfll";
 }
 
 static const HChar *
-s390_irgen_VLED(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
+s390_irgen_VFLR(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vled", m3 == 3);
+   s390_insn_assert("vflr", m3 == 3 || (s390_host_has_vxe && m3 == 2));
 
-   if (!s390_host_has_fpext && m5 != S390_BFP_ROUND_PER_FPC) {
-      m5 = S390_BFP_ROUND_PER_FPC;
-   }
+   if (m3 == 3)
+      s390_vector_fp_convert(Iop_F64toF32, Ity_F64, Ity_F32, True,
+                             v1, v2, m3, m4, m5);
+   else
+      s390_vector_fp_convert(Iop_F128toF64, Ity_F128, Ity_F64, True,
+                             v1, v2, m3, m4, m5);
 
-   s390_vector_fp_convert(Iop_F64toF32, Ity_F64, Ity_F32, v1, v2, m3, m4, m5);
-
-   return "vled";
+   return "vflr";
 }
 
 static const HChar *
 s390_irgen_VFPSO(UChar v1, UChar v2, UChar m3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vfpso", m3 == 3);
+   s390_insn_assert("vfpso", m5 <= 2 &&
+                    (m3 == 3 || (s390_host_has_vxe && m3 >= 2 && m3 <= 4)));
 
-   IRExpr* result;
-   switch (m5) {
-   case 0: {
-      /* Invert sign */
-      if (!s390_vr_is_single_element_control_set(m4)) {
-         result = unop(Iop_Neg64Fx2, get_vr_qw(v2));
-      }
-      else {
-         result = binop(Iop_64HLtoV128,
-                        unop(Iop_ReinterpF64asI64,
-                             unop(Iop_NegF64, get_vr(v2, Ity_F64, 0))),
-                        mkU64(0));
-      }
-      break;
-   }
+   Bool single = s390_vr_is_single_element_control_set(m4) || m3 == 4;
+   IRType type = single ? s390_vr_get_ftype(m3) : Ity_V128;
+   int idx = 2 * (m3 - 2) + (single ? 0 : 1);
 
-   case 1: {
+   static const IROp negate_ops[] = {
+      Iop_NegF32, Iop_Neg32Fx4,
+      Iop_NegF64, Iop_Neg64Fx2,
+      Iop_NegF128
+   };
+   static const IROp abs_ops[] = {
+      Iop_AbsF32, Iop_Abs32Fx4,
+      Iop_AbsF64, Iop_Abs64Fx2,
+      Iop_AbsF128
+   };
+
+   if (m5 == 1) {
       /* Set sign to negative */
-      IRExpr* highHalf = mkU64(0x8000000000000000ULL);
-      if (!s390_vr_is_single_element_control_set(m4)) {
-         IRExpr* lowHalf = highHalf;
-         IRExpr* mask = binop(Iop_64HLtoV128, highHalf, lowHalf);
-         result = binop(Iop_OrV128, get_vr_qw(v2), mask);
-      }
-      else {
-         result = binop(Iop_64HLtoV128,
-                        binop(Iop_Or64, get_vr_dw0(v2), highHalf),
-                        mkU64(0ULL));
-      }
-
-      break;
-   }
-
-   case 2: {
-      /* Set sign to positive */
-      if (!s390_vr_is_single_element_control_set(m4)) {
-         result = unop(Iop_Abs64Fx2, get_vr_qw(v2));
-      }
-      else {
-         result = binop(Iop_64HLtoV128,
-                        unop(Iop_ReinterpF64asI64,
-                             unop(Iop_AbsF64, get_vr(v2, Ity_F64, 0))),
-                        mkU64(0));
-      }
-
-      break;
-   }
-
-   default:
-      vpanic("s390_irgen_VFPSO: Invalid m5 value");
-   }
-
-   put_vr_qw(v1, result);
-   if (s390_vr_is_single_element_control_set(m4)) {
-      put_vr_dw1(v1, mkU64(0ULL));
+      put_vr(v1, type, 0,
+             unop(negate_ops[idx],
+                  unop(abs_ops[idx], get_vr(v2, type, 0))));
+   } else {
+      /* m5 == 0: invert sign; m5 == 2: set sign to positive */
+      const IROp *ops = m5 == 2 ? abs_ops : negate_ops;
+      put_vr(v1, type, 0, unop(ops[idx], get_vr(v2, type, 0)));
    }
 
    return "vfpso";
 }
 
-static void s390x_vec_fp_binary_op(IROp generalOp, IROp singleElementOp,
-                                   UChar v1, UChar v2, UChar v3, UChar m4,
-                                   UChar m5)
+static const HChar *
+s390x_vec_fp_binary_op(const HChar* mnm, const IROp ops[],
+                       UChar v1, UChar v2, UChar v3,
+                       UChar m4, UChar m5)
 {
-   IRExpr* result;
-   if (!s390_vr_is_single_element_control_set(m5)) {
-      result = triop(generalOp, get_bfp_rounding_mode_from_fpc(),
-                     get_vr_qw(v2), get_vr_qw(v3));
+   s390_insn_assert(mnm, (m5 & 7) == 0 &&
+                    (m4 == 3 || (s390_host_has_vxe && m4 >= 2 && m4 <= 4)));
+
+   int idx = 2 * (m4 - 2);
+
+   if (m4 == 4 || s390_vr_is_single_element_control_set(m5)) {
+      IRType type = s390_vr_get_ftype(m4);
+      put_vr(v1, type, 0,
+             triop(ops[idx], get_bfp_rounding_mode_from_fpc(),
+                   get_vr(v2, type, 0), get_vr(v3, type, 0)));
    } else {
-      IRExpr* highHalf = triop(singleElementOp,
-                               get_bfp_rounding_mode_from_fpc(),
-                               get_vr(v2, Ity_F64, 0),
-                               get_vr(v3, Ity_F64, 0));
-      result = binop(Iop_64HLtoV128, unop(Iop_ReinterpF64asI64, highHalf),
-                     mkU64(0ULL));
+      put_vr_qw(v1, triop(ops[idx + 1], get_bfp_rounding_mode_from_fpc(),
+                          get_vr_qw(v2), get_vr_qw(v3)));
    }
 
-   put_vr_qw(v1, result);
+   return mnm;
 }
 
-static void s390x_vec_fp_unary_op(IROp generalOp, IROp singleElementOp,
-                                  UChar v1, UChar v2, UChar m3, UChar m4)
+static const HChar *
+s390x_vec_fp_unary_op(const HChar* mnm, const IROp ops[],
+                      UChar v1, UChar v2, UChar m3, UChar m4)
 {
-   IRExpr* result;
-   if (!s390_vr_is_single_element_control_set(m4)) {
-      result = binop(generalOp, get_bfp_rounding_mode_from_fpc(),
-                     get_vr_qw(v2));
+   s390_insn_assert(mnm, (m4 & 7) == 0 &&
+                    (m3 == 3 || (s390_host_has_vxe && m3 >= 2 && m3 <= 4)));
+
+   int idx = 2 * (m3 - 2);
+
+   if (m3 == 4 || s390_vr_is_single_element_control_set(m4)) {
+      IRType type = s390_vr_get_ftype(m3);
+      put_vr(v1, type, 0,
+             binop(ops[idx], get_bfp_rounding_mode_from_fpc(),
+                   get_vr(v2, type, 0)));
    }
    else {
-      IRExpr* highHalf = binop(singleElementOp,
-                               get_bfp_rounding_mode_from_fpc(),
-                               get_vr(v2, Ity_F64, 0));
-      result = binop(Iop_64HLtoV128, unop(Iop_ReinterpF64asI64, highHalf),
-                     mkU64(0ULL));
+      put_vr_qw(v1, binop(ops[idx + 1], get_bfp_rounding_mode_from_fpc(),
+                          get_vr_qw(v2)));
    }
 
-   put_vr_qw(v1, result);
+   return mnm;
 }
 
 
-static void
-s390_vector_fp_mulAddOrSub(IROp singleElementOp,
-                           UChar v1, UChar v2, UChar v3, UChar v4,
-                           UChar m5, UChar m6)
+static const HChar *
+s390_vector_fp_mulAddOrSub(UChar v1, UChar v2, UChar v3, UChar v4,
+                           UChar m5, UChar m6,
+                           const HChar* mnm, const IROp single_ops[],
+                           Bool negate)
 {
-   Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
+   s390_insn_assert(mnm, m6 == 3 || (s390_host_has_vxe && m6 >= 2 && m6 <= 4));
+
+   static const IROp negate_ops[] = { Iop_NegF32, Iop_NegF64, Iop_NegF128 };
+   IRType type = s390_vr_get_ftype(m6);
+   Bool single = s390_vr_is_single_element_control_set(m5) || m6 == 4;
+   UChar n_elem = single ? 1 : s390_vr_get_n_elem(m6);
    IRTemp irrm_temp = newTemp(Ity_I32);
    assign(irrm_temp, get_bfp_rounding_mode_from_fpc());
    IRExpr* irrm = mkexpr(irrm_temp);
-   IRExpr* result;
-   IRExpr* highHalf = qop(singleElementOp,
-                          irrm,
-                          get_vr(v2, Ity_F64, 0),
-                          get_vr(v3, Ity_F64, 0),
-                          get_vr(v4, Ity_F64, 0));
 
-   if (isSingleElementOp) {
-      result = binop(Iop_64HLtoV128, unop(Iop_ReinterpF64asI64, highHalf),
-                     mkU64(0ULL));
-   } else {
-      IRExpr* lowHalf = qop(singleElementOp,
-                            irrm,
-                            get_vr(v2, Ity_F64, 1),
-                            get_vr(v3, Ity_F64, 1),
-                            get_vr(v4, Ity_F64, 1));
-      result = binop(Iop_64HLtoV128, unop(Iop_ReinterpF64asI64, highHalf),
-                     unop(Iop_ReinterpF64asI64, lowHalf));
+   for (UChar idx = 0; idx < n_elem; idx++) {
+      IRExpr* result = qop(single_ops[m6 - 2],
+                           irrm,
+                           get_vr(v2, type, idx),
+                           get_vr(v3, type, idx),
+                           get_vr(v4, type, idx));
+      put_vr(v1, type, idx, negate ? unop(negate_ops[m6 - 2], result) : result);
    }
-
-   put_vr_qw(v1, result);
+   return mnm;
 }
 
 static const HChar *
 s390_irgen_VFA(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vfa", m4 == 3);
-   s390x_vec_fp_binary_op(Iop_Add64Fx2, Iop_AddF64, v1, v2, v3, m4, m5);
-   return "vfa";
+   static const IROp vfa_ops[] = {
+      Iop_AddF32, Iop_Add32Fx4,
+      Iop_AddF64, Iop_Add64Fx2,
+      Iop_AddF128,
+   };
+   return s390x_vec_fp_binary_op("vfa", vfa_ops, v1, v2, v3, m4, m5);
 }
 
 static const HChar *
 s390_irgen_VFS(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vfs", m4 == 3);
-   s390x_vec_fp_binary_op(Iop_Sub64Fx2, Iop_SubF64, v1, v2, v3, m4, m5);
-   return "vfs";
+   static const IROp vfs_ops[] = {
+      Iop_SubF32, Iop_Sub32Fx4,
+      Iop_SubF64, Iop_Sub64Fx2,
+      Iop_SubF128,
+   };
+   return s390x_vec_fp_binary_op("vfs", vfs_ops, v1, v2, v3, m4, m5);
 }
 
 static const HChar *
 s390_irgen_VFM(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vfm", m4 == 3);
-   s390x_vec_fp_binary_op(Iop_Mul64Fx2, Iop_MulF64, v1, v2, v3, m4, m5);
-   return "vfm";
+   static const IROp vfm_ops[] = {
+      Iop_MulF32, Iop_Mul32Fx4,
+      Iop_MulF64, Iop_Mul64Fx2,
+      Iop_MulF128,
+   };
+   return s390x_vec_fp_binary_op("vfm", vfm_ops, v1, v2, v3, m4, m5);
 }
 
 static const HChar *
 s390_irgen_VFD(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vfd", m4 == 3);
-   s390x_vec_fp_binary_op(Iop_Div64Fx2, Iop_DivF64, v1, v2, v3, m4, m5);
-   return "vfd";
+   static const IROp vfd_ops[] = {
+      Iop_DivF32, Iop_Div32Fx4,
+      Iop_DivF64, Iop_Div64Fx2,
+      Iop_DivF128,
+   };
+   return s390x_vec_fp_binary_op("vfd", vfd_ops, v1, v2, v3, m4, m5);
 }
 
 static const HChar *
 s390_irgen_VFSQ(UChar v1, UChar v2, UChar m3, UChar m4)
 {
-   s390_insn_assert("vfsq", m3 == 3);
-   s390x_vec_fp_unary_op(Iop_Sqrt64Fx2, Iop_SqrtF64, v1, v2, m3, m4);
-
-   return "vfsq";
+   static const IROp vfsq_ops[] = {
+      Iop_SqrtF32, Iop_Sqrt32Fx4,
+      Iop_SqrtF64, Iop_Sqrt64Fx2,
+      Iop_SqrtF128
+   };
+   return s390x_vec_fp_unary_op("vfsq", vfsq_ops, v1, v2, m3, m4);
 }
+
+static const IROp FMA_single_ops[] = {
+   Iop_MAddF32, Iop_MAddF64, Iop_MAddF128
+};
 
 static const HChar *
 s390_irgen_VFMA(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
 {
-   s390_insn_assert("vfma", m6 == 3);
-   s390_vector_fp_mulAddOrSub(Iop_MAddF64, v1, v2, v3, v4, m5, m6);
-   return "vfma";
+   return s390_vector_fp_mulAddOrSub(v1, v2, v3, v4, m5, m6,
+                                     "vfma", FMA_single_ops, False);
 }
+
+static const HChar *
+s390_irgen_VFNMA(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
+{
+   return s390_vector_fp_mulAddOrSub(v1, v2, v3, v4, m5, m6,
+                                     "vfnma", FMA_single_ops, True);
+}
+
+static const IROp FMS_single_ops[] = {
+   Iop_MSubF32, Iop_MSubF64, Iop_MSubF128
+};
 
 static const HChar *
 s390_irgen_VFMS(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
 {
-   s390_insn_assert("vfms", m6 == 3);
-   s390_vector_fp_mulAddOrSub(Iop_MSubF64, v1, v2, v3, v4, m5, m6);
-   return "vfms";
+   return s390_vector_fp_mulAddOrSub(v1, v2, v3, v4, m5, m6,
+                                     "vfms", FMS_single_ops, False);
+}
+
+static const HChar *
+s390_irgen_VFNMS(UChar v1, UChar v2, UChar v3, UChar v4, UChar m5, UChar m6)
+{
+   return s390_vector_fp_mulAddOrSub(v1, v2, v3, v4, m5, m6,
+                                     "vfnms", FMS_single_ops, True);
 }
 
 static const HChar *
 s390_irgen_WFC(UChar v1, UChar v2, UChar m3, UChar m4)
 {
-   s390_insn_assert("wfc", m3 == 3);
-   s390_insn_assert("wfc", m4 == 0);
+   s390_insn_assert("wfc", m4 == 0 &&
+                    (m3 == 3 || (s390_host_has_vxe && m3 >= 2 && m3 <= 4)));
+
+   static const IROp ops[] = { Iop_CmpF32, Iop_CmpF64, Iop_CmpF128 };
+   IRType type = s390_vr_get_ftype(m3);
 
    IRTemp cc_vex = newTemp(Ity_I32);
-   assign(cc_vex, binop(Iop_CmpF64,
-                        get_vr(v1, Ity_F64, 0), get_vr(v2, Ity_F64, 0)));
+   assign(cc_vex, binop(ops[m3 - 2], get_vr(v1, type, 0), get_vr(v2, type, 0)));
 
    IRTemp cc_s390 = newTemp(Ity_I32);
    assign(cc_s390, convert_vex_bfpcc_to_s390(cc_vex));
@@ -18695,180 +19256,96 @@ s390_irgen_WFK(UChar v1, UChar v2, UChar m3, UChar m4)
 }
 
 static const HChar *
-s390_irgen_VFCE(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6)
+s390_irgen_VFCx(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6,
+                const HChar *mnem, IRCmpFResult cmp, Bool equal_ok,
+                IROp cmp32, IROp cmp64)
 {
-   s390_insn_assert("vfce", m4 == 3);
+   s390_insn_assert(mnem, (m5 & 3) == 0 && (m6 & 14) == 0 &&
+                    (m4 == 3 || (s390_host_has_vxe && m4 >= 2 && m4 <= 4)));
 
-   Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
-   if (!s390_vr_is_cs_set(m6)) {
-      if (!isSingleElementOp) {
-         put_vr_qw(v1, binop(Iop_CmpEQ64Fx2, get_vr_qw(v2), get_vr_qw(v3)));
+   Bool single = s390_vr_is_single_element_control_set(m5) || m4 == 4;
+
+   if (single) {
+      static const IROp ops[] = { Iop_CmpF32, Iop_CmpF64, Iop_CmpF128 };
+      IRType type = s390_vr_get_ftype(m4);
+      IRTemp result = newTemp(Ity_I32);
+      IRTemp cond = newTemp(Ity_I1);
+
+      assign(result, binop(ops[m4 - 2],
+                           get_vr(v2, type, 0), get_vr(v3, type, 0)));
+      if (equal_ok) {
+         assign(cond,
+                binop(Iop_Or1,
+                      binop(Iop_CmpEQ32, mkexpr(result), mkU32(cmp)),
+                      binop(Iop_CmpEQ32, mkexpr(result), mkU32(Ircr_EQ))));
       } else {
-         IRExpr* comparisonResult = binop(Iop_CmpF64, get_vr(v2, Ity_F64, 0),
-                                          get_vr(v3, Ity_F64, 0));
-         IRExpr* result = mkite(binop(Iop_CmpEQ32, comparisonResult,
-                                      mkU32(Ircr_EQ)),
-                                mkU64(0xffffffffffffffffULL),
-                                mkU64(0ULL));
-         put_vr_qw(v1, binop(Iop_64HLtoV128, result, mkU64(0ULL)));
+         assign(cond, binop(Iop_CmpEQ32, mkexpr(result), mkU32(cmp)));
+      }
+      put_vr_qw(v1, mkite(mkexpr(cond),
+                          mkV128(0xffff),
+                          mkV128(0)));
+      if (s390_vr_is_cs_set(m6)) {
+         IRTemp cc = newTemp(Ity_I64);
+         assign(cc, mkite(mkexpr(cond), mkU64(0), mkU64(3)));
+         s390_cc_set(cc);
       }
    } else {
-      IRDirty* d;
-      IRTemp cc = newTemp(Ity_I64);
+      IRTemp result = newTemp(Ity_V128);
 
-      s390x_vec_op_details_t details = { .serialized = 0ULL };
-      details.op = S390_VEC_OP_VFCE;
-      details.v1 = v1;
-      details.v2 = v2;
-      details.v3 = v3;
-      details.m4 = m4;
-      details.m5 = m5;
-      details.m6 = m6;
-
-      d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                            &s390x_dirtyhelper_vec_op,
-                            mkIRExprVec_2(IRExpr_GSPTR(),
-                                          mkU64(details.serialized)));
-
-      const UChar elementSize = isSingleElementOp ? sizeof(ULong) : sizeof(V128);
-      d->nFxState = 3;
-      vex_bzero(&d->fxState, sizeof(d->fxState));
-      d->fxState[0].fx = Ifx_Read;
-      d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-      d->fxState[0].size = elementSize;
-      d->fxState[1].fx = Ifx_Read;
-      d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
-      d->fxState[1].size = elementSize;
-      d->fxState[2].fx = Ifx_Write;
-      d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-      d->fxState[2].size = sizeof(V128);
-
-      stmt(IRStmt_Dirty(d));
-      s390_cc_set(cc);
+      assign(result, binop(m4 == 2 ? cmp32 : cmp64,
+                           get_vr_qw(v2), get_vr_qw(v3)));
+      put_vr_qw(v1, mkexpr(result));
+      if (s390_vr_is_cs_set(m6)) {
+         IRTemp cc = newTemp(Ity_I64);
+         assign(cc,
+                mkite(binop(Iop_CmpEQ64,
+                            binop(Iop_And64,
+                                  unop(Iop_V128to64, mkexpr(result)),
+                                  unop(Iop_V128HIto64, mkexpr(result))),
+                            mkU64(-1ULL)),
+                      mkU64(0), /* all comparison results are true */
+                      mkite(binop(Iop_CmpEQ64,
+                                  binop(Iop_Or64,
+                                        unop(Iop_V128to64, mkexpr(result)),
+                                        unop(Iop_V128HIto64, mkexpr(result))),
+                                  mkU64(0)),
+                            mkU64(3), /* all false */
+                            mkU64(1)))); /* mixed true/false */
+         s390_cc_set(cc);
+      }
    }
 
-   return "vfce";
+   return mnem;
+}
+
+static const HChar *
+s390_irgen_VFCE(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6)
+{
+   return s390_irgen_VFCx(v1, v2, v3, m4, m5, m6, "vfce", Ircr_EQ,
+                          False, Iop_CmpEQ32Fx4, Iop_CmpEQ64Fx2);
 }
 
 static const HChar *
 s390_irgen_VFCH(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6)
 {
-   vassert(m4 == 3);
-
-   Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
-   if (!s390_vr_is_cs_set(m6)) {
-      if (!isSingleElementOp) {
-         put_vr_qw(v1, binop(Iop_CmpLE64Fx2, get_vr_qw(v3), get_vr_qw(v2)));
-      } else {
-         IRExpr* comparisonResult = binop(Iop_CmpF64, get_vr(v2, Ity_F64, 0),
-                                          get_vr(v3, Ity_F64, 0));
-         IRExpr* result = mkite(binop(Iop_CmpEQ32, comparisonResult,
-                                      mkU32(Ircr_GT)),
-                                mkU64(0xffffffffffffffffULL),
-                                mkU64(0ULL));
-         put_vr_qw(v1, binop(Iop_64HLtoV128, result, mkU64(0ULL)));
-      }
-   }
-   else {
-      IRDirty* d;
-      IRTemp cc = newTemp(Ity_I64);
-
-      s390x_vec_op_details_t details = { .serialized = 0ULL };
-      details.op = S390_VEC_OP_VFCH;
-      details.v1 = v1;
-      details.v2 = v2;
-      details.v3 = v3;
-      details.m4 = m4;
-      details.m5 = m5;
-      details.m6 = m6;
-
-      d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                            &s390x_dirtyhelper_vec_op,
-                            mkIRExprVec_2(IRExpr_GSPTR(),
-                                          mkU64(details.serialized)));
-
-      const UChar elementSize = isSingleElementOp ? sizeof(ULong) : sizeof(V128);
-      d->nFxState = 3;
-      vex_bzero(&d->fxState, sizeof(d->fxState));
-      d->fxState[0].fx = Ifx_Read;
-      d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-      d->fxState[0].size = elementSize;
-      d->fxState[1].fx = Ifx_Read;
-      d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
-      d->fxState[1].size = elementSize;
-      d->fxState[2].fx = Ifx_Write;
-      d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-      d->fxState[2].size = sizeof(V128);
-
-      stmt(IRStmt_Dirty(d));
-      s390_cc_set(cc);
-   }
-
-   return "vfch";
+   /* Swap arguments and compare "low" instead. */
+   return s390_irgen_VFCx(v1, v3, v2, m4, m5, m6, "vfch", Ircr_LT,
+                          False, Iop_CmpLT32Fx4, Iop_CmpLT64Fx2);
 }
 
 static const HChar *
 s390_irgen_VFCHE(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6)
 {
-   s390_insn_assert("vfche", m4 == 3);
-
-   Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
-   if (!s390_vr_is_cs_set(m6)) {
-      if (!isSingleElementOp) {
-         put_vr_qw(v1, binop(Iop_CmpLT64Fx2, get_vr_qw(v3), get_vr_qw(v2)));
-      }
-      else {
-         IRExpr* comparisonResult = binop(Iop_CmpF64, get_vr(v3, Ity_F64, 0),
-                                          get_vr(v2, Ity_F64, 0));
-         IRExpr* result = mkite(binop(Iop_CmpEQ32, comparisonResult,
-                                      mkU32(Ircr_LT)),
-                                mkU64(0xffffffffffffffffULL),
-                                mkU64(0ULL));
-         put_vr_qw(v1, binop(Iop_64HLtoV128, result, mkU64(0ULL)));
-      }
-   }
-   else {
-      IRDirty* d;
-      IRTemp cc = newTemp(Ity_I64);
-
-      s390x_vec_op_details_t details = { .serialized = 0ULL };
-      details.op = S390_VEC_OP_VFCHE;
-      details.v1 = v1;
-      details.v2 = v2;
-      details.v3 = v3;
-      details.m4 = m4;
-      details.m5 = m5;
-      details.m6 = m6;
-
-      d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
-                            &s390x_dirtyhelper_vec_op,
-                            mkIRExprVec_2(IRExpr_GSPTR(),
-                                          mkU64(details.serialized)));
-
-      const UChar elementSize = isSingleElementOp ? sizeof(ULong) : sizeof(V128);
-      d->nFxState = 3;
-      vex_bzero(&d->fxState, sizeof(d->fxState));
-      d->fxState[0].fx = Ifx_Read;
-      d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
-      d->fxState[0].size = elementSize;
-      d->fxState[1].fx = Ifx_Read;
-      d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
-      d->fxState[1].size = elementSize;
-      d->fxState[2].fx = Ifx_Write;
-      d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
-      d->fxState[2].size = sizeof(V128);
-
-      stmt(IRStmt_Dirty(d));
-      s390_cc_set(cc);
-   }
-
-   return "vfche";
+   /* Swap arguments and compare "low or equal" instead. */
+   return s390_irgen_VFCx(v1, v3, v2, m4, m5, m6, "vfche", Ircr_LT,
+                          True, Iop_CmpLE32Fx4, Iop_CmpLE64Fx2);
 }
 
 static const HChar *
 s390_irgen_VFTCI(UChar v1, UChar v2, UShort i3, UChar m4, UChar m5)
 {
-   s390_insn_assert("vftci", m4 == 3);
+   s390_insn_assert("vftci",
+                    (m4 == 3 || (s390_host_has_vxe && m4 >= 2 && m4 <= 4)));
 
    Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
 
@@ -18888,7 +19365,8 @@ s390_irgen_VFTCI(UChar v1, UChar v2, UShort i3, UChar m4, UChar m5)
                          mkIRExprVec_2(IRExpr_GSPTR(),
                                        mkU64(details.serialized)));
 
-   const UChar elementSize = isSingleElementOp ? sizeof(ULong) : sizeof(V128);
+   const UChar elementSize = isSingleElementOp ?
+      sizeofIRType(s390_vr_get_ftype(m4)) : sizeof(V128);
    d->nFxState = 2;
    vex_bzero(&d->fxState, sizeof(d->fxState));
    d->fxState[0].fx = Ifx_Read;
@@ -18902,6 +19380,356 @@ s390_irgen_VFTCI(UChar v1, UChar v2, UShort i3, UChar m4, UChar m5)
    s390_cc_set(cc);
 
    return "vftci";
+}
+
+static const HChar *
+s390_irgen_VFMIN(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6)
+{
+   s390_insn_assert("vfmin",
+                    (m4 == 3 || (s390_host_has_vxe && m4 >= 2 && m4 <= 4)));
+
+   Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
+   IRDirty* d;
+   IRTemp cc = newTemp(Ity_I64);
+
+   s390x_vec_op_details_t details = { .serialized = 0ULL };
+   details.op = S390_VEC_OP_VFMIN;
+   details.v1 = v1;
+   details.v2 = v2;
+   details.v3 = v3;
+   details.m4 = m4;
+   details.m5 = m5;
+   details.m6 = m6;
+
+   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
+                         &s390x_dirtyhelper_vec_op,
+                         mkIRExprVec_2(IRExpr_GSPTR(),
+                                       mkU64(details.serialized)));
+
+   const UChar elementSize = isSingleElementOp ?
+      sizeofIRType(s390_vr_get_ftype(m4)) : sizeof(V128);
+   d->nFxState = 3;
+   vex_bzero(&d->fxState, sizeof(d->fxState));
+   d->fxState[0].fx = Ifx_Read;
+   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
+   d->fxState[0].size = elementSize;
+   d->fxState[1].fx = Ifx_Read;
+   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
+   d->fxState[1].size = elementSize;
+   d->fxState[2].fx = Ifx_Write;
+   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
+   d->fxState[2].size = sizeof(V128);
+
+   stmt(IRStmt_Dirty(d));
+   s390_cc_set(cc);
+   return "vfmin";
+}
+
+static const HChar *
+s390_irgen_VFMAX(UChar v1, UChar v2, UChar v3, UChar m4, UChar m5, UChar m6)
+{
+   s390_insn_assert("vfmax",
+                    (m4 == 3 || (s390_host_has_vxe && m4 >= 2 && m4 <= 4)));
+
+   Bool isSingleElementOp = s390_vr_is_single_element_control_set(m5);
+   IRDirty* d;
+   IRTemp cc = newTemp(Ity_I64);
+
+   s390x_vec_op_details_t details = { .serialized = 0ULL };
+   details.op = S390_VEC_OP_VFMAX;
+   details.v1 = v1;
+   details.v2 = v2;
+   details.v3 = v3;
+   details.m4 = m4;
+   details.m5 = m5;
+   details.m6 = m6;
+
+   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
+                         &s390x_dirtyhelper_vec_op,
+                         mkIRExprVec_2(IRExpr_GSPTR(),
+                                       mkU64(details.serialized)));
+
+   const UChar elementSize = isSingleElementOp ?
+      sizeofIRType(s390_vr_get_ftype(m4)) : sizeof(V128);
+   d->nFxState = 3;
+   vex_bzero(&d->fxState, sizeof(d->fxState));
+   d->fxState[0].fx = Ifx_Read;
+   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
+   d->fxState[0].size = elementSize;
+   d->fxState[1].fx = Ifx_Read;
+   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
+   d->fxState[1].size = elementSize;
+   d->fxState[2].fx = Ifx_Write;
+   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
+   d->fxState[2].size = sizeof(V128);
+
+   stmt(IRStmt_Dirty(d));
+   s390_cc_set(cc);
+   return "vfmax";
+}
+
+static const HChar *
+s390_irgen_VBPERM(UChar v1, UChar v2, UChar v3)
+{
+   IRDirty* d;
+   IRTemp cc = newTemp(Ity_I64);
+
+   s390x_vec_op_details_t details = { .serialized = 0ULL };
+   details.op = S390_VEC_OP_VBPERM;
+   details.v1 = v1;
+   details.v2 = v2;
+   details.v3 = v3;
+   details.m4 = 0;
+   details.m5 = 0;
+   details.m6 = 0;
+
+   d = unsafeIRDirty_1_N(cc, 0, "s390x_dirtyhelper_vec_op",
+                         &s390x_dirtyhelper_vec_op,
+                         mkIRExprVec_2(IRExpr_GSPTR(),
+                                       mkU64(details.serialized)));
+
+   d->nFxState = 3;
+   vex_bzero(&d->fxState, sizeof(d->fxState));
+   d->fxState[0].fx = Ifx_Read;
+   d->fxState[0].offset = S390X_GUEST_OFFSET(guest_v0) + v2 * sizeof(V128);
+   d->fxState[0].size = sizeof(V128);
+   d->fxState[1].fx = Ifx_Read;
+   d->fxState[1].offset = S390X_GUEST_OFFSET(guest_v0) + v3 * sizeof(V128);
+   d->fxState[1].size = sizeof(V128);
+   d->fxState[2].fx = Ifx_Write;
+   d->fxState[2].offset = S390X_GUEST_OFFSET(guest_v0) + v1 * sizeof(V128);
+   d->fxState[2].size = sizeof(V128);
+
+   stmt(IRStmt_Dirty(d));
+   s390_cc_set(cc);
+   return "vbperm";
+}
+
+static const HChar *
+s390_irgen_SELR(UChar r3, UChar m4, UChar r1, UChar r2)
+{
+   IRExpr* cond = binop(Iop_CmpNE32, s390_call_calculate_cond(m4), mkU32(0));
+   put_gpr_w1(r1, mkite(cond, get_gpr_w1(r2), get_gpr_w1(r3)));
+   return "selr";
+}
+
+static const HChar *
+s390_irgen_SELGR(UChar r3, UChar m4, UChar r1, UChar r2)
+{
+   IRExpr* cond = binop(Iop_CmpNE32, s390_call_calculate_cond(m4), mkU32(0));
+   put_gpr_dw0(r1, mkite(cond, get_gpr_dw0(r2), get_gpr_dw0(r3)));
+   return "selgr";
+}
+
+static const HChar *
+s390_irgen_SELFHR(UChar r3, UChar m4, UChar r1, UChar r2)
+{
+   IRExpr* cond = binop(Iop_CmpNE32, s390_call_calculate_cond(m4), mkU32(0));
+   put_gpr_w0(r1, mkite(cond, get_gpr_w0(r2), get_gpr_w0(r3)));
+   return "selfhr";
+}
+
+/* Helper function that byte-swaps each element of its V128 input operand */
+static IRExpr *
+s390_byteswap_elements(IRExpr* v, UChar m)
+{
+   static const ULong perm[4][2] = {
+      { 0x0100030205040706, 0x09080b0a0d0c0f0e }, /* 2-byte elements */
+      { 0x0302010007060504, 0x0b0a09080f0e0d0c }, /* 4-byte elements */
+      { 0x0706050403020100, 0x0f0e0d0c0b0a0908 }, /* 8-byte elements */
+      { 0x0f0e0d0c0b0a0908, 0x0706050403020100 }, /* whole vector */
+   };
+   return binop(Iop_Perm8x16, v, binop(Iop_64HLtoV128,
+                                       mkU64(perm[m - 1][0]),
+                                       mkU64(perm[m - 1][1])));
+}
+
+/* Helper function that reverses the elements of its V128 input operand */
+static IRExpr *
+s390_reverse_elements(IRExpr* v, UChar m)
+{
+   static const ULong perm[3][2] = {
+      { 0x0e0f0c0d0a0b0809, 0x0607040502030001 }, /* 2-byte elements */
+      { 0x0c0d0e0f08090a0b, 0x0405060700010203 }, /* 4-byte elements */
+      { 0x08090a0b0c0d0e0f, 0x0001020304050607 }, /* 8-byte elements */
+   };
+   return binop(Iop_Perm8x16, v, binop(Iop_64HLtoV128,
+                                       mkU64(perm[m - 1][0]),
+                                       mkU64(perm[m - 1][1])));
+}
+
+static const HChar *
+s390_irgen_VLBR(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vlbr", m3 >= 1 && m3 <= 4);
+   put_vr_qw(v1, s390_byteswap_elements(load(Ity_V128, mkexpr(op2addr)), m3));
+   return "vlbr";
+}
+
+static const HChar *
+s390_irgen_VSTBR(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vstbr", m3 >= 1 && m3 <= 4);
+   store(mkexpr(op2addr), s390_byteswap_elements(get_vr_qw(v1), m3));
+   return "vstbr";
+}
+
+static const HChar *
+s390_irgen_VLER(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vler", m3 >= 1 && m3 <= 3);
+   put_vr_qw(v1, s390_reverse_elements(load(Ity_V128, mkexpr(op2addr)), m3));
+   return "vler";
+}
+
+static const HChar *
+s390_irgen_VSTER(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vstbr", m3 >= 1 && m3 <= 4);
+   store(mkexpr(op2addr), s390_reverse_elements(get_vr_qw(v1), m3));
+   return "vstbr";
+}
+
+/* Helper function that combines its two V128 operands by replacing element 'to'
+   in 'a' by byte-swapped element 'from' in 'b' */
+static IRExpr *
+s390_insert_byteswapped(IRExpr* a, IRExpr* b, UChar m, UChar to, UChar from)
+{
+   UInt elem_size = 1U << m;
+   UInt start = elem_size * to;
+   UInt end = start + elem_size - 1;
+   UInt offs = end + elem_size * from + 16;
+   UInt i;
+
+   ULong permH = 0;
+   for (i = 0; i < 8; i++) {
+      permH = (permH << 8) | (i >= start && i <= end ? offs - i : i);
+   }
+   ULong permL = 0;
+   for (i = 8; i < 16; i++) {
+      permL = (permL << 8) | (i >= start && i <= end ? offs - i : i);
+   }
+   return triop(Iop_Perm8x16x2, a, b, binop(Iop_64HLtoV128,
+                                            mkU64(permH), mkU64(permL)));
+}
+
+static const HChar *
+s390_irgen_VLEBRH(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vlebrh", m3 <= 7);
+   IRTemp op2 = newTemp(Ity_I16);
+   assign(op2, load(Ity_I16, mkexpr(op2addr)));
+   put_vr(v1, Ity_I16, m3, binop(Iop_Or16,
+                                 binop(Iop_Shl16, mkexpr(op2), mkU8(8)),
+                                 binop(Iop_Shr16, mkexpr(op2), mkU8(8))));
+   return "vlebrh";
+}
+
+static const HChar *
+s390_irgen_VLEBRF(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vlebrf", m3 <= 3);
+   IRTemp op1 = newTemp(Ity_V128);
+   assign(op1, get_vr_qw(v1));
+   IRTemp op2 = newTemp(Ity_I64);
+   assign(op2, unop(Iop_32Uto64, load(Ity_I32, mkexpr(op2addr))));
+   IRExpr* b = binop(Iop_64HLtoV128, mkexpr(op2), mkexpr(op2));
+   put_vr_qw(v1, s390_insert_byteswapped(mkexpr(op1), b, 2, m3, 3));
+   return "vlebrf";
+}
+
+static const HChar *
+s390_irgen_VLEBRG(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vlebrg", m3 <= 1);
+   IRTemp op1 = newTemp(Ity_V128);
+   assign(op1, get_vr_qw(v1));
+   IRTemp op2 = newTemp(Ity_I64);
+   assign(op2, load(Ity_I64, mkexpr(op2addr)));
+   IRExpr* b = binop(Iop_64HLtoV128, mkexpr(op2), mkexpr(op2));
+   put_vr_qw(v1, s390_insert_byteswapped(mkexpr(op1), b, 3, m3, 1));
+   return "vlebrg";
+}
+
+static const HChar *
+s390_irgen_VLBRREP(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vlbrrep", m3 >= 1 && m3 <= 3);
+   static const ULong perm[3] = {
+      0x0f0e0f0e0f0e0f0e,       /* 2-byte element */
+      0x0f0e0d0c0f0e0d0c,       /* 4-byte element */
+      0x0f0e0d0c0b0a0908        /* 8-byte element */
+   };
+   IRExpr* permHL = mkU64(perm[m3 - 1]);
+   IRTemp op2 = newTemp(Ity_I64);
+   if (m3 == 3)
+      assign(op2, load(Ity_I64, mkexpr(op2addr)));
+   else
+      assign(op2, unop(m3 == 2 ? Iop_32Uto64 : Iop_16Uto64,
+                       load(s390_vr_get_type(m3), mkexpr(op2addr))));
+   put_vr_qw(v1, binop(Iop_Perm8x16,
+                       binop(Iop_64HLtoV128, mkexpr(op2), mkexpr(op2)),
+                       binop(Iop_64HLtoV128, permHL, permHL)));
+   return "vlbrrep";
+}
+
+static const HChar *
+s390_irgen_VLLEBRZ(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vllebrz", (m3 >= 1 && m3 <= 3) || m3 == 6);
+   static const ULong perm[6] = {
+      0x0000000000000f0e,       /* 2-byte element */
+      0x000000000f0e0d0c,       /* 4-byte element */
+      0x0f0e0d0c0b0a0908,       /* 8-byte element */
+      0,                        /* invalid (4) */
+      0,                        /* invalid (5) */
+      0x0f0e0d0c00000000,       /* 4-byte element, left-aligned */
+   };
+   IRExpr* permH = mkU64(perm[m3 - 1]);
+   IRTemp op2 = newTemp(Ity_I64);
+   if (m3 == 3)
+      assign(op2, load(Ity_I64, mkexpr(op2addr)));
+   else
+      assign(op2, unop((m3 & 3) == 2 ? Iop_32Uto64 : Iop_16Uto64,
+                       load(s390_vr_get_type(m3 & 3), mkexpr(op2addr))));
+   put_vr_qw(v1, binop(Iop_Perm8x16,
+                       binop(Iop_64HLtoV128, mkU64(0), mkexpr(op2)),
+                       binop(Iop_64HLtoV128, permH, mkU64(0))));
+   return "vllebrz";
+}
+
+static const HChar *
+s390_irgen_VSTEBRH(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vstebrh", m3 <= 7);
+   IRTemp op1 = newTemp(Ity_I16);
+   assign(op1, get_vr(v1, Ity_I16, m3));
+   store(mkexpr(op2addr), binop(Iop_Or16,
+                                binop(Iop_Shl16, mkexpr(op1), mkU8(8)),
+                                binop(Iop_Shr16, mkexpr(op1), mkU8(8))));
+   return "vstebrh";
+}
+
+static const HChar *
+s390_irgen_VSTEBRF(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vstebrf", m3 <= 3);
+   IRTemp op1 = newTemp(Ity_V128);
+   assign(op1, get_vr_qw(v1));
+   IRExpr* b = s390_insert_byteswapped(mkexpr(op1), mkexpr(op1), 2, 3, m3);
+   store(mkexpr(op2addr), unop(Iop_V128to32, b));
+   return "vstebrf";
+}
+
+static const HChar *
+s390_irgen_VSTEBRG(UChar v1, IRTemp op2addr, UChar m3)
+{
+   s390_insn_assert("vstebrg", m3 <= 1);
+   IRTemp op1 = newTemp(Ity_V128);
+   assign(op1, get_vr_qw(v1));
+   IRExpr* b = s390_insert_byteswapped(mkexpr(op1), mkexpr(op1), 3, 1, m3);
+   store(mkexpr(op2addr), unop(Iop_V128to64, b));
+   return "vstebrg";
 }
 
 /* New insns are added here.
@@ -19675,6 +20503,9 @@ s390_decode_4byte_and_irgen(const UChar *bytes)
                                    RRE_r2(ovl));  goto ok;
    case 0xb931: s390_format_RRE_RR(s390_irgen_CLGFR, RRE_r1(ovl),
                                    RRE_r2(ovl));  goto ok;
+   case 0xb938: /* SORTL */ goto unimplemented;
+   case 0xb939: /* DFLTCC */ goto unimplemented;
+   case 0xb93a: /* KDSA */ goto unimplemented;
    case 0xb93c: s390_format_RRE_RR(s390_irgen_PPNO, RRE_r1(ovl),
                                    RRE_r2(ovl));  goto ok;
    case 0xb93e: /* KIMD */ goto unimplemented;
@@ -19723,12 +20554,28 @@ s390_decode_4byte_and_irgen(const UChar *bytes)
    case 0xb961: s390_format_RRF_U0RR(s390_irgen_CLGRT, RRF2_m3(ovl),
                                      RRF2_r1(ovl), RRF2_r2(ovl),
                                      S390_XMNM_CAB); goto ok;
+   case 0xb964: s390_format_RRF_R0RR2(s390_irgen_NNGRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
+   case 0xb965: s390_format_RRF_R0RR2(s390_irgen_OCGRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
+   case 0xb966: s390_format_RRF_R0RR2(s390_irgen_NOGRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
+   case 0xb967: s390_format_RRF_R0RR2(s390_irgen_NXGRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
    case 0xb972: s390_format_RRF_U0RR(s390_irgen_CRT, RRF2_m3(ovl),
                                      RRF2_r1(ovl), RRF2_r2(ovl),
                                      S390_XMNM_CAB); goto ok;
    case 0xb973: s390_format_RRF_U0RR(s390_irgen_CLRT, RRF2_m3(ovl),
                                      RRF2_r1(ovl), RRF2_r2(ovl),
                                      S390_XMNM_CAB); goto ok;
+   case 0xb974: s390_format_RRF_R0RR2(s390_irgen_NNRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
+   case 0xb975: s390_format_RRF_R0RR2(s390_irgen_OCRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
+   case 0xb976: s390_format_RRF_R0RR2(s390_irgen_NORK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
+   case 0xb977: s390_format_RRF_R0RR2(s390_irgen_NXRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl)); goto ok;
    case 0xb980: s390_format_RRE_RR(s390_irgen_NGR, RRE_r1(ovl),
                                    RRE_r2(ovl));  goto ok;
    case 0xb981: s390_format_RRE_RR(s390_irgen_OGR, RRE_r1(ovl),
@@ -19797,6 +20644,9 @@ s390_decode_4byte_and_irgen(const UChar *bytes)
    case 0xb9bd: /* TRTRE */ goto unimplemented;
    case 0xb9be: /* SRSTU */ goto unimplemented;
    case 0xb9bf: /* TRTE */ goto unimplemented;
+   case 0xb9c0: s390_format_RRF_RURR(s390_irgen_SELFHR, RRF4_r3(ovl),
+                                     RRF4_m4(ovl), RRF4_r1(ovl),
+                                     RRF4_r2(ovl)); goto ok;
    case 0xb9c8: s390_format_RRF_R0RR2(s390_irgen_AHHHR, RRF4_r3(ovl),
                                       RRF4_r1(ovl), RRF4_r2(ovl));
                                       goto ok;
@@ -19832,12 +20682,18 @@ s390_decode_4byte_and_irgen(const UChar *bytes)
    case 0xb9e0: s390_format_RRF_U0RR(s390_irgen_LOCFHR, RRF3_r3(ovl),
                                      RRF3_r1(ovl), RRF3_r2(ovl),
                                      S390_XMNM_LOCFHR);  goto ok;
-   case 0xb9e1: s390_format_RRE_RR(s390_irgen_POPCNT, RRE_r1(ovl),
-                                   RRE_r2(ovl));  goto ok;
+   case 0xb9e1: s390_format_RRFa_U0RR(s390_irgen_POPCNT, RRF3_r3(ovl),
+                                      RRF3_r1(ovl), RRF3_r2(ovl));  goto ok;
    case 0xb9e2: s390_format_RRF_U0RR(s390_irgen_LOCGR, RRF3_r3(ovl),
                                      RRF3_r1(ovl), RRF3_r2(ovl),
                                      S390_XMNM_LOCGR);  goto ok;
+   case 0xb9e3: s390_format_RRF_RURR(s390_irgen_SELGR, RRF4_r3(ovl),
+                                     RRF4_m4(ovl), RRF4_r1(ovl),
+                                     RRF4_r2(ovl)); goto ok;
    case 0xb9e4: s390_format_RRF_R0RR2(s390_irgen_NGRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl));
+                                      goto ok;
+   case 0xb9e5: s390_format_RRF_R0RR2(s390_irgen_NCGRK, RRF4_r3(ovl),
                                       RRF4_r1(ovl), RRF4_r2(ovl));
                                       goto ok;
    case 0xb9e6: s390_format_RRF_R0RR2(s390_irgen_OGRK, RRF4_r3(ovl),
@@ -19864,10 +20720,16 @@ s390_decode_4byte_and_irgen(const UChar *bytes)
    case 0xb9ed: s390_format_RRF_R0RR2(s390_irgen_MSGRKC, RRF4_r3(ovl),
                                       RRF4_r1(ovl), RRF4_r2(ovl));
                                       goto ok;
+   case 0xb9f0: s390_format_RRF_RURR(s390_irgen_SELR, RRF4_r3(ovl),
+                                     RRF4_m4(ovl), RRF4_r1(ovl),
+                                     RRF4_r2(ovl)); goto ok;
    case 0xb9f2: s390_format_RRF_U0RR(s390_irgen_LOCR, RRF3_r3(ovl),
                                      RRF3_r1(ovl), RRF3_r2(ovl),
                                      S390_XMNM_LOCR);  goto ok;
    case 0xb9f4: s390_format_RRF_R0RR2(s390_irgen_NRK, RRF4_r3(ovl),
+                                      RRF4_r1(ovl), RRF4_r2(ovl));
+                                      goto ok;
+   case 0xb9f5: s390_format_RRF_R0RR2(s390_irgen_NCRK, RRF4_r3(ovl),
                                       RRF4_r1(ovl), RRF4_r2(ovl));
                                       goto ok;
    case 0xb9f6: s390_format_RRF_R0RR2(s390_irgen_ORK, RRF4_r3(ovl),
@@ -20488,12 +21350,77 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
                                                 RXY_x2(ovl), RXY_b2(ovl),
                                                 RXY_dl2(ovl),
                                                 RXY_dh2(ovl));  goto ok;
+   case 0xe60000000001ULL: s390_format_VRX_VRRDM(s390_irgen_VLEBRH, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000002ULL: s390_format_VRX_VRRDM(s390_irgen_VLEBRG, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000003ULL: s390_format_VRX_VRRDM(s390_irgen_VLEBRF, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000004ULL: s390_format_VRX_VRRDM(s390_irgen_VLLEBRZ,
+                                                 VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000005ULL: s390_format_VRX_VRRDM(s390_irgen_VLBRREP,
+                                                 VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000006ULL: s390_format_VRX_VRRDM(s390_irgen_VLBR, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000007ULL: s390_format_VRX_VRRDM(s390_irgen_VLER, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe60000000009ULL: s390_format_VRX_VRRDM(s390_irgen_VSTEBRH,
+                                                 VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe6000000000aULL: s390_format_VRX_VRRDM(s390_irgen_VSTEBRG,
+                                                 VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe6000000000bULL: s390_format_VRX_VRRDM(s390_irgen_VSTEBRF,
+                                                 VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe6000000000eULL: s390_format_VRX_VRRDM(s390_irgen_VSTBR, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
+   case 0xe6000000000fULL: s390_format_VRX_VRRDM(s390_irgen_VSTER, VRX_v1(ovl),
+                                                 VRX_x2(ovl), VRX_b2(ovl),
+                                                 VRX_d2(ovl), VRX_m3(ovl),
+                                                 VRX_rxb(ovl));  goto ok;
    case 0xe60000000034ULL: /* VPKZ */ goto unimplemented;
-   case 0xe60000000035ULL: /* VLRL */ goto unimplemented;
-   case 0xe60000000037ULL: /* VLRLR */ goto unimplemented;
+   case 0xe60000000035ULL: s390_format_VSI_URDV(s390_irgen_VLRL, VSI_v1(ovl),
+                                                VSI_b2(ovl), VSI_d2(ovl),
+                                                VSI_i3(ovl),
+                                                VSI_rxb(ovl)); goto ok;
+   case 0xe60000000037ULL: s390_format_VRS_RRDV(s390_irgen_VLRLR, VRSd_v1(ovl),
+                                                VRSd_r3(ovl), VRS_b2(ovl),
+                                                VRS_d2(ovl),
+                                                VRS_rxb(ovl));  goto ok;
    case 0xe6000000003cULL: /* VUPKZ */ goto unimplemented;
-   case 0xe6000000003dULL: /* VSTRL */ goto unimplemented;
-   case 0xe6000000003fULL: /* VSTRLR */ goto unimplemented;
+   case 0xe6000000003dULL:  s390_format_VSI_URDV(s390_irgen_VSTRL, VSI_v1(ovl),
+                                                 VSI_b2(ovl), VSI_d2(ovl),
+                                                 VSI_i3(ovl),
+                                                 VSI_rxb(ovl)); goto ok;
+   case 0xe6000000003fULL: s390_format_VRS_RRDV(s390_irgen_VSTRLR, VRSd_v1(ovl),
+                                                VRSd_r3(ovl), VRS_b2(ovl),
+                                                VRS_d2(ovl),
+                                                VRS_rxb(ovl));  goto ok;
    case 0xe60000000049ULL: /* VLIP */ goto unimplemented;
    case 0xe60000000050ULL: /* VCVB */ goto unimplemented;
    case 0xe60000000052ULL: /* VCVBG */ goto unimplemented;
@@ -20691,12 +21618,18 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
    case 0xe7000000006bULL: s390_format_VRR_VVV(s390_irgen_VNO, VRR_v1(ovl),
                                                VRR_v2(ovl), VRR_r3(ovl),
                                                VRR_rxb(ovl));  goto ok;
-   case 0xe7000000006cULL: /* VNX */ goto unimplemented;
+   case 0xe7000000006cULL: s390_format_VRR_VVV(s390_irgen_VNX, VRR_v1(ovl),
+                                               VRR_v2(ovl), VRR_r3(ovl),
+                                               VRR_rxb(ovl));  goto ok;
    case 0xe7000000006dULL: s390_format_VRR_VVV(s390_irgen_VX, VRR_v1(ovl),
                                                VRR_v2(ovl), VRR_r3(ovl),
                                                VRR_rxb(ovl));  goto ok;
-   case 0xe7000000006eULL: /* VNN */ goto unimplemented;
-   case 0xe7000000006fULL: /* VOC */ goto unimplemented;
+   case 0xe7000000006eULL: s390_format_VRR_VVV(s390_irgen_VNN, VRR_v1(ovl),
+                                               VRR_v2(ovl), VRR_r3(ovl),
+                                               VRR_rxb(ovl));  goto ok;
+   case 0xe7000000006fULL: s390_format_VRR_VVV(s390_irgen_VOC, VRR_v1(ovl),
+                                               VRR_v2(ovl), VRR_r3(ovl),
+                                               VRR_rxb(ovl));  goto ok;
    case 0xe70000000070ULL: s390_format_VRR_VVVM(s390_irgen_VESLV, VRR_v1(ovl),
                                                 VRR_v2(ovl), VRR_r3(ovl),
                                                 VRR_m4(ovl), VRR_rxb(ovl));  goto ok;
@@ -20749,8 +21682,23 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
    case 0xe70000000084ULL: s390_format_VRR_VVVM(s390_irgen_VPDI, VRR_v1(ovl),
                                                VRR_v2(ovl), VRR_r3(ovl),
                                                VRR_m4(ovl), VRR_rxb(ovl));  goto ok;
-   case 0xe70000000085ULL: /* VBPERM */ goto unimplemented;
+   case 0xe70000000085ULL: s390_format_VRR_VVV(s390_irgen_VBPERM, VRR_v1(ovl),
+                                               VRR_v2(ovl), VRR_r3(ovl),
+                                               VRR_rxb(ovl));  goto ok;
+   case 0xe70000000086ULL: s390_format_VRId_VVVI(s390_irgen_VSLD, VRId_v1(ovl),
+                                                 VRId_v2(ovl), VRId_v3(ovl),
+                                                 VRId_i4(ovl),
+                                                 VRId_rxb(ovl));  goto ok;
+   case 0xe70000000087ULL: s390_format_VRId_VVVI(s390_irgen_VSRD, VRId_v1(ovl),
+                                                 VRId_v2(ovl), VRId_v3(ovl),
+                                                 VRId_i4(ovl),
+                                                 VRId_rxb(ovl));  goto ok;
    case 0xe7000000008aULL: s390_format_VRR_VVVVMM(s390_irgen_VSTRC, VRRd_v1(ovl),
+                                                  VRRd_v2(ovl), VRRd_v3(ovl),
+                                                  VRRd_v4(ovl), VRRd_m5(ovl),
+                                                  VRRd_m6(ovl),
+                                                  VRRd_rxb(ovl));  goto ok;
+   case 0xe7000000008bULL: s390_format_VRR_VVVVMM(s390_irgen_VSTRS, VRRd_v1(ovl),
                                                   VRRd_v2(ovl), VRRd_v3(ovl),
                                                   VRRd_v4(ovl), VRRd_m5(ovl),
                                                   VRRd_m6(ovl),
@@ -20780,8 +21728,16 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
    case 0xe70000000097ULL: s390_format_VRR_VVVMM(s390_irgen_VPKS, VRR_v1(ovl),
                                                VRR_v2(ovl), VRR_r3(ovl),
                                                VRR_m4(ovl), VRR_m5(ovl), VRR_rxb(ovl));  goto ok;
-   case 0xe7000000009eULL: /* VFNMS */ goto unimplemented;
-   case 0xe7000000009fULL: /* VFNMA */ goto unimplemented;
+   case 0xe7000000009eULL: s390_format_VRR_VVVVMM(s390_irgen_VFNMS, VRRe_v1(ovl),
+                                                  VRRe_v2(ovl), VRRe_v3(ovl),
+                                                  VRRe_v4(ovl), VRRe_m5(ovl),
+                                                  VRRe_m6(ovl),
+                                                  VRRe_rxb(ovl));  goto ok;
+   case 0xe7000000009fULL: s390_format_VRR_VVVVMM(s390_irgen_VFNMA, VRRe_v1(ovl),
+                                                  VRRe_v2(ovl), VRRe_v3(ovl),
+                                                  VRRe_v4(ovl), VRRe_m5(ovl),
+                                                  VRRe_m6(ovl),
+                                                  VRRe_rxb(ovl));  goto ok;
    case 0xe700000000a1ULL: s390_format_VRR_VVVM(s390_irgen_VMLH, VRR_v1(ovl),
                                                 VRR_v2(ovl), VRR_r3(ovl),
                                                 VRR_m4(ovl), VRR_rxb(ovl));  goto ok;
@@ -20834,7 +21790,11 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
    case 0xe700000000b4ULL: s390_format_VRR_VVVM(s390_irgen_VGFM, VRR_v1(ovl),
                                                 VRR_v2(ovl), VRR_r3(ovl),
                                                 VRR_m4(ovl), VRR_rxb(ovl));  goto ok;
-   case 0xe700000000b8ULL: /* VMSL */ goto unimplemented;
+   case 0xe700000000b8ULL: s390_format_VRR_VVVVMM(s390_irgen_VMSL, VRRd_v1(ovl),
+                                                  VRRd_v2(ovl), VRRd_v3(ovl),
+                                                  VRRd_v4(ovl), VRRd_m5(ovl),
+                                                  VRRd_m6(ovl),
+                                                  VRRd_rxb(ovl));  goto ok;
    case 0xe700000000b9ULL: s390_format_VRRd_VVVVM(s390_irgen_VACCC, VRRd_v1(ovl),
                                                   VRRd_v2(ovl), VRRd_v3(ovl),
                                                   VRRd_v4(ovl), VRRd_m5(ovl),
@@ -20871,11 +21831,11 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
                                                   VRRa_v2(ovl), VRRa_m3(ovl),
                                                   VRRa_m4(ovl), VRRa_m5(ovl),
                                                   VRRa_rxb(ovl)); goto ok;
-   case 0xe700000000c4ULL: s390_format_VRRa_VVMMM(s390_irgen_VLDE, VRRa_v1(ovl),
+   case 0xe700000000c4ULL: s390_format_VRRa_VVMMM(s390_irgen_VFLL, VRRa_v1(ovl),
                                                   VRRa_v2(ovl), VRRa_m3(ovl),
                                                   VRRa_m4(ovl), VRRa_m5(ovl),
                                                   VRRa_rxb(ovl)); goto ok;
-   case 0xe700000000c5ULL: s390_format_VRRa_VVMMM(s390_irgen_VLED, VRRa_v1(ovl),
+   case 0xe700000000c5ULL: s390_format_VRRa_VVMMM(s390_irgen_VFLR, VRRa_v1(ovl),
                                                   VRRa_v2(ovl), VRRa_m3(ovl),
                                                   VRRa_m4(ovl), VRRa_m5(ovl),
                                                   VRRa_rxb(ovl)); goto ok;
@@ -20956,8 +21916,16 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
                                                    VRRa_m3(ovl), VRRa_m4(ovl),
                                                    VRRa_m5(ovl),
                                                    VRRa_rxb(ovl)); goto ok;
-   case 0xe700000000eeULL: /* VFMIN */ goto unimplemented;
-   case 0xe700000000efULL: /* VFMAX */ goto unimplemented;
+   case 0xe700000000eeULL: s390_format_VRRa_VVVMMM(s390_irgen_VFMIN, VRRa_v1(ovl),
+                                                   VRRa_v2(ovl), VRRa_v3(ovl),
+                                                   VRRa_m3(ovl), VRRa_m4(ovl),
+                                                   VRRa_m5(ovl),
+                                                   VRRa_rxb(ovl)); goto ok;
+   case 0xe700000000efULL: s390_format_VRRa_VVVMMM(s390_irgen_VFMAX, VRRa_v1(ovl),
+                                                   VRRa_v2(ovl), VRRa_v3(ovl),
+                                                   VRRa_m3(ovl), VRRa_m4(ovl),
+                                                   VRRa_m5(ovl),
+                                                   VRRa_rxb(ovl)); goto ok;
    case 0xe700000000f0ULL: s390_format_VRR_VVVM(s390_irgen_VAVGL, VRR_v1(ovl),
                                                 VRR_v2(ovl), VRR_r3(ovl),
                                                 VRR_m4(ovl), VRR_rxb(ovl));  goto ok;
@@ -21746,6 +22714,9 @@ s390_decode_6byte_and_irgen(const UChar *bytes)
    case 0xe500ULL: /* LASP */ goto unimplemented;
    case 0xe501ULL: /* TPROT */ goto unimplemented;
    case 0xe502ULL: /* STRAG */ goto unimplemented;
+   case 0xe50aULL: s390_format_SSE_RDRD(s390_irgen_MVCRL,
+                                        SS_b1(ovl), SS_d1(ovl),
+                                        SS_b2(ovl), SS_d2(ovl));  goto ok;
    case 0xe50eULL: /* MVCSK */ goto unimplemented;
    case 0xe50fULL: /* MVCDK */ goto unimplemented;
    case 0xe544ULL: s390_format_SIL_RDI(s390_irgen_MVHHI, SIL_b1(ovl),
