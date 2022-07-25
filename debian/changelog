@@ -1,3 +1,9 @@
+valgrind (1:3.18.1-1.1pexip1) pexip-bullseye; urgency=medium
+
+  * Move to bookworm version.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Mon, 25 Jul 2022 09:52:06 +0100
+
 valgrind (1:3.18.1-1.1) unstable; urgency=medium
 
   * Non-maintainer upload.
