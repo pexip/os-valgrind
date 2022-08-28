@@ -134,6 +134,7 @@ check_PROGRAMS = allexec$(EXEEXT) jm-insns$(EXEEXT) round$(EXEEXT) \
 	test_mod_instructions$(EXEEXT) test_isa_3_1_RT$(EXEEXT) \
 	test_isa_3_1_XT$(EXEEXT) test_isa_3_1_VRT$(EXEEXT) \
 	test_isa_3_1_Misc$(EXEEXT) test_isa_3_1_AT$(EXEEXT) \
+	test_isa_3_1_R1_RT$(EXEEXT) test_isa_3_1_R1_XT$(EXEEXT) \
 	subnormal_test$(EXEEXT) test_darn_inst$(EXEEXT) \
 	test_copy_paste$(EXEEXT) test_tm$(EXEEXT) \
 	test_touch_tm$(EXEEXT) data-cache-instructions$(EXEEXT) \
@@ -280,6 +281,20 @@ test_isa_3_1_Misc_OBJECTS = $(am_test_isa_3_1_Misc_OBJECTS)
 test_isa_3_1_Misc_LDADD = $(LDADD)
 test_isa_3_1_Misc_LINK = $(CCLD) $(test_isa_3_1_Misc_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_test_isa_3_1_R1_RT_OBJECTS =  \
+	test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.$(OBJEXT) \
+	test_isa_3_1_R1_RT-test_isa_3_1_common.$(OBJEXT)
+test_isa_3_1_R1_RT_OBJECTS = $(am_test_isa_3_1_R1_RT_OBJECTS)
+test_isa_3_1_R1_RT_LDADD = $(LDADD)
+test_isa_3_1_R1_RT_LINK = $(CCLD) $(test_isa_3_1_R1_RT_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_test_isa_3_1_R1_XT_OBJECTS =  \
+	test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.$(OBJEXT) \
+	test_isa_3_1_R1_XT-test_isa_3_1_common.$(OBJEXT)
+test_isa_3_1_R1_XT_OBJECTS = $(am_test_isa_3_1_R1_XT_OBJECTS)
+test_isa_3_1_R1_XT_LDADD = $(LDADD)
+test_isa_3_1_R1_XT_LINK = $(CCLD) $(test_isa_3_1_R1_XT_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_test_isa_3_1_RT_OBJECTS =  \
 	test_isa_3_1_RT-test_isa_3_1_RT.$(OBJEXT) \
 	test_isa_3_1_RT-test_isa_3_1_common.$(OBJEXT)
@@ -373,6 +388,10 @@ am__depfiles_remade = ./$(DEPDIR)/allexec-allexec.Po \
 	./$(DEPDIR)/test_isa_3_1_AT-test_isa_3_1_common.Po \
 	./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_Misc.Po \
 	./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_common.Po \
+	./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Po \
+	./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Po \
+	./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Po \
+	./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Po \
 	./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Po \
 	./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_common.Po \
 	./$(DEPDIR)/test_isa_3_1_VRT-test_isa_3_1_VRT.Po \
@@ -411,6 +430,7 @@ SOURCES = allexec.c data-cache-instructions.c jm-insns.c \
 	test_isa_2_06_part3.c test_isa_2_07_part1.c \
 	test_isa_2_07_part2.c $(test_isa_3_0_SOURCES) \
 	$(test_isa_3_1_AT_SOURCES) $(test_isa_3_1_Misc_SOURCES) \
+	$(test_isa_3_1_R1_RT_SOURCES) $(test_isa_3_1_R1_XT_SOURCES) \
 	$(test_isa_3_1_RT_SOURCES) $(test_isa_3_1_VRT_SOURCES) \
 	$(test_isa_3_1_XT_SOURCES) test_lxvx_stxvx.c test_mcrxrx.c \
 	$(test_mod_instructions_SOURCES) test_tm.c test_touch_tm.c \
@@ -424,6 +444,7 @@ DIST_SOURCES = allexec.c data-cache-instructions.c jm-insns.c \
 	test_isa_2_06_part3.c test_isa_2_07_part1.c \
 	test_isa_2_07_part2.c $(test_isa_3_0_SOURCES) \
 	$(test_isa_3_1_AT_SOURCES) $(test_isa_3_1_Misc_SOURCES) \
+	$(test_isa_3_1_R1_RT_SOURCES) $(test_isa_3_1_R1_XT_SOURCES) \
 	$(test_isa_3_1_RT_SOURCES) $(test_isa_3_1_VRT_SOURCES) \
 	$(test_isa_3_1_XT_SOURCES) test_lxvx_stxvx.c test_mcrxrx.c \
 	$(test_mod_instructions_SOURCES) test_tm.c test_touch_tm.c \
@@ -593,7 +614,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -926,6 +950,8 @@ EXTRA_DIST = \
 	test_isa_3_1_VRT.vgtest test_isa_3_1_VRT.stderr.exp test_isa_3_1_VRT.stdout.exp \
 	test_isa_3_1_Misc.vgtest test_isa_3_1_Misc.stderr.exp test_isa_3_1_Misc.stdout.exp \
 	test_isa_3_1_AT.vgtest test_isa_3_1_AT.stderr.exp test_isa_3_1_AT.stdout.exp \
+	test_isa_3_1_R1_RT.vgtest test_isa_3_1_R1_RT.stderr.exp test_isa_3_1_R1_RT.stdout.exp \
+	test_isa_3_1_R1_XT.vgtest test_isa_3_1_R1_XT.stderr.exp test_isa_3_1_R1_XT.stdout.exp \
 	subnormal_test.stderr.exp  subnormal_test.stdout.exp \
 	subnormal_test.vgtest test_darn_inst.stderr.exp \
 	test_darn_inst.stdout.exp test_darn_inst.vgtest \
@@ -933,7 +959,8 @@ EXTRA_DIST = \
 	test_copy_paste.stderr.exp test_copy_paste.stdout.exp \
 	test_copy_paste.vgtest \
 	test_mcrxrx.vgtest test_mcrxrx.stderr.exp test_mcrxrx.stdout.exp \
-	test_lxvx_stxvx.vgtest test_lxvx_stxvx.stderr.exp test_lxvx_stxvx.stdout.exp-p8  test_lxvx_stxvx.stdout.exp-p9
+	test_lxvx_stxvx.vgtest test_lxvx_stxvx.stderr.exp \
+	test_lxvx_stxvx.stdout.exp-p8  test_lxvx_stxvx.stdout.exp-p9
 
 allexec_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
 scv_test_SOURCES = scv_test.c
@@ -945,6 +972,8 @@ test_isa_3_1_RT_SOURCES = test_isa_3_1_RT.c test_isa_3_1_common.c
 test_isa_3_1_VRT_SOURCES = test_isa_3_1_VRT.c test_isa_3_1_common.c
 test_isa_3_1_Misc_SOURCES = test_isa_3_1_Misc.c test_isa_3_1_common.c
 test_isa_3_1_AT_SOURCES = test_isa_3_1_AT.c test_isa_3_1_common.c
+test_isa_3_1_R1_XT_SOURCES = test_isa_3_1_R1_XT.c test_isa_3_1_common.c
+test_isa_3_1_R1_RT_SOURCES = test_isa_3_1_R1_RT.c test_isa_3_1_common.c
 test_darn_inst_SOURCES = test_darn_inst.c
 @HAS_ALTIVEC_FALSE@BUILD_FLAG_ALTIVEC = 
 @HAS_ALTIVEC_TRUE@BUILD_FLAG_ALTIVEC = -maltivec
@@ -1037,6 +1066,11 @@ test_isa_3_1_XT_CFLAGS = $(test_isa_3_1_CFLAGS)
 test_isa_3_1_VRT_CFLAGS = $(test_isa_3_1_CFLAGS)
 test_isa_3_1_Misc_CFLAGS = $(test_isa_3_1_CFLAGS)
 test_isa_3_1_AT_CFLAGS = $(test_isa_3_1_CFLAGS)
+
+# The _R1_foo tests exercise pc-relative instructions, so require the bss and text sections
+# exist at known offsets with respect to each other.
+test_isa_3_1_R1_RT_CFLAGS = $(test_isa_3_1_CFLAGS) -Wl,-Tbss,0x20000 -Wl,-Ttext,0x40000
+test_isa_3_1_R1_XT_CFLAGS = $(test_isa_3_1_CFLAGS) -Wl,-Tbss,0x20000 -Wl,-Ttext,0x40000
 subnormal_test_CFLAGS = $(AM_CFLAGS) -Winline -Wall -O -g -mregnames $(VSX_FLAG) $(ISA_2_06_FLAG) \
 			@FLAG_M64@ $(ALTIVEC_FLAG) $(BUILD_FLAG_VSX) $(BUILD_FLAGS_ISA_2_06)
 
@@ -1205,6 +1239,14 @@ test_isa_3_1_Misc$(EXEEXT): $(test_isa_3_1_Misc_OBJECTS) $(test_isa_3_1_Misc_DEP
 	@rm -f test_isa_3_1_Misc$(EXEEXT)
 	$(AM_V_CCLD)$(test_isa_3_1_Misc_LINK) $(test_isa_3_1_Misc_OBJECTS) $(test_isa_3_1_Misc_LDADD) $(LIBS)
 
+test_isa_3_1_R1_RT$(EXEEXT): $(test_isa_3_1_R1_RT_OBJECTS) $(test_isa_3_1_R1_RT_DEPENDENCIES) $(EXTRA_test_isa_3_1_R1_RT_DEPENDENCIES) 
+	@rm -f test_isa_3_1_R1_RT$(EXEEXT)
+	$(AM_V_CCLD)$(test_isa_3_1_R1_RT_LINK) $(test_isa_3_1_R1_RT_OBJECTS) $(test_isa_3_1_R1_RT_LDADD) $(LIBS)
+
+test_isa_3_1_R1_XT$(EXEEXT): $(test_isa_3_1_R1_XT_OBJECTS) $(test_isa_3_1_R1_XT_DEPENDENCIES) $(EXTRA_test_isa_3_1_R1_XT_DEPENDENCIES) 
+	@rm -f test_isa_3_1_R1_XT$(EXEEXT)
+	$(AM_V_CCLD)$(test_isa_3_1_R1_XT_LINK) $(test_isa_3_1_R1_XT_OBJECTS) $(test_isa_3_1_R1_XT_LDADD) $(LIBS)
+
 test_isa_3_1_RT$(EXEEXT): $(test_isa_3_1_RT_OBJECTS) $(test_isa_3_1_RT_DEPENDENCIES) $(EXTRA_test_isa_3_1_RT_DEPENDENCIES) 
 	@rm -f test_isa_3_1_RT$(EXEEXT)
 	$(AM_V_CCLD)$(test_isa_3_1_RT_LINK) $(test_isa_3_1_RT_OBJECTS) $(test_isa_3_1_RT_LDADD) $(LIBS)
@@ -1278,6 +1320,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_AT-test_isa_3_1_common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_Misc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_isa_3_1_VRT-test_isa_3_1_VRT.Po@am__quote@ # am--include-marker
@@ -1608,6 +1654,62 @@ test_isa_3_1_Misc-test_isa_3_1_common.obj: test_isa_3_1_common.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_Misc_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_Misc-test_isa_3_1_common.obj `if test -f 'test_isa_3_1_common.c'; then $(CYGPATH_W) 'test_isa_3_1_common.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_common.c'; fi`
 
+test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.o: test_isa_3_1_R1_RT.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.o -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Tpo -c -o test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.o `test -f 'test_isa_3_1_R1_RT.c' || echo '$(srcdir)/'`test_isa_3_1_R1_RT.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Tpo $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_R1_RT.c' object='test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.o `test -f 'test_isa_3_1_R1_RT.c' || echo '$(srcdir)/'`test_isa_3_1_R1_RT.c
+
+test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.obj: test_isa_3_1_R1_RT.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.obj -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Tpo -c -o test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.obj `if test -f 'test_isa_3_1_R1_RT.c'; then $(CYGPATH_W) 'test_isa_3_1_R1_RT.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_R1_RT.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Tpo $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_R1_RT.c' object='test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.obj `if test -f 'test_isa_3_1_R1_RT.c'; then $(CYGPATH_W) 'test_isa_3_1_R1_RT.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_R1_RT.c'; fi`
+
+test_isa_3_1_R1_RT-test_isa_3_1_common.o: test_isa_3_1_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_RT-test_isa_3_1_common.o -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Tpo -c -o test_isa_3_1_R1_RT-test_isa_3_1_common.o `test -f 'test_isa_3_1_common.c' || echo '$(srcdir)/'`test_isa_3_1_common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Tpo $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_common.c' object='test_isa_3_1_R1_RT-test_isa_3_1_common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_RT-test_isa_3_1_common.o `test -f 'test_isa_3_1_common.c' || echo '$(srcdir)/'`test_isa_3_1_common.c
+
+test_isa_3_1_R1_RT-test_isa_3_1_common.obj: test_isa_3_1_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_RT-test_isa_3_1_common.obj -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Tpo -c -o test_isa_3_1_R1_RT-test_isa_3_1_common.obj `if test -f 'test_isa_3_1_common.c'; then $(CYGPATH_W) 'test_isa_3_1_common.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Tpo $(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_common.c' object='test_isa_3_1_R1_RT-test_isa_3_1_common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_RT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_RT-test_isa_3_1_common.obj `if test -f 'test_isa_3_1_common.c'; then $(CYGPATH_W) 'test_isa_3_1_common.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_common.c'; fi`
+
+test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.o: test_isa_3_1_R1_XT.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.o -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Tpo -c -o test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.o `test -f 'test_isa_3_1_R1_XT.c' || echo '$(srcdir)/'`test_isa_3_1_R1_XT.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Tpo $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_R1_XT.c' object='test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.o `test -f 'test_isa_3_1_R1_XT.c' || echo '$(srcdir)/'`test_isa_3_1_R1_XT.c
+
+test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.obj: test_isa_3_1_R1_XT.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.obj -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Tpo -c -o test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.obj `if test -f 'test_isa_3_1_R1_XT.c'; then $(CYGPATH_W) 'test_isa_3_1_R1_XT.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_R1_XT.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Tpo $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_R1_XT.c' object='test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.obj `if test -f 'test_isa_3_1_R1_XT.c'; then $(CYGPATH_W) 'test_isa_3_1_R1_XT.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_R1_XT.c'; fi`
+
+test_isa_3_1_R1_XT-test_isa_3_1_common.o: test_isa_3_1_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_XT-test_isa_3_1_common.o -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Tpo -c -o test_isa_3_1_R1_XT-test_isa_3_1_common.o `test -f 'test_isa_3_1_common.c' || echo '$(srcdir)/'`test_isa_3_1_common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Tpo $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_common.c' object='test_isa_3_1_R1_XT-test_isa_3_1_common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_XT-test_isa_3_1_common.o `test -f 'test_isa_3_1_common.c' || echo '$(srcdir)/'`test_isa_3_1_common.c
+
+test_isa_3_1_R1_XT-test_isa_3_1_common.obj: test_isa_3_1_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_R1_XT-test_isa_3_1_common.obj -MD -MP -MF $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Tpo -c -o test_isa_3_1_R1_XT-test_isa_3_1_common.obj `if test -f 'test_isa_3_1_common.c'; then $(CYGPATH_W) 'test_isa_3_1_common.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Tpo $(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_isa_3_1_common.c' object='test_isa_3_1_R1_XT-test_isa_3_1_common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_R1_XT_CFLAGS) $(CFLAGS) -c -o test_isa_3_1_R1_XT-test_isa_3_1_common.obj `if test -f 'test_isa_3_1_common.c'; then $(CYGPATH_W) 'test_isa_3_1_common.c'; else $(CYGPATH_W) '$(srcdir)/test_isa_3_1_common.c'; fi`
+
 test_isa_3_1_RT-test_isa_3_1_RT.o: test_isa_3_1_RT.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_isa_3_1_RT_CFLAGS) $(CFLAGS) -MT test_isa_3_1_RT-test_isa_3_1_RT.o -MD -MP -MF $(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Tpo -c -o test_isa_3_1_RT-test_isa_3_1_RT.o `test -f 'test_isa_3_1_RT.c' || echo '$(srcdir)/'`test_isa_3_1_RT.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Tpo $(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Po
@@ -1915,6 +2017,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/test_isa_3_1_AT-test_isa_3_1_common.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_Misc.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_common.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_common.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_VRT-test_isa_3_1_VRT.Po
@@ -2000,6 +2106,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/test_isa_3_1_AT-test_isa_3_1_common.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_Misc.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_Misc-test_isa_3_1_common.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_R1_RT.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_RT-test_isa_3_1_common.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_R1_XT.Po
+	-rm -f ./$(DEPDIR)/test_isa_3_1_R1_XT-test_isa_3_1_common.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_RT.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_RT-test_isa_3_1_common.Po
 	-rm -f ./$(DEPDIR)/test_isa_3_1_VRT-test_isa_3_1_VRT.Po

@@ -140,17 +140,18 @@ check_PROGRAMS = annotate_hb_err$(EXEEXT) annotate_hb_race$(EXEEXT) \
 	pth_create_chain$(EXEEXT) pth_detached$(EXEEXT) \
 	pth_detached_sem$(EXEEXT) pth_detached3$(EXEEXT) \
 	pth_inconsistent_cond_wait$(EXEEXT) pth_mutex_reinit$(EXEEXT) \
-	pth_process_shared_mutex$(EXEEXT) recursive_mutex$(EXEEXT) \
-	rwlock_race$(EXEEXT) rwlock_test$(EXEEXT) \
-	rwlock_type_checking$(EXEEXT) sem_as_mutex$(EXEEXT) \
-	sem_open$(EXEEXT) sigalrm$(EXEEXT) threaded-fork$(EXEEXT) \
-	trylock$(EXEEXT) unit_bitmap$(EXEEXT) unit_vc$(EXEEXT) \
-	std_atomic$(EXEEXT) std_list$(EXEEXT) std_mutex$(EXEEXT) \
-	std_string$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
-	$(am__EXEEXT_6) $(am__EXEEXT_7) $(am__EXEEXT_8) \
-	$(am__EXEEXT_9) $(am__EXEEXT_10) $(am__EXEEXT_11) \
-	$(am__EXEEXT_12)
+	pth_mutex_signal$(EXEEXT) pth_process_shared_mutex$(EXEEXT) \
+	recursive_mutex$(EXEEXT) rwlock_race$(EXEEXT) \
+	rwlock_test$(EXEEXT) rwlock_type_checking$(EXEEXT) \
+	sem_as_mutex$(EXEEXT) sem_open$(EXEEXT) sigalrm$(EXEEXT) \
+	threaded-fork$(EXEEXT) trylock$(EXEEXT) unit_bitmap$(EXEEXT) \
+	unit_vc$(EXEEXT) std_atomic$(EXEEXT) std_list$(EXEEXT) \
+	std_mutex$(EXEEXT) std_string$(EXEEXT) $(am__EXEEXT_1) \
+	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
+	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
+	$(am__EXEEXT_8) $(am__EXEEXT_9) $(am__EXEEXT_10) \
+	$(am__EXEEXT_11) $(am__EXEEXT_12) $(am__EXEEXT_13) \
+	$(am__EXEEXT_14) $(am__EXEEXT_15)
 @HAVE_BOOST_1_35_TRUE@am__append_12 = boost_thread
 @HAVE_BUILTIN_ATOMIC_TRUE@am__append_13 = \
 @HAVE_BUILTIN_ATOMIC_TRUE@  annotate_barrier       \
@@ -172,8 +173,17 @@ check_PROGRAMS = annotate_hb_err$(EXEEXT) annotate_hb_race$(EXEEXT) \
 @CXX_CAN_INCLUDE_THREAD_HEADER_TRUE@@HAVE_SHARED_POINTER_ANNOTATION_TRUE@  std_thread      \
 @CXX_CAN_INCLUDE_THREAD_HEADER_TRUE@@HAVE_SHARED_POINTER_ANNOTATION_TRUE@  std_thread2
 
-@HAVE_OPENMP_TRUE@am__append_17 = omp_matinv omp_prime omp_printf
-@HAVE_PTHREAD_BARRIER_TRUE@am__append_18 = \
+@CXX_CAN_INCLUDE_CONDITION_VARIABLE_HEADER_TRUE@am__append_17 = \
+@CXX_CAN_INCLUDE_CONDITION_VARIABLE_HEADER_TRUE@    condvar
+
+@CXX_CAN_USE_SHARED_TIMED_MUTEX_TRUE@am__append_18 = \
+@CXX_CAN_USE_SHARED_TIMED_MUTEX_TRUE@    shared_timed_mutex
+
+@CXX_CAN_USE_TIMED_MUTEX_TRUE@am__append_19 = \
+@CXX_CAN_USE_TIMED_MUTEX_TRUE@    timed_mutex
+
+@HAVE_OPENMP_TRUE@am__append_20 = omp_matinv omp_prime omp_printf
+@HAVE_PTHREAD_BARRIER_TRUE@am__append_21 = \
 @HAVE_PTHREAD_BARRIER_TRUE@	bug322621		\
 @HAVE_PTHREAD_BARRIER_TRUE@	matinv			\
 @HAVE_PTHREAD_BARRIER_TRUE@	pth_barrier		\
@@ -182,18 +192,18 @@ check_PROGRAMS = annotate_hb_err$(EXEEXT) annotate_hb_race$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	pth_barrier_thr_cr	\
 @HAVE_PTHREAD_BARRIER_TRUE@	thread_name
 
-@HAVE_PTHREAD_CREATE_GLIBC_2_0_TRUE@am__append_19 = pth_create_glibc_2_0
-@HAVE_PTHREAD_SPINLOCK_TRUE@am__append_20 = pth_spinlock
-@HAVE_SWAPCONTEXT_TRUE@am__append_21 = swapcontext
-@VGCONF_OS_IS_DARWIN_FALSE@am__append_22 = sem_wait
-@VGCONF_OS_IS_FREEBSD_TRUE@am__append_23 = thread_name_freebsd
-@VGCONF_OS_IS_SOLARIS_TRUE@am__append_24 = -D__EXTENSIONS__
-@VGCONF_OS_IS_SOLARIS_TRUE@am__append_25 = -D__EXTENSIONS__
-@VGCONF_OS_IS_SOLARIS_TRUE@am__append_26 = -D__EXTENSIONS__
+@HAVE_PTHREAD_CREATE_GLIBC_2_0_TRUE@am__append_22 = pth_create_glibc_2_0
+@HAVE_PTHREAD_SPINLOCK_TRUE@am__append_23 = pth_spinlock
+@HAVE_SWAPCONTEXT_TRUE@am__append_24 = swapcontext
+@VGCONF_OS_IS_DARWIN_FALSE@am__append_25 = sem_wait
+@VGCONF_OS_IS_FREEBSD_TRUE@am__append_26 = thread_name_freebsd
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_27 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_28 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_29 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_30 = -D__EXTENSIONS__
+@VGCONF_OS_IS_SOLARIS_TRUE@am__append_31 = -D__EXTENSIONS__
+@VGCONF_OS_IS_SOLARIS_TRUE@am__append_32 = -D__EXTENSIONS__
+@VGCONF_OS_IS_SOLARIS_TRUE@am__append_33 = -D__EXTENSIONS__
 subdir = drd/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -219,20 +229,23 @@ CONFIG_CLEAN_VPATH_FILES =
 @VGCONF_OS_IS_FREEBSD_FALSE@	pth_uninitialized_cond$(EXEEXT)
 @CXX_CAN_INCLUDE_THREAD_HEADER_TRUE@@HAVE_SHARED_POINTER_ANNOTATION_TRUE@am__EXEEXT_5 = std_thread$(EXEEXT) \
 @CXX_CAN_INCLUDE_THREAD_HEADER_TRUE@@HAVE_SHARED_POINTER_ANNOTATION_TRUE@	std_thread2$(EXEEXT)
-@HAVE_OPENMP_TRUE@am__EXEEXT_6 = omp_matinv$(EXEEXT) \
+@CXX_CAN_INCLUDE_CONDITION_VARIABLE_HEADER_TRUE@am__EXEEXT_6 = condvar$(EXEEXT)
+@CXX_CAN_USE_SHARED_TIMED_MUTEX_TRUE@am__EXEEXT_7 = shared_timed_mutex$(EXEEXT)
+@CXX_CAN_USE_TIMED_MUTEX_TRUE@am__EXEEXT_8 = timed_mutex$(EXEEXT)
+@HAVE_OPENMP_TRUE@am__EXEEXT_9 = omp_matinv$(EXEEXT) \
 @HAVE_OPENMP_TRUE@	omp_prime$(EXEEXT) omp_printf$(EXEEXT)
-@HAVE_PTHREAD_BARRIER_TRUE@am__EXEEXT_7 = bug322621$(EXEEXT) \
+@HAVE_PTHREAD_BARRIER_TRUE@am__EXEEXT_10 = bug322621$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	matinv$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	pth_barrier$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	pth_barrier_race$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	pth_barrier_reinit$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	pth_barrier_thr_cr$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@	thread_name$(EXEEXT)
-@HAVE_PTHREAD_CREATE_GLIBC_2_0_TRUE@am__EXEEXT_8 = pth_create_glibc_2_0$(EXEEXT)
-@HAVE_PTHREAD_SPINLOCK_TRUE@am__EXEEXT_9 = pth_spinlock$(EXEEXT)
-@HAVE_SWAPCONTEXT_TRUE@am__EXEEXT_10 = swapcontext$(EXEEXT)
-@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_11 = sem_wait$(EXEEXT)
-@VGCONF_OS_IS_FREEBSD_TRUE@am__EXEEXT_12 =  \
+@HAVE_PTHREAD_CREATE_GLIBC_2_0_TRUE@am__EXEEXT_11 = pth_create_glibc_2_0$(EXEEXT)
+@HAVE_PTHREAD_SPINLOCK_TRUE@am__EXEEXT_12 = pth_spinlock$(EXEEXT)
+@HAVE_SWAPCONTEXT_TRUE@am__EXEEXT_13 = swapcontext$(EXEEXT)
+@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_14 = sem_wait$(EXEEXT)
+@VGCONF_OS_IS_FREEBSD_TRUE@am__EXEEXT_15 =  \
 @VGCONF_OS_IS_FREEBSD_TRUE@	thread_name_freebsd$(EXEEXT)
 annotate_barrier_SOURCES = annotate_barrier.c
 annotate_barrier_OBJECTS = annotate_barrier.$(OBJEXT)
@@ -312,6 +325,12 @@ am_concurrent_close_OBJECTS = concurrent_close.$(OBJEXT)
 concurrent_close_OBJECTS = $(am_concurrent_close_OBJECTS)
 concurrent_close_LDADD = $(LDADD)
 concurrent_close_DEPENDENCIES =
+am_condvar_OBJECTS = condvar-condvar.$(OBJEXT)
+condvar_OBJECTS = $(am_condvar_OBJECTS)
+condvar_LDADD = $(LDADD)
+condvar_DEPENDENCIES =
+condvar_LINK = $(CXXLD) $(condvar_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 custom_alloc_SOURCES = custom_alloc.c
 custom_alloc_OBJECTS = custom_alloc.$(OBJEXT)
 custom_alloc_LDADD = $(LDADD)
@@ -458,6 +477,10 @@ pth_mutex_reinit_SOURCES = pth_mutex_reinit.c
 pth_mutex_reinit_OBJECTS = pth_mutex_reinit.$(OBJEXT)
 pth_mutex_reinit_LDADD = $(LDADD)
 pth_mutex_reinit_DEPENDENCIES =
+pth_mutex_signal_SOURCES = pth_mutex_signal.c
+pth_mutex_signal_OBJECTS = pth_mutex_signal.$(OBJEXT)
+pth_mutex_signal_LDADD = $(LDADD)
+pth_mutex_signal_DEPENDENCIES =
 pth_process_shared_mutex_SOURCES = pth_process_shared_mutex.c
 pth_process_shared_mutex_OBJECTS = pth_process_shared_mutex.$(OBJEXT)
 pth_process_shared_mutex_LDADD = $(LDADD)
@@ -500,6 +523,13 @@ am_sem_wait_OBJECTS = sem_wait.$(OBJEXT)
 sem_wait_OBJECTS = $(am_sem_wait_OBJECTS)
 sem_wait_LDADD = $(LDADD)
 sem_wait_DEPENDENCIES =
+am_shared_timed_mutex_OBJECTS =  \
+	shared_timed_mutex-shared_timed_mutex.$(OBJEXT)
+shared_timed_mutex_OBJECTS = $(am_shared_timed_mutex_OBJECTS)
+shared_timed_mutex_LDADD = $(LDADD)
+shared_timed_mutex_DEPENDENCIES =
+shared_timed_mutex_LINK = $(CXXLD) $(shared_timed_mutex_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 sigalrm_SOURCES = sigalrm.c
 sigalrm_OBJECTS = sigalrm.$(OBJEXT)
 sigalrm_LDADD = $(LDADD)
@@ -558,6 +588,12 @@ threaded_fork_SOURCES = threaded-fork.c
 threaded_fork_OBJECTS = threaded-fork.$(OBJEXT)
 threaded_fork_LDADD = $(LDADD)
 threaded_fork_DEPENDENCIES =
+am_timed_mutex_OBJECTS = timed_mutex-timed_mutex.$(OBJEXT)
+timed_mutex_OBJECTS = $(am_timed_mutex_OBJECTS)
+timed_mutex_LDADD = $(LDADD)
+timed_mutex_DEPENDENCIES =
+timed_mutex_LINK = $(CXXLD) $(timed_mutex_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 trylock_SOURCES = trylock.c
 trylock_OBJECTS = trylock.$(OBJEXT)
 trylock_LDADD = $(LDADD)
@@ -606,7 +642,7 @@ am__depfiles_remade = ./$(DEPDIR)/annotate_barrier.Po \
 	./$(DEPDIR)/boost_thread-boost_thread.Po \
 	./$(DEPDIR)/bug-235681.Po ./$(DEPDIR)/bug322621.Po \
 	./$(DEPDIR)/circular_buffer.Po ./$(DEPDIR)/concurrent_close.Po \
-	./$(DEPDIR)/custom_alloc.Po \
+	./$(DEPDIR)/condvar-condvar.Po ./$(DEPDIR)/custom_alloc.Po \
 	./$(DEPDIR)/dlopen_lib_so-dlopen_lib.Po \
 	./$(DEPDIR)/dlopen_main.Po ./$(DEPDIR)/fork.Po \
 	./$(DEPDIR)/fp_race.Po \
@@ -633,6 +669,7 @@ am__depfiles_remade = ./$(DEPDIR)/annotate_barrier.Po \
 	./$(DEPDIR)/pth_detached3.Po ./$(DEPDIR)/pth_detached_sem.Po \
 	./$(DEPDIR)/pth_inconsistent_cond_wait.Po \
 	./$(DEPDIR)/pth_mutex_reinit.Po \
+	./$(DEPDIR)/pth_mutex_signal.Po \
 	./$(DEPDIR)/pth_process_shared_mutex.Po \
 	./$(DEPDIR)/pth_spinlock.Po \
 	./$(DEPDIR)/pth_uninitialized_cond.Po \
@@ -640,8 +677,9 @@ am__depfiles_remade = ./$(DEPDIR)/annotate_barrier.Po \
 	./$(DEPDIR)/rwlock_test-rwlock_test.Po \
 	./$(DEPDIR)/rwlock_type_checking.Po \
 	./$(DEPDIR)/sem_as_mutex.Po ./$(DEPDIR)/sem_open.Po \
-	./$(DEPDIR)/sem_wait.Po ./$(DEPDIR)/sigalrm.Po \
-	./$(DEPDIR)/std_atomic-std_atomic.Po \
+	./$(DEPDIR)/sem_wait.Po \
+	./$(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Po \
+	./$(DEPDIR)/sigalrm.Po ./$(DEPDIR)/std_atomic-std_atomic.Po \
 	./$(DEPDIR)/std_list-std_list.Po \
 	./$(DEPDIR)/std_mutex-std_mutex.Po \
 	./$(DEPDIR)/std_string-std_string.Po \
@@ -649,7 +687,8 @@ am__depfiles_remade = ./$(DEPDIR)/annotate_barrier.Po \
 	./$(DEPDIR)/std_thread2-std_thread2.Po \
 	./$(DEPDIR)/swapcontext-swapcontext.Po \
 	./$(DEPDIR)/thread_name.Po ./$(DEPDIR)/thread_name_freebsd.Po \
-	./$(DEPDIR)/threaded-fork.Po ./$(DEPDIR)/trylock.Po \
+	./$(DEPDIR)/threaded-fork.Po \
+	./$(DEPDIR)/timed_mutex-timed_mutex.Po ./$(DEPDIR)/trylock.Po \
 	./$(DEPDIR)/tsan_unittest-tsan_unittest.Po \
 	./$(DEPDIR)/unit_bitmap-unit_bitmap.Po \
 	./$(DEPDIR)/unit_vc-unit_vc.Po
@@ -689,7 +728,7 @@ SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	$(annotate_smart_pointer_SOURCES) $(annotate_static_SOURCES) \
 	annotate_trace_memory.c atomic_var.c $(boost_thread_SOURCES) \
 	bug-235681.c $(bug322621_SOURCES) circular_buffer.c \
-	$(concurrent_close_SOURCES) custom_alloc.c \
+	$(concurrent_close_SOURCES) $(condvar_SOURCES) custom_alloc.c \
 	$(dlopen_lib_so_SOURCES) dlopen_main.c fork.c fp_race.c \
 	free_is_write.c hold_lock.c linuxthreads_det.c \
 	$(local_static_SOURCES) matinv.c memory_allocation.c \
@@ -700,15 +739,16 @@ SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	pth_cond_destroy_busy.c pth_cond_race.c pth_create_chain.c \
 	pth_create_glibc_2_0.c pth_detached.c pth_detached3.c \
 	pth_detached_sem.c pth_inconsistent_cond_wait.c \
-	pth_mutex_reinit.c pth_process_shared_mutex.c pth_spinlock.c \
+	pth_mutex_reinit.c pth_mutex_signal.c \
+	pth_process_shared_mutex.c pth_spinlock.c \
 	pth_uninitialized_cond.c recursive_mutex.c rwlock_race.c \
 	rwlock_test.c rwlock_type_checking.c sem_as_mutex.c sem_open.c \
-	$(sem_wait_SOURCES) sigalrm.c $(std_atomic_SOURCES) \
-	$(std_list_SOURCES) $(std_mutex_SOURCES) $(std_string_SOURCES) \
-	$(std_thread_SOURCES) $(std_thread2_SOURCES) \
-	$(swapcontext_SOURCES) thread_name.c thread_name_freebsd.c \
-	threaded-fork.c trylock.c $(tsan_unittest_SOURCES) \
-	unit_bitmap.c unit_vc.c
+	$(sem_wait_SOURCES) $(shared_timed_mutex_SOURCES) sigalrm.c \
+	$(std_atomic_SOURCES) $(std_list_SOURCES) $(std_mutex_SOURCES) \
+	$(std_string_SOURCES) $(std_thread_SOURCES) \
+	$(std_thread2_SOURCES) $(swapcontext_SOURCES) thread_name.c \
+	thread_name_freebsd.c threaded-fork.c $(timed_mutex_SOURCES) \
+	trylock.c $(tsan_unittest_SOURCES) unit_bitmap.c unit_vc.c
 DIST_SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	annotate_ignore_rw.c annotate_ignore_write.c \
 	annotate_publish_hg.c annotate_rwlock.c annotate_sem.c \
@@ -716,7 +756,7 @@ DIST_SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	$(annotate_static_SOURCES) annotate_trace_memory.c \
 	atomic_var.c $(am__boost_thread_SOURCES_DIST) bug-235681.c \
 	$(bug322621_SOURCES) circular_buffer.c \
-	$(concurrent_close_SOURCES) custom_alloc.c \
+	$(concurrent_close_SOURCES) $(condvar_SOURCES) custom_alloc.c \
 	$(dlopen_lib_so_SOURCES) dlopen_main.c fork.c fp_race.c \
 	free_is_write.c hold_lock.c linuxthreads_det.c \
 	$(local_static_SOURCES) matinv.c memory_allocation.c \
@@ -727,15 +767,16 @@ DIST_SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	pth_cond_destroy_busy.c pth_cond_race.c pth_create_chain.c \
 	pth_create_glibc_2_0.c pth_detached.c pth_detached3.c \
 	pth_detached_sem.c pth_inconsistent_cond_wait.c \
-	pth_mutex_reinit.c pth_process_shared_mutex.c pth_spinlock.c \
+	pth_mutex_reinit.c pth_mutex_signal.c \
+	pth_process_shared_mutex.c pth_spinlock.c \
 	pth_uninitialized_cond.c recursive_mutex.c rwlock_race.c \
 	rwlock_test.c rwlock_type_checking.c sem_as_mutex.c sem_open.c \
-	$(sem_wait_SOURCES) sigalrm.c $(std_atomic_SOURCES) \
-	$(std_list_SOURCES) $(std_mutex_SOURCES) $(std_string_SOURCES) \
-	$(std_thread_SOURCES) $(std_thread2_SOURCES) \
-	$(swapcontext_SOURCES) thread_name.c thread_name_freebsd.c \
-	threaded-fork.c trylock.c $(tsan_unittest_SOURCES) \
-	unit_bitmap.c unit_vc.c
+	$(sem_wait_SOURCES) $(shared_timed_mutex_SOURCES) sigalrm.c \
+	$(std_atomic_SOURCES) $(std_list_SOURCES) $(std_mutex_SOURCES) \
+	$(std_string_SOURCES) $(std_thread_SOURCES) \
+	$(std_thread2_SOURCES) $(swapcontext_SOURCES) thread_name.c \
+	thread_name_freebsd.c threaded-fork.c $(timed_mutex_SOURCES) \
+	trylock.c $(tsan_unittest_SOURCES) unit_bitmap.c unit_vc.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -907,7 +948,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -1289,6 +1333,8 @@ EXTRA_DIST = \
 	circular_buffer.vgtest			    \
 	concurrent_close.stderr.exp		    \
 	concurrent_close.vgtest			    \
+	condvar.stderr.exp			    \
+	condvar.vgtest				    \
 	custom_alloc.stderr.exp			    \
 	custom_alloc.vgtest			    \
 	custom_alloc_fiw.stderr.exp		    \
@@ -1409,6 +1455,8 @@ EXTRA_DIST = \
 	pth_inconsistent_cond_wait.vgtest           \
 	pth_mutex_reinit.stderr.exp		    \
 	pth_mutex_reinit.vgtest			    \
+	pth_mutex_signal.stderr.exp		    \
+	pth_mutex_signal.vgtest			    \
 	pth_once.stderr.exp			    \
 	pth_once.vgtest				    \
 	pth_process_shared_mutex.stderr.exp         \
@@ -1455,6 +1503,8 @@ EXTRA_DIST = \
 	sem_open_traced.vgtest                      \
 	sem_wait.stderr.exp                         \
 	sem_wait.vgtest                             \
+	shared_timed_mutex.stderr.exp               \
+	shared_timed_mutex.vgtest                   \
 	swapcontext.stderr.exp                      \
 	swapcontext.vgtest                          \
 	sigalrm.stderr.exp                          \
@@ -1549,6 +1599,8 @@ EXTRA_DIST = \
 	threaded-fork.vgtest			    \
 	threaded-fork-vcs.stderr.exp		    \
 	threaded-fork-vcs.vgtest		    \
+	timed_mutex.stderr.exp                      \
+	timed_mutex.vgtest                          \
 	tls_threads.stderr.exp			    \
 	tls_threads.vgtest			    \
 	trylock.stderr.exp                          \
@@ -1560,6 +1612,8 @@ EXTRA_DIST = \
 
 LDADD = -lpthread
 bug322621_SOURCES = bug322621.cpp
+condvar_SOURCES = condvar.cpp
+condvar_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x
 concurrent_close_SOURCES = concurrent_close.cpp
 @VGCONF_OS_IS_FREEBSD_FALSE@dlopen_main_LDADD = -ldl
 dlopen_lib_so_SOURCES = dlopen_lib.c
@@ -1568,10 +1622,10 @@ dlopen_lib_so_LDFLAGS = -shared -fPIC
 monitor_example_SOURCES = monitor_example.cpp
 new_delete_SOURCES = new_delete.cpp
 new_delete_CXXFLAGS = $(AM_CXXFLAGS) @FLAG_W_NO_MISMATCHED_NEW_DELETE@
-free_is_write_CFLAGS = $(AM_CFLAGS) $(am__append_24)
-pth_barrier_CFLAGS = $(AM_CFLAGS) $(am__append_25)
-pth_create_chain_CFLAGS = $(AM_CFLAGS) $(am__append_26)
-pth_detached_CFLAGS = $(AM_CFLAGS) $(am__append_27)
+free_is_write_CFLAGS = $(AM_CFLAGS) $(am__append_27)
+pth_barrier_CFLAGS = $(AM_CFLAGS) $(am__append_28)
+pth_create_chain_CFLAGS = $(AM_CFLAGS) $(am__append_29)
+pth_detached_CFLAGS = $(AM_CFLAGS) $(am__append_30)
 tsan_unittest_SOURCES = tsan_unittest.cpp
 tsan_unittest_CXXFLAGS = $(AM_CXXFLAGS) \
 			-DTHREAD_WRAPPERS='"tsan_thread_wrappers_pthread.h"'
@@ -1599,9 +1653,11 @@ local_static_SOURCES = local_static.cpp
 @HAVE_OPENMP_TRUE@omp_printf_CFLAGS = $(AM_CFLAGS) -fopenmp
 @HAVE_OPENMP_TRUE@omp_printf_LDFLAGS = -fopenmp
 @HAVE_OPENMP_TRUE@omp_printf_LDADD = $(LDADD) -lm
-matinv_CFLAGS = $(AM_CFLAGS) $(am__append_28)
+matinv_CFLAGS = $(AM_CFLAGS) $(am__append_31)
 @HAVE_PTHREAD_BARRIER_TRUE@matinv_LDADD = $(LDADD) -lm
-rwlock_test_CFLAGS = $(AM_CFLAGS) $(am__append_29)
+rwlock_test_CFLAGS = $(AM_CFLAGS) $(am__append_32)
+shared_timed_mutex_SOURCES = shared_timed_mutex.cpp
+shared_timed_mutex_CXXFLAGS = $(AM_CXXFLAGS) -std=c++1y
 std_atomic_SOURCES = std_atomic.cpp
 std_atomic_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
 std_list_SOURCES = std_list.cpp
@@ -1621,7 +1677,9 @@ std_thread2_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x
 @VGCONF_OS_IS_SOLARIS_FALSE@std_thread2_LDFLAGS = -Wl,--no-as-needed
 sem_wait_SOURCES = sem_wait.cpp
 swapcontext_SOURCES = swapcontext.c
-swapcontext_CFLAGS = $(AM_CFLAGS) -g $(am__append_30)
+swapcontext_CFLAGS = $(AM_CFLAGS) -g $(am__append_33)
+timed_mutex_SOURCES = timed_mutex.cpp
+timed_mutex_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x
 all: all-am
 
 .SUFFIXES:
@@ -1739,6 +1797,10 @@ circular_buffer$(EXEEXT): $(circular_buffer_OBJECTS) $(circular_buffer_DEPENDENC
 concurrent_close$(EXEEXT): $(concurrent_close_OBJECTS) $(concurrent_close_DEPENDENCIES) $(EXTRA_concurrent_close_DEPENDENCIES) 
 	@rm -f concurrent_close$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(concurrent_close_OBJECTS) $(concurrent_close_LDADD) $(LIBS)
+
+condvar$(EXEEXT): $(condvar_OBJECTS) $(condvar_DEPENDENCIES) $(EXTRA_condvar_DEPENDENCIES) 
+	@rm -f condvar$(EXEEXT)
+	$(AM_V_CXXLD)$(condvar_LINK) $(condvar_OBJECTS) $(condvar_LDADD) $(LIBS)
 
 custom_alloc$(EXEEXT): $(custom_alloc_OBJECTS) $(custom_alloc_DEPENDENCIES) $(EXTRA_custom_alloc_DEPENDENCIES) 
 	@rm -f custom_alloc$(EXEEXT)
@@ -1868,6 +1930,10 @@ pth_mutex_reinit$(EXEEXT): $(pth_mutex_reinit_OBJECTS) $(pth_mutex_reinit_DEPEND
 	@rm -f pth_mutex_reinit$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pth_mutex_reinit_OBJECTS) $(pth_mutex_reinit_LDADD) $(LIBS)
 
+pth_mutex_signal$(EXEEXT): $(pth_mutex_signal_OBJECTS) $(pth_mutex_signal_DEPENDENCIES) $(EXTRA_pth_mutex_signal_DEPENDENCIES) 
+	@rm -f pth_mutex_signal$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(pth_mutex_signal_OBJECTS) $(pth_mutex_signal_LDADD) $(LIBS)
+
 pth_process_shared_mutex$(EXEEXT): $(pth_process_shared_mutex_OBJECTS) $(pth_process_shared_mutex_DEPENDENCIES) $(EXTRA_pth_process_shared_mutex_DEPENDENCIES) 
 	@rm -f pth_process_shared_mutex$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pth_process_shared_mutex_OBJECTS) $(pth_process_shared_mutex_LDADD) $(LIBS)
@@ -1907,6 +1973,10 @@ sem_open$(EXEEXT): $(sem_open_OBJECTS) $(sem_open_DEPENDENCIES) $(EXTRA_sem_open
 sem_wait$(EXEEXT): $(sem_wait_OBJECTS) $(sem_wait_DEPENDENCIES) $(EXTRA_sem_wait_DEPENDENCIES) 
 	@rm -f sem_wait$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(sem_wait_OBJECTS) $(sem_wait_LDADD) $(LIBS)
+
+shared_timed_mutex$(EXEEXT): $(shared_timed_mutex_OBJECTS) $(shared_timed_mutex_DEPENDENCIES) $(EXTRA_shared_timed_mutex_DEPENDENCIES) 
+	@rm -f shared_timed_mutex$(EXEEXT)
+	$(AM_V_CXXLD)$(shared_timed_mutex_LINK) $(shared_timed_mutex_OBJECTS) $(shared_timed_mutex_LDADD) $(LIBS)
 
 sigalrm$(EXEEXT): $(sigalrm_OBJECTS) $(sigalrm_DEPENDENCIES) $(EXTRA_sigalrm_DEPENDENCIES) 
 	@rm -f sigalrm$(EXEEXT)
@@ -1952,6 +2022,10 @@ threaded-fork$(EXEEXT): $(threaded_fork_OBJECTS) $(threaded_fork_DEPENDENCIES) $
 	@rm -f threaded-fork$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(threaded_fork_OBJECTS) $(threaded_fork_LDADD) $(LIBS)
 
+timed_mutex$(EXEEXT): $(timed_mutex_OBJECTS) $(timed_mutex_DEPENDENCIES) $(EXTRA_timed_mutex_DEPENDENCIES) 
+	@rm -f timed_mutex$(EXEEXT)
+	$(AM_V_CXXLD)$(timed_mutex_LINK) $(timed_mutex_OBJECTS) $(timed_mutex_LDADD) $(LIBS)
+
 trylock$(EXEEXT): $(trylock_OBJECTS) $(trylock_DEPENDENCIES) $(EXTRA_trylock_DEPENDENCIES) 
 	@rm -f trylock$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(trylock_OBJECTS) $(trylock_LDADD) $(LIBS)
@@ -1991,6 +2065,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug322621.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/circular_buffer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/concurrent_close.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/condvar-condvar.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/custom_alloc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlopen_lib_so-dlopen_lib.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlopen_main.Po@am__quote@ # am--include-marker
@@ -2023,6 +2098,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_detached_sem.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_inconsistent_cond_wait.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mutex_reinit.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mutex_signal.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_process_shared_mutex.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_spinlock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_uninitialized_cond.Po@am__quote@ # am--include-marker
@@ -2033,6 +2109,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem_as_mutex.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem_open.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem_wait.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigalrm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/std_atomic-std_atomic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/std_list-std_list.Po@am__quote@ # am--include-marker
@@ -2044,6 +2121,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread_name.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread_name_freebsd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threaded-fork.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timed_mutex-timed_mutex.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trylock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tsan_unittest-tsan_unittest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unit_bitmap-unit_bitmap.Po@am__quote@ # am--include-marker
@@ -2297,6 +2375,20 @@ boost_thread-boost_thread.obj: boost_thread.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(boost_thread_CXXFLAGS) $(CXXFLAGS) -c -o boost_thread-boost_thread.obj `if test -f 'boost_thread.cpp'; then $(CYGPATH_W) 'boost_thread.cpp'; else $(CYGPATH_W) '$(srcdir)/boost_thread.cpp'; fi`
 
+condvar-condvar.o: condvar.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(condvar_CXXFLAGS) $(CXXFLAGS) -MT condvar-condvar.o -MD -MP -MF $(DEPDIR)/condvar-condvar.Tpo -c -o condvar-condvar.o `test -f 'condvar.cpp' || echo '$(srcdir)/'`condvar.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/condvar-condvar.Tpo $(DEPDIR)/condvar-condvar.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='condvar.cpp' object='condvar-condvar.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(condvar_CXXFLAGS) $(CXXFLAGS) -c -o condvar-condvar.o `test -f 'condvar.cpp' || echo '$(srcdir)/'`condvar.cpp
+
+condvar-condvar.obj: condvar.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(condvar_CXXFLAGS) $(CXXFLAGS) -MT condvar-condvar.obj -MD -MP -MF $(DEPDIR)/condvar-condvar.Tpo -c -o condvar-condvar.obj `if test -f 'condvar.cpp'; then $(CYGPATH_W) 'condvar.cpp'; else $(CYGPATH_W) '$(srcdir)/condvar.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/condvar-condvar.Tpo $(DEPDIR)/condvar-condvar.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='condvar.cpp' object='condvar-condvar.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(condvar_CXXFLAGS) $(CXXFLAGS) -c -o condvar-condvar.obj `if test -f 'condvar.cpp'; then $(CYGPATH_W) 'condvar.cpp'; else $(CYGPATH_W) '$(srcdir)/condvar.cpp'; fi`
+
 new_delete-new_delete.o: new_delete.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_delete_CXXFLAGS) $(CXXFLAGS) -MT new_delete-new_delete.o -MD -MP -MF $(DEPDIR)/new_delete-new_delete.Tpo -c -o new_delete-new_delete.o `test -f 'new_delete.cpp' || echo '$(srcdir)/'`new_delete.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/new_delete-new_delete.Tpo $(DEPDIR)/new_delete-new_delete.Po
@@ -2310,6 +2402,20 @@ new_delete-new_delete.obj: new_delete.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='new_delete.cpp' object='new_delete-new_delete.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_delete_CXXFLAGS) $(CXXFLAGS) -c -o new_delete-new_delete.obj `if test -f 'new_delete.cpp'; then $(CYGPATH_W) 'new_delete.cpp'; else $(CYGPATH_W) '$(srcdir)/new_delete.cpp'; fi`
+
+shared_timed_mutex-shared_timed_mutex.o: shared_timed_mutex.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(shared_timed_mutex_CXXFLAGS) $(CXXFLAGS) -MT shared_timed_mutex-shared_timed_mutex.o -MD -MP -MF $(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Tpo -c -o shared_timed_mutex-shared_timed_mutex.o `test -f 'shared_timed_mutex.cpp' || echo '$(srcdir)/'`shared_timed_mutex.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Tpo $(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='shared_timed_mutex.cpp' object='shared_timed_mutex-shared_timed_mutex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(shared_timed_mutex_CXXFLAGS) $(CXXFLAGS) -c -o shared_timed_mutex-shared_timed_mutex.o `test -f 'shared_timed_mutex.cpp' || echo '$(srcdir)/'`shared_timed_mutex.cpp
+
+shared_timed_mutex-shared_timed_mutex.obj: shared_timed_mutex.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(shared_timed_mutex_CXXFLAGS) $(CXXFLAGS) -MT shared_timed_mutex-shared_timed_mutex.obj -MD -MP -MF $(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Tpo -c -o shared_timed_mutex-shared_timed_mutex.obj `if test -f 'shared_timed_mutex.cpp'; then $(CYGPATH_W) 'shared_timed_mutex.cpp'; else $(CYGPATH_W) '$(srcdir)/shared_timed_mutex.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Tpo $(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='shared_timed_mutex.cpp' object='shared_timed_mutex-shared_timed_mutex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(shared_timed_mutex_CXXFLAGS) $(CXXFLAGS) -c -o shared_timed_mutex-shared_timed_mutex.obj `if test -f 'shared_timed_mutex.cpp'; then $(CYGPATH_W) 'shared_timed_mutex.cpp'; else $(CYGPATH_W) '$(srcdir)/shared_timed_mutex.cpp'; fi`
 
 std_atomic-std_atomic.o: std_atomic.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(std_atomic_CXXFLAGS) $(CXXFLAGS) -MT std_atomic-std_atomic.o -MD -MP -MF $(DEPDIR)/std_atomic-std_atomic.Tpo -c -o std_atomic-std_atomic.o `test -f 'std_atomic.cpp' || echo '$(srcdir)/'`std_atomic.cpp
@@ -2394,6 +2500,20 @@ std_thread2-std_thread2.obj: std_thread2.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='std_thread2.cpp' object='std_thread2-std_thread2.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(std_thread2_CXXFLAGS) $(CXXFLAGS) -c -o std_thread2-std_thread2.obj `if test -f 'std_thread2.cpp'; then $(CYGPATH_W) 'std_thread2.cpp'; else $(CYGPATH_W) '$(srcdir)/std_thread2.cpp'; fi`
+
+timed_mutex-timed_mutex.o: timed_mutex.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timed_mutex_CXXFLAGS) $(CXXFLAGS) -MT timed_mutex-timed_mutex.o -MD -MP -MF $(DEPDIR)/timed_mutex-timed_mutex.Tpo -c -o timed_mutex-timed_mutex.o `test -f 'timed_mutex.cpp' || echo '$(srcdir)/'`timed_mutex.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/timed_mutex-timed_mutex.Tpo $(DEPDIR)/timed_mutex-timed_mutex.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='timed_mutex.cpp' object='timed_mutex-timed_mutex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timed_mutex_CXXFLAGS) $(CXXFLAGS) -c -o timed_mutex-timed_mutex.o `test -f 'timed_mutex.cpp' || echo '$(srcdir)/'`timed_mutex.cpp
+
+timed_mutex-timed_mutex.obj: timed_mutex.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timed_mutex_CXXFLAGS) $(CXXFLAGS) -MT timed_mutex-timed_mutex.obj -MD -MP -MF $(DEPDIR)/timed_mutex-timed_mutex.Tpo -c -o timed_mutex-timed_mutex.obj `if test -f 'timed_mutex.cpp'; then $(CYGPATH_W) 'timed_mutex.cpp'; else $(CYGPATH_W) '$(srcdir)/timed_mutex.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/timed_mutex-timed_mutex.Tpo $(DEPDIR)/timed_mutex-timed_mutex.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='timed_mutex.cpp' object='timed_mutex-timed_mutex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timed_mutex_CXXFLAGS) $(CXXFLAGS) -c -o timed_mutex-timed_mutex.obj `if test -f 'timed_mutex.cpp'; then $(CYGPATH_W) 'timed_mutex.cpp'; else $(CYGPATH_W) '$(srcdir)/timed_mutex.cpp'; fi`
 
 tsan_unittest-tsan_unittest.o: tsan_unittest.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tsan_unittest_CXXFLAGS) $(CXXFLAGS) -MT tsan_unittest-tsan_unittest.o -MD -MP -MF $(DEPDIR)/tsan_unittest-tsan_unittest.Tpo -c -o tsan_unittest-tsan_unittest.o `test -f 'tsan_unittest.cpp' || echo '$(srcdir)/'`tsan_unittest.cpp
@@ -2552,6 +2672,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/bug322621.Po
 	-rm -f ./$(DEPDIR)/circular_buffer.Po
 	-rm -f ./$(DEPDIR)/concurrent_close.Po
+	-rm -f ./$(DEPDIR)/condvar-condvar.Po
 	-rm -f ./$(DEPDIR)/custom_alloc.Po
 	-rm -f ./$(DEPDIR)/dlopen_lib_so-dlopen_lib.Po
 	-rm -f ./$(DEPDIR)/dlopen_main.Po
@@ -2584,6 +2705,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/pth_detached_sem.Po
 	-rm -f ./$(DEPDIR)/pth_inconsistent_cond_wait.Po
 	-rm -f ./$(DEPDIR)/pth_mutex_reinit.Po
+	-rm -f ./$(DEPDIR)/pth_mutex_signal.Po
 	-rm -f ./$(DEPDIR)/pth_process_shared_mutex.Po
 	-rm -f ./$(DEPDIR)/pth_spinlock.Po
 	-rm -f ./$(DEPDIR)/pth_uninitialized_cond.Po
@@ -2594,6 +2716,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/sem_as_mutex.Po
 	-rm -f ./$(DEPDIR)/sem_open.Po
 	-rm -f ./$(DEPDIR)/sem_wait.Po
+	-rm -f ./$(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Po
 	-rm -f ./$(DEPDIR)/sigalrm.Po
 	-rm -f ./$(DEPDIR)/std_atomic-std_atomic.Po
 	-rm -f ./$(DEPDIR)/std_list-std_list.Po
@@ -2605,6 +2728,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/thread_name.Po
 	-rm -f ./$(DEPDIR)/thread_name_freebsd.Po
 	-rm -f ./$(DEPDIR)/threaded-fork.Po
+	-rm -f ./$(DEPDIR)/timed_mutex-timed_mutex.Po
 	-rm -f ./$(DEPDIR)/trylock.Po
 	-rm -f ./$(DEPDIR)/tsan_unittest-tsan_unittest.Po
 	-rm -f ./$(DEPDIR)/unit_bitmap-unit_bitmap.Po
@@ -2671,6 +2795,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/bug322621.Po
 	-rm -f ./$(DEPDIR)/circular_buffer.Po
 	-rm -f ./$(DEPDIR)/concurrent_close.Po
+	-rm -f ./$(DEPDIR)/condvar-condvar.Po
 	-rm -f ./$(DEPDIR)/custom_alloc.Po
 	-rm -f ./$(DEPDIR)/dlopen_lib_so-dlopen_lib.Po
 	-rm -f ./$(DEPDIR)/dlopen_main.Po
@@ -2703,6 +2828,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/pth_detached_sem.Po
 	-rm -f ./$(DEPDIR)/pth_inconsistent_cond_wait.Po
 	-rm -f ./$(DEPDIR)/pth_mutex_reinit.Po
+	-rm -f ./$(DEPDIR)/pth_mutex_signal.Po
 	-rm -f ./$(DEPDIR)/pth_process_shared_mutex.Po
 	-rm -f ./$(DEPDIR)/pth_spinlock.Po
 	-rm -f ./$(DEPDIR)/pth_uninitialized_cond.Po
@@ -2713,6 +2839,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/sem_as_mutex.Po
 	-rm -f ./$(DEPDIR)/sem_open.Po
 	-rm -f ./$(DEPDIR)/sem_wait.Po
+	-rm -f ./$(DEPDIR)/shared_timed_mutex-shared_timed_mutex.Po
 	-rm -f ./$(DEPDIR)/sigalrm.Po
 	-rm -f ./$(DEPDIR)/std_atomic-std_atomic.Po
 	-rm -f ./$(DEPDIR)/std_list-std_list.Po
@@ -2724,6 +2851,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/thread_name.Po
 	-rm -f ./$(DEPDIR)/thread_name_freebsd.Po
 	-rm -f ./$(DEPDIR)/threaded-fork.Po
+	-rm -f ./$(DEPDIR)/timed_mutex-timed_mutex.Po
 	-rm -f ./$(DEPDIR)/trylock.Po
 	-rm -f ./$(DEPDIR)/tsan_unittest-tsan_unittest.Po
 	-rm -f ./$(DEPDIR)/unit_bitmap-unit_bitmap.Po

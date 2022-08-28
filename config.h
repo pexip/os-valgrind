@@ -58,8 +58,11 @@
 /* FREEBSD_VERS value for FreeBSD 12.2 */
 /* #undef FREEBSD_12_2 */
 
-/* FREEBSD_VERS value for FreeBSD 13.x */
-/* #undef FREEBSD_13 */
+/* FREEBSD_VERS value for FreeBSD 13.0 */
+/* #undef FREEBSD_13_0 */
+
+/* FREEBSD_VERS value for FreeBSD 13.1+ */
+/* #undef FREEBSD_13_1 */
 
 /* FREEBSD_VERS value for FreeBSD 14.x */
 /* #undef FREEBSD_14 */
@@ -249,7 +252,7 @@
 #define HAVE_PTHREAD_SPIN_LOCK 1
 
 /* Define to 1 if you have the `pthread_yield' function. */
-#define HAVE_PTHREAD_YIELD 1
+/* #undef HAVE_PTHREAD_YIELD */
 
 /* Define to 1 if you have the `PTRACE_GETREGS' ptrace request. */
 #define HAVE_PTRACE_GETREGS 1
@@ -259,6 +262,9 @@
 
 /* Define to 1 if you have the `pwritev2' function. */
 #define HAVE_PWRITEV2 1
+
+/* Define to 1 if you have the `rawmemchr' function. */
+#define HAVE_RAWMEMCHR 1
 
 /* Define to 1 if you have the `readlinkat' function. */
 #define HAVE_READLINKAT 1
@@ -304,6 +310,9 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #define HAVE_STRSTR 1
+
+/* Define to 1 if <sys/stat.h> declares struct statx. */
+#define HAVE_STRUCT_STATX_IN_SYS_STAT_H 1
 
 /* Define to 1 if you have the `swapcontext' function. */
 #define HAVE_SWAPCONTEXT 1
@@ -384,7 +393,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.18.1"
+#define PACKAGE_STRING "Valgrind 3.19.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -393,7 +402,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.18.1"
+#define PACKAGE_VERSION "3.19.0"
 
 /* Define to 1 if you have the `A_GETSTAT' and `A_SETSTAT' constants. */
 /* #undef SOLARIS_AUDITON_STAT */
@@ -503,11 +512,8 @@
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#define TIME_WITH_SYS_TIME 1
-
 /* Version number of package */
-#define VERSION "3.18.1"
+#define VERSION "3.19.0"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"

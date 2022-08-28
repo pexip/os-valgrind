@@ -134,7 +134,9 @@ check_PROGRAMS = statfs$(EXEEXT) pdfork_pdkill$(EXEEXT) \
 	scalar_vfork$(EXEEXT) stat$(EXEEXT) \
 	file_locking_wait6$(EXEEXT) utimens$(EXEEXT) access$(EXEEXT) \
 	chmod_chown$(EXEEXT) misc$(EXEEXT) get_set_context$(EXEEXT) \
-	utimes$(EXEEXT) static_allocs$(EXEEXT)
+	utimes$(EXEEXT) static_allocs$(EXEEXT) fexecve$(EXEEXT) \
+	$(am__EXEEXT_1)
+@FREEBSD_VERS_13_PLUS_TRUE@am__append_12 = realpathat scalar_13_plus eventfd1 eventfd2
 subdir = memcheck/tests/freebsd
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -146,6 +148,9 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@FREEBSD_VERS_13_PLUS_TRUE@am__EXEEXT_1 = realpathat$(EXEEXT) \
+@FREEBSD_VERS_13_PLUS_TRUE@	scalar_13_plus$(EXEEXT) \
+@FREEBSD_VERS_13_PLUS_TRUE@	eventfd1$(EXEEXT) eventfd2$(EXEEXT)
 access_SOURCES = access.c
 access_OBJECTS = access.$(OBJEXT)
 access_LDADD = $(LDADD)
@@ -158,9 +163,18 @@ chflags_LDADD = $(LDADD)
 chmod_chown_SOURCES = chmod_chown.c
 chmod_chown_OBJECTS = chmod_chown.$(OBJEXT)
 chmod_chown_LDADD = $(LDADD)
+eventfd1_SOURCES = eventfd1.c
+eventfd1_OBJECTS = eventfd1.$(OBJEXT)
+eventfd1_LDADD = $(LDADD)
+eventfd2_SOURCES = eventfd2.c
+eventfd2_OBJECTS = eventfd2.$(OBJEXT)
+eventfd2_LDADD = $(LDADD)
 extattr_SOURCES = extattr.c
 extattr_OBJECTS = extattr.$(OBJEXT)
 extattr_LDADD = $(LDADD)
+fexecve_SOURCES = fexecve.c
+fexecve_OBJECTS = fexecve.$(OBJEXT)
+fexecve_LDADD = $(LDADD)
 file_locking_wait6_SOURCES = file_locking_wait6.c
 file_locking_wait6_OBJECTS = file_locking_wait6.$(OBJEXT)
 file_locking_wait6_LDADD = $(LDADD)
@@ -195,6 +209,9 @@ misc_LDADD = $(LDADD)
 pdfork_pdkill_SOURCES = pdfork_pdkill.c
 pdfork_pdkill_OBJECTS = pdfork_pdkill.$(OBJEXT)
 pdfork_pdkill_LDADD = $(LDADD)
+realpathat_SOURCES = realpathat.c
+realpathat_OBJECTS = realpathat.$(OBJEXT)
+realpathat_LDADD = $(LDADD)
 revoke_SOURCES = revoke.c
 revoke_OBJECTS = revoke.$(OBJEXT)
 revoke_LDADD = $(LDADD)
@@ -203,6 +220,11 @@ scalar_OBJECTS = scalar-scalar.$(OBJEXT)
 scalar_LDADD = $(LDADD)
 scalar_LINK = $(CCLD) $(scalar_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+scalar_13_plus_SOURCES = scalar_13_plus.c
+scalar_13_plus_OBJECTS = scalar_13_plus-scalar_13_plus.$(OBJEXT)
+scalar_13_plus_LDADD = $(LDADD)
+scalar_13_plus_LINK = $(CCLD) $(scalar_13_plus_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 scalar_abort2_SOURCES = scalar_abort2.c
 scalar_abort2_OBJECTS = scalar_abort2.$(OBJEXT)
 scalar_abort2_LDADD = $(LDADD)
@@ -254,19 +276,23 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/access.Po ./$(DEPDIR)/capsicum.Po \
 	./$(DEPDIR)/chflags.Po ./$(DEPDIR)/chmod_chown.Po \
-	./$(DEPDIR)/extattr.Po ./$(DEPDIR)/file_locking_wait6.Po \
+	./$(DEPDIR)/eventfd1.Po ./$(DEPDIR)/eventfd2.Po \
+	./$(DEPDIR)/extattr.Po ./$(DEPDIR)/fexecve.Po \
+	./$(DEPDIR)/file_locking_wait6.Po \
 	./$(DEPDIR)/get_set_context.Po ./$(DEPDIR)/get_set_login.Po \
 	./$(DEPDIR)/getfh.Po ./$(DEPDIR)/getfsstat.Po \
 	./$(DEPDIR)/inlinfo.Po \
 	./$(DEPDIR)/inlinfo_nested_so-inlinfo_nested.Po \
 	./$(DEPDIR)/linkat.Po ./$(DEPDIR)/misc.Po \
-	./$(DEPDIR)/pdfork_pdkill.Po ./$(DEPDIR)/revoke.Po \
-	./$(DEPDIR)/scalar-scalar.Po ./$(DEPDIR)/scalar_abort2.Po \
-	./$(DEPDIR)/scalar_fork.Po ./$(DEPDIR)/scalar_pdfork.Po \
-	./$(DEPDIR)/scalar_thr_exit.Po ./$(DEPDIR)/scalar_vfork.Po \
-	./$(DEPDIR)/sigwait.Po ./$(DEPDIR)/stat.Po \
-	./$(DEPDIR)/statfs.Po ./$(DEPDIR)/static_allocs.Po \
-	./$(DEPDIR)/utimens.Po ./$(DEPDIR)/utimes.Po
+	./$(DEPDIR)/pdfork_pdkill.Po ./$(DEPDIR)/realpathat.Po \
+	./$(DEPDIR)/revoke.Po ./$(DEPDIR)/scalar-scalar.Po \
+	./$(DEPDIR)/scalar_13_plus-scalar_13_plus.Po \
+	./$(DEPDIR)/scalar_abort2.Po ./$(DEPDIR)/scalar_fork.Po \
+	./$(DEPDIR)/scalar_pdfork.Po ./$(DEPDIR)/scalar_thr_exit.Po \
+	./$(DEPDIR)/scalar_vfork.Po ./$(DEPDIR)/sigwait.Po \
+	./$(DEPDIR)/stat.Po ./$(DEPDIR)/statfs.Po \
+	./$(DEPDIR)/static_allocs.Po ./$(DEPDIR)/utimens.Po \
+	./$(DEPDIR)/utimes.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -284,18 +310,20 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = access.c capsicum.c chflags.c chmod_chown.c extattr.c \
-	file_locking_wait6.c get_set_context.c get_set_login.c getfh.c \
-	getfsstat.c $(inlinfo_SOURCES) $(inlinfo_nested_so_SOURCES) \
-	linkat.c misc.c pdfork_pdkill.c revoke.c scalar.c \
-	scalar_abort2.c scalar_fork.c scalar_pdfork.c \
+SOURCES = access.c capsicum.c chflags.c chmod_chown.c eventfd1.c \
+	eventfd2.c extattr.c fexecve.c file_locking_wait6.c \
+	get_set_context.c get_set_login.c getfh.c getfsstat.c \
+	$(inlinfo_SOURCES) $(inlinfo_nested_so_SOURCES) linkat.c \
+	misc.c pdfork_pdkill.c realpathat.c revoke.c scalar.c \
+	scalar_13_plus.c scalar_abort2.c scalar_fork.c scalar_pdfork.c \
 	scalar_thr_exit.c scalar_vfork.c sigwait.c stat.c statfs.c \
 	static_allocs.c utimens.c utimes.c
-DIST_SOURCES = access.c capsicum.c chflags.c chmod_chown.c extattr.c \
-	file_locking_wait6.c get_set_context.c get_set_login.c getfh.c \
-	getfsstat.c $(inlinfo_SOURCES) $(inlinfo_nested_so_SOURCES) \
-	linkat.c misc.c pdfork_pdkill.c revoke.c scalar.c \
-	scalar_abort2.c scalar_fork.c scalar_pdfork.c \
+DIST_SOURCES = access.c capsicum.c chflags.c chmod_chown.c eventfd1.c \
+	eventfd2.c extattr.c fexecve.c file_locking_wait6.c \
+	get_set_context.c get_set_login.c getfh.c getfsstat.c \
+	$(inlinfo_SOURCES) $(inlinfo_nested_so_SOURCES) linkat.c \
+	misc.c pdfork_pdkill.c realpathat.c revoke.c scalar.c \
+	scalar_13_plus.c scalar_abort2.c scalar_fork.c scalar_pdfork.c \
 	scalar_thr_exit.c scalar_vfork.c sigwait.c stat.c statfs.c \
 	static_allocs.c utimens.c utimes.c
 am__can_run_installinfo = \
@@ -462,7 +490,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -739,7 +770,7 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
 dist_noinst_SCRIPTS = filter_stderr filter_pts dump_stdout filter_sigwait \
-	filter_scalar
+	filter_scalar filter_realpathat
 
 EXTRA_DIST = \
 	scalar.h \
@@ -770,7 +801,6 @@ EXTRA_DIST = \
 	scalar.vgtest \
 	scalar.stderr.exp \
 		scalar.stderr.exp-x86 \
-		scalar.stderr.exp-freebsd130 \
 	capsicum.vgtest \
 	capsicum.stderr.exp \
 	getfh.vgtest \
@@ -807,7 +837,17 @@ EXTRA_DIST = \
 	utimes.stderr.exp-x86 \
 	utimes.stderr.exp \
 	static_allocs.vgtest \
-	static_allocs.stderr.exp
+	static_allocs.stderr.exp \
+	fexecve.vgtest \
+	fexecve.stderr.exp \
+	realpathat.vgtest \
+	realpathat.stderr.exp \
+	scalar_13_plus.vgtest \
+	scalar_13_plus.stderr.exp \
+	eventfd1.vgtest \
+	eventfd1.stderr.exp eventfd1.stdout.exp \
+	eventfd2.vgtest \
+	eventfd2.stderr.exp eventfd2.stdout.exp
 
 inlinfo_SOURCES = inlinfo.c
 inlinfo_DEPENDENCIES = inlinfo_nested.so
@@ -816,6 +856,7 @@ inlinfo_LDADD = inlinfo_nested.so
 inlinfo_nested_so_SOURCES = inlinfo_nested.c
 inlinfo_nested_so_CFLAGS = $(AM_CFLAGS) -fPIC @FLAG_W_NO_UNINITIALIZED@
 inlinfo_nested_so_LDFLAGS = -Wl,-rpath,$(top_builddir)/memcheck/tests/freebsd -shared -fPIC
+@FREEBSD_VERS_13_PLUS_TRUE@scalar_13_plus_CFLAGS = ${AM_CFLAGS} -g
 scalar_CFLAGS = ${AM_CFLAGS} -g
 all: all-am
 
@@ -871,9 +912,21 @@ chmod_chown$(EXEEXT): $(chmod_chown_OBJECTS) $(chmod_chown_DEPENDENCIES) $(EXTRA
 	@rm -f chmod_chown$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(chmod_chown_OBJECTS) $(chmod_chown_LDADD) $(LIBS)
 
+eventfd1$(EXEEXT): $(eventfd1_OBJECTS) $(eventfd1_DEPENDENCIES) $(EXTRA_eventfd1_DEPENDENCIES) 
+	@rm -f eventfd1$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(eventfd1_OBJECTS) $(eventfd1_LDADD) $(LIBS)
+
+eventfd2$(EXEEXT): $(eventfd2_OBJECTS) $(eventfd2_DEPENDENCIES) $(EXTRA_eventfd2_DEPENDENCIES) 
+	@rm -f eventfd2$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(eventfd2_OBJECTS) $(eventfd2_LDADD) $(LIBS)
+
 extattr$(EXEEXT): $(extattr_OBJECTS) $(extattr_DEPENDENCIES) $(EXTRA_extattr_DEPENDENCIES) 
 	@rm -f extattr$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(extattr_OBJECTS) $(extattr_LDADD) $(LIBS)
+
+fexecve$(EXEEXT): $(fexecve_OBJECTS) $(fexecve_DEPENDENCIES) $(EXTRA_fexecve_DEPENDENCIES) 
+	@rm -f fexecve$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(fexecve_OBJECTS) $(fexecve_LDADD) $(LIBS)
 
 file_locking_wait6$(EXEEXT): $(file_locking_wait6_OBJECTS) $(file_locking_wait6_DEPENDENCIES) $(EXTRA_file_locking_wait6_DEPENDENCIES) 
 	@rm -f file_locking_wait6$(EXEEXT)
@@ -915,6 +968,10 @@ pdfork_pdkill$(EXEEXT): $(pdfork_pdkill_OBJECTS) $(pdfork_pdkill_DEPENDENCIES) $
 	@rm -f pdfork_pdkill$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pdfork_pdkill_OBJECTS) $(pdfork_pdkill_LDADD) $(LIBS)
 
+realpathat$(EXEEXT): $(realpathat_OBJECTS) $(realpathat_DEPENDENCIES) $(EXTRA_realpathat_DEPENDENCIES) 
+	@rm -f realpathat$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(realpathat_OBJECTS) $(realpathat_LDADD) $(LIBS)
+
 revoke$(EXEEXT): $(revoke_OBJECTS) $(revoke_DEPENDENCIES) $(EXTRA_revoke_DEPENDENCIES) 
 	@rm -f revoke$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(revoke_OBJECTS) $(revoke_LDADD) $(LIBS)
@@ -922,6 +979,10 @@ revoke$(EXEEXT): $(revoke_OBJECTS) $(revoke_DEPENDENCIES) $(EXTRA_revoke_DEPENDE
 scalar$(EXEEXT): $(scalar_OBJECTS) $(scalar_DEPENDENCIES) $(EXTRA_scalar_DEPENDENCIES) 
 	@rm -f scalar$(EXEEXT)
 	$(AM_V_CCLD)$(scalar_LINK) $(scalar_OBJECTS) $(scalar_LDADD) $(LIBS)
+
+scalar_13_plus$(EXEEXT): $(scalar_13_plus_OBJECTS) $(scalar_13_plus_DEPENDENCIES) $(EXTRA_scalar_13_plus_DEPENDENCIES) 
+	@rm -f scalar_13_plus$(EXEEXT)
+	$(AM_V_CCLD)$(scalar_13_plus_LINK) $(scalar_13_plus_OBJECTS) $(scalar_13_plus_LDADD) $(LIBS)
 
 scalar_abort2$(EXEEXT): $(scalar_abort2_OBJECTS) $(scalar_abort2_DEPENDENCIES) $(EXTRA_scalar_abort2_DEPENDENCIES) 
 	@rm -f scalar_abort2$(EXEEXT)
@@ -977,7 +1038,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/capsicum.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chflags.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chmod_chown.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eventfd1.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eventfd2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extattr.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fexecve.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file_locking_wait6.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_set_context.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_set_login.Po@am__quote@ # am--include-marker
@@ -988,8 +1052,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linkat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdfork_pdkill.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/realpathat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/revoke.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar-scalar.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_13_plus-scalar_13_plus.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_abort2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_fork.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_pdfork.Po@am__quote@ # am--include-marker
@@ -1051,6 +1117,20 @@ scalar-scalar.obj: scalar.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar.c' object='scalar-scalar.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -c -o scalar-scalar.obj `if test -f 'scalar.c'; then $(CYGPATH_W) 'scalar.c'; else $(CYGPATH_W) '$(srcdir)/scalar.c'; fi`
+
+scalar_13_plus-scalar_13_plus.o: scalar_13_plus.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_13_plus_CFLAGS) $(CFLAGS) -MT scalar_13_plus-scalar_13_plus.o -MD -MP -MF $(DEPDIR)/scalar_13_plus-scalar_13_plus.Tpo -c -o scalar_13_plus-scalar_13_plus.o `test -f 'scalar_13_plus.c' || echo '$(srcdir)/'`scalar_13_plus.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_13_plus-scalar_13_plus.Tpo $(DEPDIR)/scalar_13_plus-scalar_13_plus.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_13_plus.c' object='scalar_13_plus-scalar_13_plus.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_13_plus_CFLAGS) $(CFLAGS) -c -o scalar_13_plus-scalar_13_plus.o `test -f 'scalar_13_plus.c' || echo '$(srcdir)/'`scalar_13_plus.c
+
+scalar_13_plus-scalar_13_plus.obj: scalar_13_plus.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_13_plus_CFLAGS) $(CFLAGS) -MT scalar_13_plus-scalar_13_plus.obj -MD -MP -MF $(DEPDIR)/scalar_13_plus-scalar_13_plus.Tpo -c -o scalar_13_plus-scalar_13_plus.obj `if test -f 'scalar_13_plus.c'; then $(CYGPATH_W) 'scalar_13_plus.c'; else $(CYGPATH_W) '$(srcdir)/scalar_13_plus.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_13_plus-scalar_13_plus.Tpo $(DEPDIR)/scalar_13_plus-scalar_13_plus.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_13_plus.c' object='scalar_13_plus-scalar_13_plus.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_13_plus_CFLAGS) $(CFLAGS) -c -o scalar_13_plus-scalar_13_plus.obj `if test -f 'scalar_13_plus.c'; then $(CYGPATH_W) 'scalar_13_plus.c'; else $(CYGPATH_W) '$(srcdir)/scalar_13_plus.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1182,7 +1262,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/capsicum.Po
 	-rm -f ./$(DEPDIR)/chflags.Po
 	-rm -f ./$(DEPDIR)/chmod_chown.Po
+	-rm -f ./$(DEPDIR)/eventfd1.Po
+	-rm -f ./$(DEPDIR)/eventfd2.Po
 	-rm -f ./$(DEPDIR)/extattr.Po
+	-rm -f ./$(DEPDIR)/fexecve.Po
 	-rm -f ./$(DEPDIR)/file_locking_wait6.Po
 	-rm -f ./$(DEPDIR)/get_set_context.Po
 	-rm -f ./$(DEPDIR)/get_set_login.Po
@@ -1193,8 +1276,10 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/linkat.Po
 	-rm -f ./$(DEPDIR)/misc.Po
 	-rm -f ./$(DEPDIR)/pdfork_pdkill.Po
+	-rm -f ./$(DEPDIR)/realpathat.Po
 	-rm -f ./$(DEPDIR)/revoke.Po
 	-rm -f ./$(DEPDIR)/scalar-scalar.Po
+	-rm -f ./$(DEPDIR)/scalar_13_plus-scalar_13_plus.Po
 	-rm -f ./$(DEPDIR)/scalar_abort2.Po
 	-rm -f ./$(DEPDIR)/scalar_fork.Po
 	-rm -f ./$(DEPDIR)/scalar_pdfork.Po
@@ -1255,7 +1340,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/capsicum.Po
 	-rm -f ./$(DEPDIR)/chflags.Po
 	-rm -f ./$(DEPDIR)/chmod_chown.Po
+	-rm -f ./$(DEPDIR)/eventfd1.Po
+	-rm -f ./$(DEPDIR)/eventfd2.Po
 	-rm -f ./$(DEPDIR)/extattr.Po
+	-rm -f ./$(DEPDIR)/fexecve.Po
 	-rm -f ./$(DEPDIR)/file_locking_wait6.Po
 	-rm -f ./$(DEPDIR)/get_set_context.Po
 	-rm -f ./$(DEPDIR)/get_set_login.Po
@@ -1266,8 +1354,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/linkat.Po
 	-rm -f ./$(DEPDIR)/misc.Po
 	-rm -f ./$(DEPDIR)/pdfork_pdkill.Po
+	-rm -f ./$(DEPDIR)/realpathat.Po
 	-rm -f ./$(DEPDIR)/revoke.Po
 	-rm -f ./$(DEPDIR)/scalar-scalar.Po
+	-rm -f ./$(DEPDIR)/scalar_13_plus-scalar_13_plus.Po
 	-rm -f ./$(DEPDIR)/scalar_abort2.Po
 	-rm -f ./$(DEPDIR)/scalar_fork.Po
 	-rm -f ./$(DEPDIR)/scalar_pdfork.Po

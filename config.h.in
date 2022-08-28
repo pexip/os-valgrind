@@ -57,8 +57,11 @@
 /* FREEBSD_VERS value for FreeBSD 12.2 */
 #undef FREEBSD_12_2
 
-/* FREEBSD_VERS value for FreeBSD 13.x */
-#undef FREEBSD_13
+/* FREEBSD_VERS value for FreeBSD 13.0 */
+#undef FREEBSD_13_0
+
+/* FREEBSD_VERS value for FreeBSD 13.1+ */
+#undef FREEBSD_13_1
 
 /* FREEBSD_VERS value for FreeBSD 14.x */
 #undef FREEBSD_14
@@ -259,6 +262,9 @@
 /* Define to 1 if you have the `pwritev2' function. */
 #undef HAVE_PWRITEV2
 
+/* Define to 1 if you have the `rawmemchr' function. */
+#undef HAVE_RAWMEMCHR
+
 /* Define to 1 if you have the `readlinkat' function. */
 #undef HAVE_READLINKAT
 
@@ -303,6 +309,9 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
+
+/* Define to 1 if <sys/stat.h> declares struct statx. */
+#undef HAVE_STRUCT_STATX_IN_SYS_STAT_H
 
 /* Define to 1 if you have the `swapcontext' function. */
 #undef HAVE_SWAPCONTEXT
@@ -501,9 +510,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#undef TIME_WITH_SYS_TIME
 
 /* Version number of package */
 #undef VERSION
