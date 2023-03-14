@@ -126,8 +126,8 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
 check_PROGRAMS = allexec$(EXEEXT) cvtf_imm$(EXEEXT) \
 	fp_and_simd$(EXEEXT) integer$(EXEEXT) memory$(EXEEXT) \
-	fmadd_sub$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3)
+	fmadd_sub$(EXEEXT) ldxp_stxp$(EXEEXT) $(am__EXEEXT_1) \
+	$(am__EXEEXT_2) $(am__EXEEXT_3)
 @BUILD_ARMV8_CRC_TESTS_TRUE@am__append_12 = crc32
 @BUILD_ARMV81_TESTS_TRUE@am__append_13 = atomics_v81 simd_v81
 @BUILD_ARMV82_TESTS_TRUE@am__append_14 = fp_and_simd_v82
@@ -182,6 +182,9 @@ integer_OBJECTS = integer-integer.$(OBJEXT)
 integer_LDADD = $(LDADD)
 integer_LINK = $(CCLD) $(integer_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+ldxp_stxp_SOURCES = ldxp_stxp.c
+ldxp_stxp_OBJECTS = ldxp_stxp.$(OBJEXT)
+ldxp_stxp_LDADD = $(LDADD)
 memory_SOURCES = memory.c
 memory_OBJECTS = memory.$(OBJEXT)
 memory_LDADD = $(LDADD)
@@ -212,8 +215,8 @@ am__depfiles_remade = ./$(DEPDIR)/allexec-allexec.Po \
 	./$(DEPDIR)/fmadd_sub.Po \
 	./$(DEPDIR)/fp_and_simd-fp_and_simd.Po \
 	./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po \
-	./$(DEPDIR)/integer-integer.Po ./$(DEPDIR)/memory.Po \
-	./$(DEPDIR)/simd_v81-simd_v81.Po
+	./$(DEPDIR)/integer-integer.Po ./$(DEPDIR)/ldxp_stxp.Po \
+	./$(DEPDIR)/memory.Po ./$(DEPDIR)/simd_v81-simd_v81.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -232,9 +235,11 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = allexec.c atomics_v81.c crc32.c cvtf_imm.c fmadd_sub.c \
-	fp_and_simd.c fp_and_simd_v82.c integer.c memory.c simd_v81.c
+	fp_and_simd.c fp_and_simd_v82.c integer.c ldxp_stxp.c memory.c \
+	simd_v81.c
 DIST_SOURCES = allexec.c atomics_v81.c crc32.c cvtf_imm.c fmadd_sub.c \
-	fp_and_simd.c fp_and_simd_v82.c integer.c memory.c simd_v81.c
+	fp_and_simd.c fp_and_simd_v82.c integer.c ldxp_stxp.c memory.c \
+	simd_v81.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -399,7 +404,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -684,7 +692,12 @@ EXTRA_DIST = \
 	atomics_v81.stdout.exp atomics_v81.stderr.exp atomics_v81.vgtest \
 	simd_v81.stdout.exp simd_v81.stderr.exp simd_v81.vgtest \
         fmadd_sub.stdout.exp fmadd_sub.stderr.exp fmadd_sub.vgtest \
-	fp_and_simd_v82.stdout.exp fp_and_simd_v82.stderr.exp fp_and_simd_v82.vgtest
+	fp_and_simd_v82.stdout.exp fp_and_simd_v82.stderr.exp \
+	fp_and_simd_v82.vgtest \
+	ldxp_stxp_basisimpl.stdout.exp ldxp_stxp_basisimpl.stderr.exp \
+	ldxp_stxp_basisimpl.vgtest \
+	ldxp_stxp_fallbackimpl.stdout.exp ldxp_stxp_fallbackimpl.stderr.exp \
+	ldxp_stxp_fallbackimpl.vgtest
 
 allexec_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
 crc32_CFLAGS = $(AM_CFLAGS) -march=armv8-a+crc
@@ -766,6 +779,10 @@ integer$(EXEEXT): $(integer_OBJECTS) $(integer_DEPENDENCIES) $(EXTRA_integer_DEP
 	@rm -f integer$(EXEEXT)
 	$(AM_V_CCLD)$(integer_LINK) $(integer_OBJECTS) $(integer_LDADD) $(LIBS)
 
+ldxp_stxp$(EXEEXT): $(ldxp_stxp_OBJECTS) $(ldxp_stxp_DEPENDENCIES) $(EXTRA_ldxp_stxp_DEPENDENCIES) 
+	@rm -f ldxp_stxp$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(ldxp_stxp_OBJECTS) $(ldxp_stxp_LDADD) $(LIBS)
+
 memory$(EXEEXT): $(memory_OBJECTS) $(memory_DEPENDENCIES) $(EXTRA_memory_DEPENDENCIES) 
 	@rm -f memory$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(memory_OBJECTS) $(memory_LDADD) $(LIBS)
@@ -788,6 +805,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fp_and_simd-fp_and_simd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/integer-integer.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldxp_stxp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memory.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simd_v81-simd_v81.Po@am__quote@ # am--include-marker
 
@@ -1045,6 +1063,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/fp_and_simd-fp_and_simd.Po
 	-rm -f ./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po
 	-rm -f ./$(DEPDIR)/integer-integer.Po
+	-rm -f ./$(DEPDIR)/ldxp_stxp.Po
 	-rm -f ./$(DEPDIR)/memory.Po
 	-rm -f ./$(DEPDIR)/simd_v81-simd_v81.Po
 	-rm -f Makefile
@@ -1100,6 +1119,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/fp_and_simd-fp_and_simd.Po
 	-rm -f ./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po
 	-rm -f ./$(DEPDIR)/integer-integer.Po
+	-rm -f ./$(DEPDIR)/ldxp_stxp.Po
 	-rm -f ./$(DEPDIR)/memory.Po
 	-rm -f ./$(DEPDIR)/simd_v81-simd_v81.Po
 	-rm -f Makefile

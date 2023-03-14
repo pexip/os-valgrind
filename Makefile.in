@@ -123,6 +123,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = valgrind.spec valgrind.pc glibc-2.X.supp \
 	glibc-2.X-helgrind.supp glibc-2.X-drd.supp \
+	docs/xml/vg-entities.xml \
 	drd/scripts/download-and-build-splash2
 CONFIG_CLEAN_VPATH_FILES =
 SCRIPTS = $(dist_noinst_SCRIPTS)
@@ -218,9 +219,10 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/glibc-2.X-helgrind.supp.in \
 	$(srcdir)/glibc-2.X.supp.in $(srcdir)/valgrind.pc.in \
 	$(srcdir)/valgrind.spec.in $(top_srcdir)/Makefile.all.am \
+	$(top_srcdir)/docs/xml/vg-entities.xml.in \
 	$(top_srcdir)/drd/scripts/download-and-build-splash2.in \
 	AUTHORS COPYING NEWS README compile config.guess config.sub \
-	depcomp install-sh missing
+	install-sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -400,7 +402,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -812,6 +817,8 @@ glibc-2.X.supp: $(top_builddir)/config.status $(srcdir)/glibc-2.X.supp.in
 glibc-2.X-helgrind.supp: $(top_builddir)/config.status $(srcdir)/glibc-2.X-helgrind.supp.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 glibc-2.X-drd.supp: $(top_builddir)/config.status $(srcdir)/glibc-2.X-drd.supp.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+docs/xml/vg-entities.xml: $(top_builddir)/config.status $(top_srcdir)/docs/xml/vg-entities.xml.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 drd/scripts/download-and-build-splash2: $(top_builddir)/config.status $(top_srcdir)/drd/scripts/download-and-build-splash2.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@

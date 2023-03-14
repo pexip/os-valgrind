@@ -136,7 +136,7 @@ check_PROGRAMS = brk$(EXEEXT) capget$(EXEEXT) \
 	$(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6)
 @HAVE_AT_FDCWD_TRUE@am__append_12 = sys-openat
-@HAVE_MEMFD_CREATE_TRUE@am__append_13 = memfd
+@HAVE_MEMFD_CREATE_TRUE@am__append_13 = memfd_create
 @HAVE_COPY_FILE_RANGE_TRUE@am__append_14 = sys-copy_file_range
 @HAVE_PREADV_PWRITEV_TRUE@am__append_15 = sys-preadv_pwritev
 @HAVE_PREADV2_PWRITEV2_TRUE@am__append_16 = sys-preadv2_pwritev2
@@ -153,7 +153,7 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = debuginfod-check.vgtest
 CONFIG_CLEAN_VPATH_FILES =
 @HAVE_AT_FDCWD_TRUE@am__EXEEXT_1 = sys-openat$(EXEEXT)
-@HAVE_MEMFD_CREATE_TRUE@am__EXEEXT_2 = memfd$(EXEEXT)
+@HAVE_MEMFD_CREATE_TRUE@am__EXEEXT_2 = memfd_create$(EXEEXT)
 @HAVE_COPY_FILE_RANGE_TRUE@am__EXEEXT_3 =  \
 @HAVE_COPY_FILE_RANGE_TRUE@	sys-copy_file_range$(EXEEXT)
 @HAVE_PREADV_PWRITEV_TRUE@am__EXEEXT_4 = sys-preadv_pwritev$(EXEEXT)
@@ -200,9 +200,9 @@ lsframe1_LDADD = $(LDADD)
 lsframe2_SOURCES = lsframe2.c
 lsframe2_OBJECTS = lsframe2.$(OBJEXT)
 lsframe2_LDADD = $(LDADD)
-memfd_SOURCES = memfd.c
-memfd_OBJECTS = memfd.$(OBJEXT)
-memfd_LDADD = $(LDADD)
+memfd_create_SOURCES = memfd_create.c
+memfd_create_OBJECTS = memfd_create.$(OBJEXT)
+memfd_create_LDADD = $(LDADD)
 proc_auxv_SOURCES = proc-auxv.c
 proc_auxv_OBJECTS = proc-auxv.$(OBJEXT)
 proc_auxv_LDADD = $(LDADD)
@@ -268,7 +268,7 @@ am__depfiles_remade = ./$(DEPDIR)/brk.Po ./$(DEPDIR)/capget.Po \
 	./$(DEPDIR)/dlclose_leak_so_so-dlclose_leak_so.Po \
 	./$(DEPDIR)/enomem.Po ./$(DEPDIR)/getregset.Po \
 	./$(DEPDIR)/ioctl-tiocsig.Po ./$(DEPDIR)/lsframe1.Po \
-	./$(DEPDIR)/lsframe2.Po ./$(DEPDIR)/memfd.Po \
+	./$(DEPDIR)/lsframe2.Po ./$(DEPDIR)/memfd_create.Po \
 	./$(DEPDIR)/proc-auxv.Po ./$(DEPDIR)/rfcomm.Po \
 	./$(DEPDIR)/sigqueue.Po ./$(DEPDIR)/stack_changes.Po \
 	./$(DEPDIR)/stack_switch.Po ./$(DEPDIR)/sys-copy_file_range.Po \
@@ -297,19 +297,19 @@ am__v_CCLD_1 =
 SOURCES = brk.c capget.c check_execveat.c check_preadv2_pwritev2.c \
 	debuginfod-check.c $(dlclose_leak_SOURCES) \
 	$(dlclose_leak_so_so_SOURCES) enomem.c getregset.c \
-	ioctl-tiocsig.c lsframe1.c lsframe2.c memfd.c proc-auxv.c \
-	rfcomm.c sigqueue.c stack_changes.c stack_switch.c \
+	ioctl-tiocsig.c lsframe1.c lsframe2.c memfd_create.c \
+	proc-auxv.c rfcomm.c sigqueue.c stack_changes.c stack_switch.c \
 	sys-copy_file_range.c sys-execveat.c sys-openat.c \
 	sys-preadv2_pwritev2.c sys-preadv_pwritev.c sys-statx.c \
 	syscalls-2007.c syslog-syscall.c timerfd-syscall.c
 DIST_SOURCES = brk.c capget.c check_execveat.c \
 	check_preadv2_pwritev2.c debuginfod-check.c \
 	$(dlclose_leak_SOURCES) $(dlclose_leak_so_so_SOURCES) enomem.c \
-	getregset.c ioctl-tiocsig.c lsframe1.c lsframe2.c memfd.c \
-	proc-auxv.c rfcomm.c sigqueue.c stack_changes.c stack_switch.c \
-	sys-copy_file_range.c sys-execveat.c sys-openat.c \
-	sys-preadv2_pwritev2.c sys-preadv_pwritev.c sys-statx.c \
-	syscalls-2007.c syslog-syscall.c timerfd-syscall.c
+	getregset.c ioctl-tiocsig.c lsframe1.c lsframe2.c \
+	memfd_create.c proc-auxv.c rfcomm.c sigqueue.c stack_changes.c \
+	stack_switch.c sys-copy_file_range.c sys-execveat.c \
+	sys-openat.c sys-preadv2_pwritev2.c sys-preadv_pwritev.c \
+	sys-statx.c syscalls-2007.c syslog-syscall.c timerfd-syscall.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -476,7 +476,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -765,7 +768,7 @@ EXTRA_DIST = \
 	ioctl-tiocsig.vgtest ioctl-tiocsig.stderr.exp \
 	lsframe1.vgtest lsframe1.stdout.exp lsframe1.stderr.exp \
 	lsframe2.vgtest lsframe2.stdout.exp lsframe2.stderr.exp \
-	memfd.vgtest memfd.stderr.exp \
+	memfd_create.vgtest memfd_create.stderr.exp \
 	rfcomm.vgtest rfcomm.stderr.exp \
 	sigqueue.vgtest sigqueue.stderr.exp \
 	stack_changes.stderr.exp stack_changes.stdout.exp \
@@ -891,9 +894,9 @@ lsframe2$(EXEEXT): $(lsframe2_OBJECTS) $(lsframe2_DEPENDENCIES) $(EXTRA_lsframe2
 	@rm -f lsframe2$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(lsframe2_OBJECTS) $(lsframe2_LDADD) $(LIBS)
 
-memfd$(EXEEXT): $(memfd_OBJECTS) $(memfd_DEPENDENCIES) $(EXTRA_memfd_DEPENDENCIES) 
-	@rm -f memfd$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(memfd_OBJECTS) $(memfd_LDADD) $(LIBS)
+memfd_create$(EXEEXT): $(memfd_create_OBJECTS) $(memfd_create_DEPENDENCIES) $(EXTRA_memfd_create_DEPENDENCIES) 
+	@rm -f memfd_create$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(memfd_create_OBJECTS) $(memfd_create_LDADD) $(LIBS)
 
 proc-auxv$(EXEEXT): $(proc_auxv_OBJECTS) $(proc_auxv_DEPENDENCIES) $(EXTRA_proc_auxv_DEPENDENCIES) 
 	@rm -f proc-auxv$(EXEEXT)
@@ -969,7 +972,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ioctl-tiocsig.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsframe1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsframe2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memfd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memfd_create.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/proc-auxv.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfcomm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigqueue.Po@am__quote@ # am--include-marker
@@ -1159,7 +1162,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/ioctl-tiocsig.Po
 	-rm -f ./$(DEPDIR)/lsframe1.Po
 	-rm -f ./$(DEPDIR)/lsframe2.Po
-	-rm -f ./$(DEPDIR)/memfd.Po
+	-rm -f ./$(DEPDIR)/memfd_create.Po
 	-rm -f ./$(DEPDIR)/proc-auxv.Po
 	-rm -f ./$(DEPDIR)/rfcomm.Po
 	-rm -f ./$(DEPDIR)/sigqueue.Po
@@ -1231,7 +1234,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/ioctl-tiocsig.Po
 	-rm -f ./$(DEPDIR)/lsframe1.Po
 	-rm -f ./$(DEPDIR)/lsframe2.Po
-	-rm -f ./$(DEPDIR)/memfd.Po
+	-rm -f ./$(DEPDIR)/memfd_create.Po
 	-rm -f ./$(DEPDIR)/proc-auxv.Po
 	-rm -f ./$(DEPDIR)/rfcomm.Po
 	-rm -f ./$(DEPDIR)/sigqueue.Po

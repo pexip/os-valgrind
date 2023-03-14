@@ -124,7 +124,8 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	-Wno-uninitialized -Wno-unused-value # \
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
-check_PROGRAMS = auxv$(EXEEXT) osrel$(EXEEXT) swapcontext$(EXEEXT)
+check_PROGRAMS = auxv$(EXEEXT) osrel$(EXEEXT) swapcontext$(EXEEXT) \
+	hello_world$(EXEEXT) fexecve$(EXEEXT)
 subdir = none/tests/freebsd
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -141,6 +142,12 @@ auxv_OBJECTS = auxv-auxv.$(OBJEXT)
 auxv_LDADD = $(LDADD)
 auxv_LINK = $(CCLD) $(auxv_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+fexecve_SOURCES = fexecve.c
+fexecve_OBJECTS = fexecve.$(OBJEXT)
+fexecve_LDADD = $(LDADD)
+am_hello_world_OBJECTS = hello_world.$(OBJEXT)
+hello_world_OBJECTS = $(am_hello_world_OBJECTS)
+hello_world_LDADD = $(LDADD)
 osrel_SOURCES = osrel.c
 osrel_OBJECTS = osrel-osrel.$(OBJEXT)
 osrel_LDADD = $(LDADD)
@@ -167,8 +174,8 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/auxv-auxv.Po \
-	./$(DEPDIR)/osrel-osrel.Po \
+am__depfiles_remade = ./$(DEPDIR)/auxv-auxv.Po ./$(DEPDIR)/fexecve.Po \
+	./$(DEPDIR)/hello_world.Po ./$(DEPDIR)/osrel-osrel.Po \
 	./$(DEPDIR)/swapcontext-swapcontext.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -187,8 +194,23 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = auxv.c osrel.c swapcontext.c
-DIST_SOURCES = auxv.c osrel.c swapcontext.c
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
+SOURCES = auxv.c fexecve.c $(hello_world_SOURCES) osrel.c \
+	swapcontext.c
+DIST_SOURCES = auxv.c fexecve.c $(hello_world_SOURCES) osrel.c \
+	swapcontext.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -353,7 +375,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -629,7 +654,7 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_stderr
+dist_noinst_SCRIPTS = filter_stderr test.sh
 EXTRA_DIST = \
 	auxv.vgtest \
 	auxv.stderr.exp \
@@ -640,15 +665,29 @@ EXTRA_DIST = \
 	osrel.stdout.exp \
 	swapcontext.vgtest \
 	swapcontext.stderr.exp \
-	swapcontext.stdout.exp
+	swapcontext.stdout.exp \
+	fexecve_hw1.vgtest \
+	fexecve_hw1.stdout.exp \
+	fexecve_hw1.stderr.exp \
+	fexecve_hw2.vgtest \
+	fexecve_hw2.stdout.exp \
+	fexecve_hw2.stderr.exp \
+	fexecve_script1.vgtest \
+	fexecve_script1.stderr.exp \
+	fexecve_script2.vgtest \
+	fexecve_script2.stdout.exp \
+	fexecve_script2.stderr.exp \
+	fexecve_txt.vgtest \
+	fexecve_txt.stderr.exp
 
 auxv_CFLAGS = ${AM_CFLAGS}
 osrel_CFLAGS = ${AM_CFLAGS}
 swapcontext_CFLAGS = ${AM_CFLAGS}
+hello_world_SOURCES = hello_world.cpp
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .cpp .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.tool-tests.am $(top_srcdir)/Makefile.all.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -687,6 +726,14 @@ auxv$(EXEEXT): $(auxv_OBJECTS) $(auxv_DEPENDENCIES) $(EXTRA_auxv_DEPENDENCIES)
 	@rm -f auxv$(EXEEXT)
 	$(AM_V_CCLD)$(auxv_LINK) $(auxv_OBJECTS) $(auxv_LDADD) $(LIBS)
 
+fexecve$(EXEEXT): $(fexecve_OBJECTS) $(fexecve_DEPENDENCIES) $(EXTRA_fexecve_DEPENDENCIES) 
+	@rm -f fexecve$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(fexecve_OBJECTS) $(fexecve_LDADD) $(LIBS)
+
+hello_world$(EXEEXT): $(hello_world_OBJECTS) $(hello_world_DEPENDENCIES) $(EXTRA_hello_world_DEPENDENCIES) 
+	@rm -f hello_world$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(hello_world_OBJECTS) $(hello_world_LDADD) $(LIBS)
+
 osrel$(EXEEXT): $(osrel_OBJECTS) $(osrel_DEPENDENCIES) $(EXTRA_osrel_DEPENDENCIES) 
 	@rm -f osrel$(EXEEXT)
 	$(AM_V_CCLD)$(osrel_LINK) $(osrel_OBJECTS) $(osrel_LDADD) $(LIBS)
@@ -702,6 +749,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auxv-auxv.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fexecve.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hello_world.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osrel-osrel.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swapcontext-swapcontext.Po@am__quote@ # am--include-marker
 
@@ -768,6 +817,22 @@ swapcontext-swapcontext.obj: swapcontext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='swapcontext.c' object='swapcontext-swapcontext.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(swapcontext_CFLAGS) $(CFLAGS) -c -o swapcontext-swapcontext.obj `if test -f 'swapcontext.c'; then $(CYGPATH_W) 'swapcontext.c'; else $(CYGPATH_W) '$(srcdir)/swapcontext.c'; fi`
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -896,6 +961,8 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/auxv-auxv.Po
+	-rm -f ./$(DEPDIR)/fexecve.Po
+	-rm -f ./$(DEPDIR)/hello_world.Po
 	-rm -f ./$(DEPDIR)/osrel-osrel.Po
 	-rm -f ./$(DEPDIR)/swapcontext-swapcontext.Po
 	-rm -f Makefile
@@ -944,6 +1011,8 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/auxv-auxv.Po
+	-rm -f ./$(DEPDIR)/fexecve.Po
+	-rm -f ./$(DEPDIR)/hello_world.Po
 	-rm -f ./$(DEPDIR)/osrel-osrel.Po
 	-rm -f ./$(DEPDIR)/swapcontext-swapcontext.Po
 	-rm -f Makefile

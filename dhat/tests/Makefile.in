@@ -155,8 +155,10 @@ big_LDADD = $(LDADD)
 big_LINK = $(CCLD) $(big_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
 copy_SOURCES = copy.c
-copy_OBJECTS = copy.$(OBJEXT)
+copy_OBJECTS = copy-copy.$(OBJEXT)
 copy_LDADD = $(LDADD)
+copy_LINK = $(CCLD) $(copy_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 empty_SOURCES = empty.c
 empty_OBJECTS = empty.$(OBJEXT)
 empty_LDADD = $(LDADD)
@@ -184,8 +186,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/acc.Po ./$(DEPDIR)/ad-hoc.Po \
 	./$(DEPDIR)/basic-basic.Po ./$(DEPDIR)/big-big.Po \
-	./$(DEPDIR)/copy.Po ./$(DEPDIR)/empty.Po ./$(DEPDIR)/sig.Po \
-	./$(DEPDIR)/single.Po
+	./$(DEPDIR)/copy-copy.Po ./$(DEPDIR)/empty.Po \
+	./$(DEPDIR)/sig.Po ./$(DEPDIR)/single.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -370,7 +372,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -661,6 +666,9 @@ EXTRA_DIST = \
 # We don't care about uninitialized or unused malloc results
 basic_CFLAGS = $(AM_CFLAGS) -Wno-uninitialized
 big_CFLAGS = $(AM_CFLAGS) -Wno-unused-result
+
+# Prevent the copying functions from being inlined
+copy_CFLAGS = $(AM_CFLAGS) -fno-builtin
 all: all-am
 
 .SUFFIXES:
@@ -717,7 +725,7 @@ big$(EXEEXT): $(big_OBJECTS) $(big_DEPENDENCIES) $(EXTRA_big_DEPENDENCIES)
 
 copy$(EXEEXT): $(copy_OBJECTS) $(copy_DEPENDENCIES) $(EXTRA_copy_DEPENDENCIES) 
 	@rm -f copy$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(copy_OBJECTS) $(copy_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(copy_LINK) $(copy_OBJECTS) $(copy_LDADD) $(LIBS)
 
 empty$(EXEEXT): $(empty_OBJECTS) $(empty_DEPENDENCIES) $(EXTRA_empty_DEPENDENCIES) 
 	@rm -f empty$(EXEEXT)
@@ -741,7 +749,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ad-hoc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic-basic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/big-big.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/copy.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/copy-copy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/empty.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sig.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/single.Po@am__quote@ # am--include-marker
@@ -795,6 +803,20 @@ big-big.obj: big.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='big.c' object='big-big.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(big_CFLAGS) $(CFLAGS) -c -o big-big.obj `if test -f 'big.c'; then $(CYGPATH_W) 'big.c'; else $(CYGPATH_W) '$(srcdir)/big.c'; fi`
+
+copy-copy.o: copy.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(copy_CFLAGS) $(CFLAGS) -MT copy-copy.o -MD -MP -MF $(DEPDIR)/copy-copy.Tpo -c -o copy-copy.o `test -f 'copy.c' || echo '$(srcdir)/'`copy.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/copy-copy.Tpo $(DEPDIR)/copy-copy.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='copy.c' object='copy-copy.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(copy_CFLAGS) $(CFLAGS) -c -o copy-copy.o `test -f 'copy.c' || echo '$(srcdir)/'`copy.c
+
+copy-copy.obj: copy.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(copy_CFLAGS) $(CFLAGS) -MT copy-copy.obj -MD -MP -MF $(DEPDIR)/copy-copy.Tpo -c -o copy-copy.obj `if test -f 'copy.c'; then $(CYGPATH_W) 'copy.c'; else $(CYGPATH_W) '$(srcdir)/copy.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/copy-copy.Tpo $(DEPDIR)/copy-copy.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='copy.c' object='copy-copy.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(copy_CFLAGS) $(CFLAGS) -c -o copy-copy.obj `if test -f 'copy.c'; then $(CYGPATH_W) 'copy.c'; else $(CYGPATH_W) '$(srcdir)/copy.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -926,7 +948,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/ad-hoc.Po
 	-rm -f ./$(DEPDIR)/basic-basic.Po
 	-rm -f ./$(DEPDIR)/big-big.Po
-	-rm -f ./$(DEPDIR)/copy.Po
+	-rm -f ./$(DEPDIR)/copy-copy.Po
 	-rm -f ./$(DEPDIR)/empty.Po
 	-rm -f ./$(DEPDIR)/sig.Po
 	-rm -f ./$(DEPDIR)/single.Po
@@ -979,7 +1001,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/ad-hoc.Po
 	-rm -f ./$(DEPDIR)/basic-basic.Po
 	-rm -f ./$(DEPDIR)/big-big.Po
-	-rm -f ./$(DEPDIR)/copy.Po
+	-rm -f ./$(DEPDIR)/copy-copy.Po
 	-rm -f ./$(DEPDIR)/empty.Po
 	-rm -f ./$(DEPDIR)/sig.Po
 	-rm -f ./$(DEPDIR)/single.Po

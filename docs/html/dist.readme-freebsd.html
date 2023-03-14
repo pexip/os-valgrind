@@ -149,6 +149,22 @@ These are much easier.<br>
 <br>
 They just contain a POST_MEM_WRITE macro for each output argument.<br>
 <br>
+1. Running regression tests<br>
+<br>
+In order to run all of the regression tests you will need to install<br>
+the following packages<br>
+gdb<br>
+gsed<br>
+<br>
+In addition to running "make" you will need to run<br>
+"make check" to build the regression test exectutables<br>
+and "make regtest".  Again, more details can be seen in<br>
+README_DEVELOPERS.<br>
+<br>
+If you want to run the 'nightly' script (see nightly/README.txt)<br>
+you will need to install coreutils and modify the<br>
+nightly/conf/freebsd.* files. The default configuration<br>
+sends an e-mail to the valgrind-testresults mailing list.<br>
 <br>
 Feedback<br>
 ~~~~~~~~<br>
