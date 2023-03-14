@@ -347,7 +347,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -624,7 +627,7 @@ AM_CCASFLAGS = $(AM_CPPFLAGS)
 dist_noinst_SCRIPTS = filter_stderr
 EXTRA_DIST = $(noinst_SCRIPTS) \
 	power_ISA2_05.stderr.exp power_ISA2_05.stdout.exp power_ISA2_05.vgtest \
-	power_ISA2_05.stdout.exp_Without_FPPO \
+	power_ISA2_05.stdout.exp_Without_FPPO power_ISA2_05.stdout.exp_Without_FPPO_2 \
 	power_ISA2_07.stdout.exp  power_ISA2_07.stdout.exp-LE \
 	power_ISA2_07.stderr.exp power_ISA2_07.vgtest
 

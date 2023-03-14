@@ -159,11 +159,12 @@ check_PROGRAMS = accounting$(EXEEXT) addressable$(EXEEXT) \
 	clo_redzone$(EXEEXT) cond_ld_st$(EXEEXT) \
 	descr_belowsp$(EXEEXT) leak_cpp_interior$(EXEEXT) \
 	custom_alloc$(EXEEXT) custom-overlap$(EXEEXT) \
-	demangle$(EXEEXT) big_debuginfo_symbol$(EXEEXT) \
-	deep-backtrace$(EXEEXT) describe-block$(EXEEXT) \
-	doublefree$(EXEEXT) error_counts$(EXEEXT) errs1$(EXEEXT) \
-	exitprog$(EXEEXT) execve1$(EXEEXT) execve2$(EXEEXT) \
-	erringfds$(EXEEXT) err_disable1$(EXEEXT) err_disable2$(EXEEXT) \
+	demangle$(EXEEXT) demangle-rust$(EXEEXT) \
+	big_debuginfo_symbol$(EXEEXT) deep-backtrace$(EXEEXT) \
+	describe-block$(EXEEXT) doublefree$(EXEEXT) \
+	error_counts$(EXEEXT) errs1$(EXEEXT) exitprog$(EXEEXT) \
+	execve1$(EXEEXT) execve2$(EXEEXT) erringfds$(EXEEXT) \
+	err_disable1$(EXEEXT) err_disable2$(EXEEXT) \
 	err_disable3$(EXEEXT) err_disable4$(EXEEXT) \
 	err_disable_arange1$(EXEEXT) file_locking$(EXEEXT) \
 	fprw$(EXEEXT) fwrite$(EXEEXT) inits$(EXEEXT) inline$(EXEEXT) \
@@ -357,6 +358,9 @@ deep_backtrace_LDADD = $(LDADD)
 am_demangle_OBJECTS = demangle.$(OBJEXT)
 demangle_OBJECTS = $(am_demangle_OBJECTS)
 demangle_LDADD = $(LDADD)
+am_demangle_rust_OBJECTS = demangle-rust.$(OBJEXT)
+demangle_rust_OBJECTS = $(am_demangle_rust_OBJECTS)
+demangle_rust_LDADD = $(LDADD)
 descr_belowsp_SOURCES = descr_belowsp.c
 descr_belowsp_OBJECTS = descr_belowsp.$(OBJEXT)
 descr_belowsp_DEPENDENCIES =
@@ -869,11 +873,11 @@ am__depfiles_remade = ./$(DEPDIR)/accounting-accounting.Po \
 	./$(DEPDIR)/cond_ld_st.Po ./$(DEPDIR)/custom-overlap.Po \
 	./$(DEPDIR)/custom_alloc.Po \
 	./$(DEPDIR)/cxx17_aligned_new-cxx17_aligned_new.Po \
-	./$(DEPDIR)/deep-backtrace.Po ./$(DEPDIR)/demangle.Po \
-	./$(DEPDIR)/descr_belowsp.Po ./$(DEPDIR)/describe-block.Po \
-	./$(DEPDIR)/doublefree.Po ./$(DEPDIR)/dw4-dw4.Po \
-	./$(DEPDIR)/err_disable1.Po ./$(DEPDIR)/err_disable2.Po \
-	./$(DEPDIR)/err_disable3.Po \
+	./$(DEPDIR)/deep-backtrace.Po ./$(DEPDIR)/demangle-rust.Po \
+	./$(DEPDIR)/demangle.Po ./$(DEPDIR)/descr_belowsp.Po \
+	./$(DEPDIR)/describe-block.Po ./$(DEPDIR)/doublefree.Po \
+	./$(DEPDIR)/dw4-dw4.Po ./$(DEPDIR)/err_disable1.Po \
+	./$(DEPDIR)/err_disable2.Po ./$(DEPDIR)/err_disable3.Po \
 	./$(DEPDIR)/err_disable4-err_disable4.Po \
 	./$(DEPDIR)/err_disable_arange1.Po ./$(DEPDIR)/erringfds.Po \
 	./$(DEPDIR)/error_counts-error_counts.Po ./$(DEPDIR)/errs1.Po \
@@ -986,11 +990,11 @@ SOURCES = accounting.c addressable.c atomic_incs.c badaddrvalue.c \
 	$(cdebug_zlib_gnu_SOURCES) client-msg.c clientperm.c \
 	clireq_nofill.c clo_redzone.c cond_ld_st.c custom-overlap.c \
 	custom_alloc.c $(cxx17_aligned_new_SOURCES) deep-backtrace.c \
-	$(demangle_SOURCES) descr_belowsp.c describe-block.c \
-	doublefree.c dw4.c err_disable1.c err_disable2.c \
-	err_disable3.c err_disable4.c err_disable_arange1.c \
-	erringfds.c error_counts.c errs1.c execve1.c execve2.c \
-	exitprog.c file_locking.c fprw.c fwrite.c \
+	$(demangle_SOURCES) $(demangle_rust_SOURCES) descr_belowsp.c \
+	describe-block.c doublefree.c dw4.c err_disable1.c \
+	err_disable2.c err_disable3.c err_disable4.c \
+	err_disable_arange1.c erringfds.c error_counts.c errs1.c \
+	execve1.c execve2.c exitprog.c file_locking.c fprw.c fwrite.c \
 	holey_buffer_too_small.c inits.c inline.c inlinfo.c \
 	$(inltemplate_SOURCES) leak-0.c leak-autofreepool.c \
 	leak-cases.c leak-cycle.c leak-delta.c leak-pool.c \
@@ -1027,9 +1031,9 @@ DIST_SOURCES = accounting.c addressable.c atomic_incs.c badaddrvalue.c \
 	$(am__cdebug_zlib_gnu_SOURCES_DIST) client-msg.c clientperm.c \
 	clireq_nofill.c clo_redzone.c cond_ld_st.c custom-overlap.c \
 	custom_alloc.c $(am__cxx17_aligned_new_SOURCES_DIST) \
-	deep-backtrace.c $(demangle_SOURCES) descr_belowsp.c \
-	describe-block.c doublefree.c dw4.c err_disable1.c \
-	err_disable2.c err_disable3.c err_disable4.c \
+	deep-backtrace.c $(demangle_SOURCES) $(demangle_rust_SOURCES) \
+	descr_belowsp.c describe-block.c doublefree.c dw4.c \
+	err_disable1.c err_disable2.c err_disable3.c err_disable4.c \
 	err_disable_arange1.c erringfds.c error_counts.c errs1.c \
 	execve1.c execve2.c exitprog.c file_locking.c fprw.c fwrite.c \
 	holey_buffer_too_small.c inits.c inline.c inlinfo.c \
@@ -1268,7 +1272,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -1576,6 +1583,7 @@ EXTRA_DIST = \
 	addressable.stderr.exp addressable.stdout.exp addressable.vgtest \
 	atomic_incs.stderr.exp atomic_incs.vgtest \
 	atomic_incs.stdout.exp-32bit atomic_incs.stdout.exp-64bit \
+	atomic_incs.stdout.exp-64bit-and-128bit \
 	badaddrvalue.stderr.exp \
 	badaddrvalue.stdout.exp badaddrvalue.vgtest \
         exit_on_first_error.stderr.exp \
@@ -1625,7 +1633,6 @@ EXTRA_DIST = \
 		cxx17_aligned_new.stdout.exp \
 	deep-backtrace.vgtest deep-backtrace.stderr.exp \
 	demangle.stderr.exp demangle.vgtest \
-		demangle.stderr.exp-freebsd \
 	big_debuginfo_symbol.stderr.exp big_debuginfo_symbol.vgtest \
 	describe-block.stderr.exp describe-block.vgtest \
 	descr_belowsp.vgtest descr_belowsp.stderr.exp \
@@ -1767,6 +1774,7 @@ EXTRA_DIST = \
 	realloc3.stderr.exp realloc3.vgtest \
 	recursive-merge.stderr.exp recursive-merge.vgtest \
 	resvn_stack.stderr.exp resvn_stack.vgtest \
+	demangle-rust.vgtest demangle-rust.stderr.exp \
 	sbfragment.stdout.exp sbfragment.stderr.exp sbfragment.vgtest \
 	sem.stderr.exp sem.vgtest \
 	sendmsg.stderr.exp sendmsg.stderr.exp-solaris sendmsg.vgtest \
@@ -1864,6 +1872,7 @@ EXTRA_DIST = \
 @VGCONF_OS_IS_SOLARIS_TRUE@buflen_check_LDADD = -lsocket -lnsl
 leak_cpp_interior_SOURCES = leak_cpp_interior.cpp
 demangle_SOURCES = demangle.cpp
+demangle_rust_SOURCES = demangle-rust.c
 
 # Suppress various gcc warnings which are correct, but for things
 # we are actually testing for at runtime.
@@ -2172,6 +2181,10 @@ deep-backtrace$(EXEEXT): $(deep_backtrace_OBJECTS) $(deep_backtrace_DEPENDENCIES
 demangle$(EXEEXT): $(demangle_OBJECTS) $(demangle_DEPENDENCIES) $(EXTRA_demangle_DEPENDENCIES) 
 	@rm -f demangle$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(demangle_OBJECTS) $(demangle_LDADD) $(LIBS)
+
+demangle-rust$(EXEEXT): $(demangle_rust_OBJECTS) $(demangle_rust_DEPENDENCIES) $(EXTRA_demangle_rust_DEPENDENCIES) 
+	@rm -f demangle-rust$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(demangle_rust_OBJECTS) $(demangle_rust_LDADD) $(LIBS)
 
 descr_belowsp$(EXEEXT): $(descr_belowsp_OBJECTS) $(descr_belowsp_DEPENDENCIES) $(EXTRA_descr_belowsp_DEPENDENCIES) 
 	@rm -f descr_belowsp$(EXEEXT)
@@ -2716,6 +2729,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/custom_alloc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cxx17_aligned_new-cxx17_aligned_new.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deep-backtrace.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/demangle-rust.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/demangle.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/descr_belowsp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/describe-block.Po@am__quote@ # am--include-marker
@@ -3881,6 +3895,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/custom_alloc.Po
 	-rm -f ./$(DEPDIR)/cxx17_aligned_new-cxx17_aligned_new.Po
 	-rm -f ./$(DEPDIR)/deep-backtrace.Po
+	-rm -f ./$(DEPDIR)/demangle-rust.Po
 	-rm -f ./$(DEPDIR)/demangle.Po
 	-rm -f ./$(DEPDIR)/descr_belowsp.Po
 	-rm -f ./$(DEPDIR)/describe-block.Po
@@ -4083,6 +4098,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/custom_alloc.Po
 	-rm -f ./$(DEPDIR)/cxx17_aligned_new-cxx17_aligned_new.Po
 	-rm -f ./$(DEPDIR)/deep-backtrace.Po
+	-rm -f ./$(DEPDIR)/demangle-rust.Po
 	-rm -f ./$(DEPDIR)/demangle.Po
 	-rm -f ./$(DEPDIR)/descr_belowsp.Po
 	-rm -f ./$(DEPDIR)/describe-block.Po

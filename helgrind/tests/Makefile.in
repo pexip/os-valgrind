@@ -132,20 +132,20 @@ check_PROGRAMS = annotate_hbefore$(EXEEXT) cond_init_destroy$(EXEEXT) \
 	hg04_race$(EXEEXT) hg05_race2$(EXEEXT) \
 	hg06_readshared$(EXEEXT) locked_vs_unlocked1$(EXEEXT) \
 	locked_vs_unlocked2$(EXEEXT) locked_vs_unlocked3$(EXEEXT) \
-	pth_destroy_cond$(EXEEXT) shmem_abits$(EXEEXT) \
-	stackteardown$(EXEEXT) t2t$(EXEEXT) tc01_simple_race$(EXEEXT) \
-	tc02_simple_tls$(EXEEXT) tc03_re_excl$(EXEEXT) \
-	tc04_free_lock$(EXEEXT) tc05_simple_race$(EXEEXT) \
-	tc06_two_races$(EXEEXT) tc07_hbl1$(EXEEXT) tc08_hbl2$(EXEEXT) \
-	tc09_bad_unlock$(EXEEXT) tc10_rec_lock$(EXEEXT) \
-	tc11_XCHG$(EXEEXT) tc12_rwl_trivial$(EXEEXT) \
-	tc13_laog1$(EXEEXT) tc14_laog_dinphils$(EXEEXT) \
-	tc15_laog_lockdel$(EXEEXT) tc16_byterace$(EXEEXT) \
-	tc17_sembar$(EXEEXT) tc18_semabuse$(EXEEXT) \
-	tc19_shadowmem$(EXEEXT) tc21_pthonce$(EXEEXT) \
-	tc23_bogus_condwait$(EXEEXT) tc24_nonzero_sem$(EXEEXT) \
-	tls_threads$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4)
+	pth_destroy_cond$(EXEEXT) pth_mempcpy_false_races$(EXEEXT) \
+	shmem_abits$(EXEEXT) stackteardown$(EXEEXT) t2t$(EXEEXT) \
+	tc01_simple_race$(EXEEXT) tc02_simple_tls$(EXEEXT) \
+	tc03_re_excl$(EXEEXT) tc04_free_lock$(EXEEXT) \
+	tc05_simple_race$(EXEEXT) tc06_two_races$(EXEEXT) \
+	tc07_hbl1$(EXEEXT) tc08_hbl2$(EXEEXT) tc09_bad_unlock$(EXEEXT) \
+	tc10_rec_lock$(EXEEXT) tc11_XCHG$(EXEEXT) \
+	tc12_rwl_trivial$(EXEEXT) tc13_laog1$(EXEEXT) \
+	tc14_laog_dinphils$(EXEEXT) tc15_laog_lockdel$(EXEEXT) \
+	tc16_byterace$(EXEEXT) tc17_sembar$(EXEEXT) \
+	tc18_semabuse$(EXEEXT) tc19_shadowmem$(EXEEXT) \
+	tc21_pthonce$(EXEEXT) tc23_bogus_condwait$(EXEEXT) \
+	tc24_nonzero_sem$(EXEEXT) tls_threads$(EXEEXT) $(am__EXEEXT_1) \
+	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4)
 
 # DDD: it seg faults, and then the Valgrind exit path hangs
 # JRS 29 July 09: it craps out in the stack unwinder, in
@@ -268,6 +268,10 @@ pth_destroy_cond_SOURCES = pth_destroy_cond.c
 pth_destroy_cond_OBJECTS = pth_destroy_cond.$(OBJEXT)
 pth_destroy_cond_LDADD = $(LDADD)
 pth_destroy_cond_DEPENDENCIES =
+pth_mempcpy_false_races_SOURCES = pth_mempcpy_false_races.c
+pth_mempcpy_false_races_OBJECTS = pth_mempcpy_false_races.$(OBJEXT)
+pth_mempcpy_false_races_LDADD = $(LDADD)
+pth_mempcpy_false_races_DEPENDENCIES =
 shmem_abits_SOURCES = shmem_abits.c
 shmem_abits_OBJECTS = shmem_abits.$(OBJEXT)
 shmem_abits_LDADD = $(LDADD)
@@ -414,11 +418,13 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/locked_vs_unlocked1.Po \
 	./$(DEPDIR)/locked_vs_unlocked2.Po \
 	./$(DEPDIR)/locked_vs_unlocked3.Po \
-	./$(DEPDIR)/pth_destroy_cond.Po ./$(DEPDIR)/shmem_abits.Po \
-	./$(DEPDIR)/stackteardown.Po ./$(DEPDIR)/t2t.Po \
-	./$(DEPDIR)/tc01_simple_race.Po ./$(DEPDIR)/tc02_simple_tls.Po \
-	./$(DEPDIR)/tc03_re_excl.Po ./$(DEPDIR)/tc04_free_lock.Po \
-	./$(DEPDIR)/tc05_simple_race.Po ./$(DEPDIR)/tc06_two_races.Po \
+	./$(DEPDIR)/pth_destroy_cond.Po \
+	./$(DEPDIR)/pth_mempcpy_false_races.Po \
+	./$(DEPDIR)/shmem_abits.Po ./$(DEPDIR)/stackteardown.Po \
+	./$(DEPDIR)/t2t.Po ./$(DEPDIR)/tc01_simple_race.Po \
+	./$(DEPDIR)/tc02_simple_tls.Po ./$(DEPDIR)/tc03_re_excl.Po \
+	./$(DEPDIR)/tc04_free_lock.Po ./$(DEPDIR)/tc05_simple_race.Po \
+	./$(DEPDIR)/tc06_two_races.Po \
 	./$(DEPDIR)/tc07_hbl1-tc07_hbl1.Po \
 	./$(DEPDIR)/tc08_hbl2-tc08_hbl2.Po \
 	./$(DEPDIR)/tc09_bad_unlock.Po ./$(DEPDIR)/tc10_rec_lock.Po \
@@ -466,30 +472,30 @@ SOURCES = annotate_hbefore.c annotate_rwlock.c bar_bad.c bar_trivial.c \
 	hg01_all_ok.c hg02_deadlock.c hg03_inherit.c hg04_race.c \
 	hg05_race2.c hg06_readshared.c locked_vs_unlocked1.c \
 	locked_vs_unlocked2.c locked_vs_unlocked3.c pth_destroy_cond.c \
-	shmem_abits.c stackteardown.c t2t.c tc01_simple_race.c \
-	tc02_simple_tls.c tc03_re_excl.c tc04_free_lock.c \
-	tc05_simple_race.c tc06_two_races.c tc07_hbl1.c tc08_hbl2.c \
-	tc09_bad_unlock.c tc10_rec_lock.c tc11_XCHG.c \
-	tc12_rwl_trivial.c tc13_laog1.c tc14_laog_dinphils.c \
-	tc15_laog_lockdel.c tc16_byterace.c tc17_sembar.c \
-	tc18_semabuse.c tc19_shadowmem.c tc20_verifywrap.c \
-	tc21_pthonce.c tc22_exit_w_lock.c tc23_bogus_condwait.c \
-	tc24_nonzero_sem.c tls_threads.c
+	pth_mempcpy_false_races.c shmem_abits.c stackteardown.c t2t.c \
+	tc01_simple_race.c tc02_simple_tls.c tc03_re_excl.c \
+	tc04_free_lock.c tc05_simple_race.c tc06_two_races.c \
+	tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c tc10_rec_lock.c \
+	tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
+	tc14_laog_dinphils.c tc15_laog_lockdel.c tc16_byterace.c \
+	tc17_sembar.c tc18_semabuse.c tc19_shadowmem.c \
+	tc20_verifywrap.c tc21_pthonce.c tc22_exit_w_lock.c \
+	tc23_bogus_condwait.c tc24_nonzero_sem.c tls_threads.c
 DIST_SOURCES = annotate_hbefore.c annotate_rwlock.c bar_bad.c \
 	bar_trivial.c $(bug322621_SOURCES) cond_init_destroy.c \
 	cond_timedwait_invalid.c cond_timedwait_test.c free_is_write.c \
 	hg01_all_ok.c hg02_deadlock.c hg03_inherit.c hg04_race.c \
 	hg05_race2.c hg06_readshared.c locked_vs_unlocked1.c \
 	locked_vs_unlocked2.c locked_vs_unlocked3.c pth_destroy_cond.c \
-	shmem_abits.c stackteardown.c t2t.c tc01_simple_race.c \
-	tc02_simple_tls.c tc03_re_excl.c tc04_free_lock.c \
-	tc05_simple_race.c tc06_two_races.c tc07_hbl1.c tc08_hbl2.c \
-	tc09_bad_unlock.c tc10_rec_lock.c tc11_XCHG.c \
-	tc12_rwl_trivial.c tc13_laog1.c tc14_laog_dinphils.c \
-	tc15_laog_lockdel.c tc16_byterace.c tc17_sembar.c \
-	tc18_semabuse.c tc19_shadowmem.c tc20_verifywrap.c \
-	tc21_pthonce.c tc22_exit_w_lock.c tc23_bogus_condwait.c \
-	tc24_nonzero_sem.c tls_threads.c
+	pth_mempcpy_false_races.c shmem_abits.c stackteardown.c t2t.c \
+	tc01_simple_race.c tc02_simple_tls.c tc03_re_excl.c \
+	tc04_free_lock.c tc05_simple_race.c tc06_two_races.c \
+	tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c tc10_rec_lock.c \
+	tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
+	tc14_laog_dinphils.c tc15_laog_lockdel.c tc16_byterace.c \
+	tc17_sembar.c tc18_semabuse.c tc19_shadowmem.c \
+	tc20_verifywrap.c tc21_pthonce.c tc22_exit_w_lock.c \
+	tc23_bogus_condwait.c tc24_nonzero_sem.c tls_threads.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -656,7 +662,10 @@ VGCONF_OS = @VGCONF_OS@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
+VG_DATE = @VG_DATE@
 VG_TMPDIR = @VG_TMPDIR@
+VG_VER_MAJOR = @VG_VER_MAJOR@
+VG_VER_MINOR = @VG_VER_MINOR@
 XCODE_DIR = @XCODE_DIR@
 XCRUN = @XCRUN@
 abs_builddir = @abs_builddir@
@@ -989,6 +998,7 @@ EXTRA_DIST = \
 		pth_cond_destroy_busy.stderr.exp-ppc64 \
 		pth_cond_destroy_busy.stderr.exp-solaris \
 		pth_cond_destroy_busy.stderr.exp-freebsd \
+	pth_mempcpy_false_races.vgtest pth_mempcpy_false_races.stderr.exp \
 	pth_spinlock.vgtest pth_spinlock.stdout.exp pth_spinlock.stderr.exp \
 	rwlock_race.vgtest rwlock_race.stdout.exp rwlock_race.stderr.exp \
 	rwlock_test.vgtest rwlock_test.stdout.exp rwlock_test.stderr.exp \
@@ -1191,6 +1201,10 @@ pth_destroy_cond$(EXEEXT): $(pth_destroy_cond_OBJECTS) $(pth_destroy_cond_DEPEND
 	@rm -f pth_destroy_cond$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pth_destroy_cond_OBJECTS) $(pth_destroy_cond_LDADD) $(LIBS)
 
+pth_mempcpy_false_races$(EXEEXT): $(pth_mempcpy_false_races_OBJECTS) $(pth_mempcpy_false_races_DEPENDENCIES) $(EXTRA_pth_mempcpy_false_races_DEPENDENCIES) 
+	@rm -f pth_mempcpy_false_races$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(pth_mempcpy_false_races_OBJECTS) $(pth_mempcpy_false_races_LDADD) $(LIBS)
+
 shmem_abits$(EXEEXT): $(shmem_abits_OBJECTS) $(shmem_abits_DEPENDENCIES) $(EXTRA_shmem_abits_DEPENDENCIES) 
 	@rm -f shmem_abits$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(shmem_abits_OBJECTS) $(shmem_abits_LDADD) $(LIBS)
@@ -1328,6 +1342,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locked_vs_unlocked2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locked_vs_unlocked3.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_destroy_cond.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mempcpy_false_races.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shmem_abits.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stackteardown.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t2t.Po@am__quote@ # am--include-marker
@@ -1582,6 +1597,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/locked_vs_unlocked2.Po
 	-rm -f ./$(DEPDIR)/locked_vs_unlocked3.Po
 	-rm -f ./$(DEPDIR)/pth_destroy_cond.Po
+	-rm -f ./$(DEPDIR)/pth_mempcpy_false_races.Po
 	-rm -f ./$(DEPDIR)/shmem_abits.Po
 	-rm -f ./$(DEPDIR)/stackteardown.Po
 	-rm -f ./$(DEPDIR)/t2t.Po
@@ -1674,6 +1690,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/locked_vs_unlocked2.Po
 	-rm -f ./$(DEPDIR)/locked_vs_unlocked3.Po
 	-rm -f ./$(DEPDIR)/pth_destroy_cond.Po
+	-rm -f ./$(DEPDIR)/pth_mempcpy_false_races.Po
 	-rm -f ./$(DEPDIR)/shmem_abits.Po
 	-rm -f ./$(DEPDIR)/stackteardown.Po
 	-rm -f ./$(DEPDIR)/t2t.Po
