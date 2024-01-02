@@ -112,6 +112,9 @@
 /* Define to 1 if compiler provides __builtin_popcount(). */
 #define HAVE_BUILTIN_POPCOUT 1
 
+/* Define to 1 if you have the `clockid_t' type. */
+#define HAVE_CLOCKID_T 1
+
 /* Define to 1 if you have the `clock_gettime' function. */
 #define HAVE_CLOCK_GETTIME 1
 
@@ -148,6 +151,9 @@
 /* Define to 1 if you have the `getpagesize' function. */
 #define HAVE_GETPAGESIZE 1
 
+/* Define to 1 if you have the `features.h' header. */
+#define HAVE_HEADER_FEATURES_H 1
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
@@ -172,8 +178,11 @@
 /* Define to 1 if you have the `memfd_create' function. */
 #define HAVE_MEMFD_CREATE 1
 
-/* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+/* Define to 1 if you have the `mempcpy' function. */
+#define HAVE_MEMPCPY 1
+
+/* Define to 1 if you have the `memrchr' function. */
+#define HAVE_MEMRCHR 1
 
 /* Define to 1 if you have the `memset' function. */
 #define HAVE_MEMSET 1
@@ -287,11 +296,20 @@
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
 
+/* Define to 1 if you have the <stdio.h> header file. */
+#define HAVE_STDIO_H 1
+
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 
+/* Define to 1 if you have the `stpncpy' function. */
+#define HAVE_STPNCPY 1
+
 /* Define to 1 if you have the `strchr' function. */
 #define HAVE_STRCHR 1
+
+/* Define to 1 if you have the `strchrnul' function. */
+#define HAVE_STRCHRNUL 1
 
 /* Define to 1 if you have the `strdup' function. */
 #define HAVE_STRDUP 1
@@ -301,6 +319,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
+
+/* Define to 1 if you have the `strndup' function. */
+#define HAVE_STRNDUP 1
 
 /* Define to 1 if you have the `strpbrk' function. */
 #define HAVE_STRPBRK 1
@@ -393,7 +414,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.19.0"
+#define PACKAGE_STRING "Valgrind 3.20.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -402,7 +423,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.19.0"
+#define PACKAGE_VERSION "3.20.0"
 
 /* Define to 1 if you have the `A_GETSTAT' and `A_SETSTAT' constants. */
 /* #undef SOLARIS_AUDITON_STAT */
@@ -509,11 +530,13 @@
    constants. */
 /* #undef SOLARIS_ZONE_DEFUNCT */
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "3.19.0"
+#define VERSION "3.20.0"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"

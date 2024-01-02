@@ -2,12 +2,12 @@
 .\"     Title: VALGRIND
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/11/2022
+.\"      Date: 10/24/2022
 .\"    Manual: valgrind
-.\"    Source: Release 3.19.0
+.\"    Source: Release 3.20.0
 .\"  Language: English
 .\"
-.TH "VALGRIND" "1" "04/11/2022" "Release 3\&.19\&.0" "valgrind"
+.TH "VALGRIND" "1" "10/24/2022" "Release 3\&.20\&.0" "valgrind"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -169,13 +169,19 @@ have been reported\&. You can additionally ask the Valgrind gdbserver to be invo
 .IP \(bu 2.3
 .\}
 a comma separated list of one or more of
-\fBstartup exit valgrindabexit\fR\&.
+\fBstartup exit abexit valgrindabexit\fR\&.
 .sp
 The values
 \fBstartup\fR
 \fBexit\fR
 \fBvalgrindabexit\fR
 respectively indicate to invoke gdbserver before your program is executed, after the last instruction of your program, on Valgrind abnormal exit (e\&.g\&. internal error, out of memory, \&.\&.\&.)\&.
+.sp
+The option
+\fBabexit\fR
+is similar to
+\fBexit\fR
+but tells to invoke gdbserver only when your application exits abnormally (i\&.e\&. with an exit code different of 0)\&.
 .sp
 Note:
 \fBstartup\fR
@@ -196,7 +202,7 @@ will in addition cause your program to stop on all subsequent errors\&.
 .\}
 \fBall\fR
 to specify the complete set\&. It is equivalent to
-\fB\-\-vgdb\-stop\-at=startup,exit,valgrindabexit\fR\&.
+\fB\-\-vgdb\-stop\-at=startup,exit,abexit,valgrindabexit\fR\&.
 .RE
 .sp
 .RS 4
@@ -280,6 +286,13 @@ valgrind\-listener
 program\&. For further details, see
 the commentary
 in the manual\&.
+.RE
+.PP
+\fB\-\-enable\-debuginfod=<no|yes> [default: yes] \fR
+.RS 4
+When enabled Valgrind will attempt to download missing debuginfo from debuginfod servers if space\-separated server URLs are present in the
+$DEBUGINFOD_URLS
+environment variable\&. This option is supported on Linux only\&.
 .RE
 .SH "ERROR\-RELATED OPTIONS"
 .PP
@@ -397,7 +410,7 @@ When enabled, Valgrind stops reporting errors after 10,000,000 in total, or 1,00
 .PP
 \fB\-\-error\-exitcode=<number> [default: 0] \fR
 .RS 4
-Specifies an alternative exit code to return if Valgrind reported any errors in the run\&. When set to the default value (zero), the return value from Valgrind will always be the return value of the process being simulated\&. When set to a nonzero value, that value is returned instead, if Valgrind detects any errors\&. This is useful for using Valgrind as part of an automated test suite, since it makes it easy to detect test cases for which Valgrind has reported errors, just by inspecting return codes\&.
+Specifies an alternative exit code to return if Valgrind reported any errors in the run\&. When set to the default value (zero), the return value from Valgrind will always be the return value of the process being simulated\&. When set to a nonzero value, that value is returned instead, if Valgrind detects any errors\&. This is useful for using Valgrind as part of an automated test suite, since it makes it easy to detect test cases for which Valgrind has reported errors, just by inspecting return codes\&. When set to a nonzero value and Valgrind detects no error, the return value of Valgrind will be the return value of the program being simulated\&.
 .RE
 .PP
 \fB\-\-exit\-on\-first\-error=<yes|no> [default: no] \fR
@@ -2854,33 +2867,35 @@ is specified\&.
 .RE
 .SH "DEBUGINFOD"
 .PP
-Valgrind supports the downloading of debuginfo files via debuginfod, an HTTP server for distributing ELF/DWARF debugging information\&. When a debuginfo file cannot be found locally, Valgrind is able to query debuginfod servers for the file using its build\-id\&.
+Valgrind supports the downloading of debuginfo files via debuginfod, an HTTP server for distributing ELF/DWARF debugging information\&. When a debuginfo file cannot be found locally, Valgrind is able to query debuginfod servers for the file using the file\*(Aqs build\-id\&.
 .PP
 In order to use this feature
 debuginfod\-find
-must be installed and
+must be installed and the
 $DEBUGINFOD_URLS
-must contain URLs of debuginfod servers\&. Valgrind does not support
+environment variable must contain space\-separated URLs of debuginfod servers\&. Valgrind does not support
 debuginfod\-find
 verbose output that is normally enabled with
 $DEBUGINFOD_PROGRESS
 and
-$DEBUGINFOD_VERBOSE\&. These environment variables will be ignored\&.
+$DEBUGINFOD_VERBOSE\&. These environment variables will be ignored\&. This feature is supported on Linux only\&.
 .PP
-For more information regarding debuginfod, see https://sourceware\&.org/elfutils/Debuginfod\&.html
+For more information regarding debuginfod, see
+\m[blue]\fBElfutils Debuginfod\fR\m[]\&\s-2\u[1]\d\s+2
+\&.
 .SH "SEE ALSO"
 .PP
 cg_annotate(1), callgrind_annotate(1), callgrind_control(1), ms_print(1),
 $INSTALL/share/doc/valgrind/html/index\&.html
 or
 http://www\&.valgrind\&.org/docs/manual/index\&.html,
-\m[blue]\fBDebugging your program using Valgrind\*(Aqs gdbserver and GDB\fR\m[]\&\s-2\u[1]\d\s+2
-\m[blue]\fBvgdb\fR\m[]\&\s-2\u[2]\d\s+2,
-\m[blue]\fBValgrind monitor commands\fR\m[]\&\s-2\u[3]\d\s+2,
-\m[blue]\fBThe Commentary\fR\m[]\&\s-2\u[4]\d\s+2,
-\m[blue]\fBScheduling and Multi\-Thread Performance\fR\m[]\&\s-2\u[5]\d\s+2,
-\m[blue]\fBCachegrind: a cache and branch\-prediction profiler\fR\m[]\&\s-2\u[6]\d\s+2\&.
-\m[blue]\fBExecution Trees\fR\m[]\&\s-2\u[7]\d\s+2
+\m[blue]\fBDebugging your program using Valgrind\*(Aqs gdbserver and GDB\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBvgdb\fR\m[]\&\s-2\u[3]\d\s+2,
+\m[blue]\fBValgrind monitor commands\fR\m[]\&\s-2\u[4]\d\s+2,
+\m[blue]\fBThe Commentary\fR\m[]\&\s-2\u[5]\d\s+2,
+\m[blue]\fBScheduling and Multi\-Thread Performance\fR\m[]\&\s-2\u[6]\d\s+2,
+\m[blue]\fBCachegrind: a cache and branch\-prediction profiler\fR\m[]\&\s-2\u[7]\d\s+2\&.
+\m[blue]\fBExecution Trees\fR\m[]\&\s-2\u[8]\d\s+2
 .SH "AUTHOR"
 .PP
 See the AUTHORS file in the valgrind distribution for a comprehensive list of authors\&.
@@ -2888,36 +2903,41 @@ See the AUTHORS file in the valgrind distribution for a comprehensive list of au
 This manpage was written by Andres Roldan <aroldan@debian\&.org> and the Valgrind developers\&.
 .SH "NOTES"
 .IP " 1." 4
+Elfutils Debuginfod
+.RS 4
+\%https://sourceware.org/elfutils/Debuginfod.html
+.RE
+.IP " 2." 4
 Debugging your program using Valgrind's gdbserver and GDB
 .RS 4
 \%http://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver
 .RE
-.IP " 2." 4
+.IP " 3." 4
 vgdb
 .RS 4
 \%http://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.vgdb
 .RE
-.IP " 3." 4
+.IP " 4." 4
 Valgrind monitor commands
 .RS 4
 \%http://www.valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.valgrind-monitor-commands
 .RE
-.IP " 4." 4
+.IP " 5." 4
 The Commentary
 .RS 4
 \%http://www.valgrind.org/docs/manual/manual-core.html#manual-core.comment
 .RE
-.IP " 5." 4
+.IP " 6." 4
 Scheduling and Multi-Thread Performance
 .RS 4
 \%http://www.valgrind.org/docs/manual/manual-core.html#manual-core.pthreads_perf_sched
 .RE
-.IP " 6." 4
+.IP " 7." 4
 Cachegrind: a cache and branch-prediction profiler
 .RS 4
 \%http://www.valgrind.org/docs/manual/cg-manual.html
 .RE
-.IP " 7." 4
+.IP " 8." 4
 Execution Trees
 .RS 4
 \%http://www.valgrind.org/docs/manual/manual-core.html#manual-core.xtree

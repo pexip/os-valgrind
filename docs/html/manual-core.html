@@ -531,17 +531,18 @@ to <code class="computeroutput">malloc.</code>.</p>
 <p><a name="debuginfod.para.1"></a>Valgrind supports the downloading of debuginfo
 files via debuginfod, an HTTP server for distributing ELF/DWARF debugging
 information. When a debuginfo file cannot be found locally, Valgrind is able
-to query debuginfod servers for the file using its build-id.</p>
+to query debuginfod servers for the file using the file's build-id.</p>
 <p><a name="debuginfod.para.2"></a>In order to use this feature
-<code class="computeroutput">debuginfod-find</code> must be installed and
-<code class="computeroutput">$DEBUGINFOD_URLS</code> must contain URLs of
-debuginfod servers. Valgrind does not support
+<code class="computeroutput">debuginfod-find</code> must be installed and the
+<code class="computeroutput">$DEBUGINFOD_URLS</code> environment variable must
+contain space-separated URLs of debuginfod servers. Valgrind does not support
 <code class="computeroutput">debuginfod-find</code> verbose output that is
 normally enabled with <code class="computeroutput">$DEBUGINFOD_PROGRESS</code>
 and <code class="computeroutput">$DEBUGINFOD_VERBOSE</code>. These environment
-variables will be ignored.</p>
+variables will be ignored. This feature is supported on Linux only.</p>
 <p><a name="debuginfod.para.3"></a>For more information regarding debuginfod, see
-https://sourceware.org/elfutils/Debuginfod.html</p>
+<a class="ulink" href="https://sourceware.org/elfutils/Debuginfod.html" target="_top">Elfutils Debuginfod</a>
+.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
@@ -732,12 +733,15 @@ in most cases.  We group the available options by rough categories.</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
 <p>a comma separated list of one or more of
-            <code class="option">startup exit valgrindabexit</code>.</p>
+            <code class="option">startup exit abexit valgrindabexit</code>.</p>
 <p>The values <code class="option">startup</code> <code class="option">exit</code>
-          <code class="option">valgrindabexit</code> respectively indicate to
-          invoke gdbserver before your program is executed, after the
-          last instruction of your program, on Valgrind abnormal exit
-          (e.g. internal error, out of memory, ...).</p>
+          <code class="option">valgrindabexit</code> respectively indicate to invoke
+          gdbserver before your program is executed, after the last instruction
+          of your program, on Valgrind abnormal exit (e.g. internal error, out
+          of memory, ...).</p>
+<p>The option <code class="option">abexit</code> is similar to <code class="option">exit</code>
+          but tells to invoke gdbserver only when your application exits abnormally
+          (i.e. with an exit code different of 0). </p>
 <p>Note: <code class="option">startup</code> and
           <code class="option">--vgdb-error=0</code> will both cause Valgrind
           gdbserver to be invoked before your program is executed. The
@@ -746,7 +750,7 @@ in most cases.  We group the available options by rough categories.</p>
 </li>
 <li class="listitem"><p><code class="option">all</code> to specify the complete set.
             It is equivalent to
-            <code class="option">--vgdb-stop-at=startup,exit,valgrindabexit</code>.</p></li>
+            <code class="option">--vgdb-stop-at=startup,exit,abexit,valgrindabexit</code>.</p></li>
 <li class="listitem"><p><code class="option">none</code> for the empty set.</p></li>
 </ul></div>
 </dd>
@@ -845,6 +849,16 @@ in most cases.  We group the available options by rough categories.</p>
       further details, see 
       <a class="link" href="manual-core.html#manual-core.comment" title="2.3. The Commentary">the commentary</a>
       in the manual.</p></dd>
+<dt>
+<a name="opt.enable-debuginfod"></a><span class="term">
+      <code class="option">--enable-debuginfod=&lt;no|yes&gt; [default: yes] </code>
+    </span>
+</dt>
+<dd><p>When enabled Valgrind will attempt to download missing debuginfo
+      from debuginfod servers if space-separated server URLs are present
+      in the <code class="computeroutput">$DEBUGINFOD_URLS</code> environment
+      variable.  This option is supported on Linux only.
+      </p></dd>
 </dl>
 </div>
 </div>
@@ -1041,7 +1055,11 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       that value is returned instead, if Valgrind detects any errors.
       This is useful for using Valgrind as part of an automated test
       suite, since it makes it easy to detect test cases for which
-      Valgrind has reported errors, just by inspecting return codes.</p></dd>
+      Valgrind has reported errors, just by inspecting return codes.
+      When set to a nonzero value and Valgrind detects no error,
+      the return value of Valgrind will be the return value of the
+      program being simulated.
+      </p></dd>
 <dt>
 <a name="opt.exit-on-first-error"></a><span class="term">
       <code class="option">--exit-on-first-error=&lt;yes|no&gt; [default: no] </code>

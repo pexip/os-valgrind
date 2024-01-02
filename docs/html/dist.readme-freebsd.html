@@ -44,7 +44,7 @@ $ ./configure --prefix=/where/ever<br>
 $ gmake<br>
 $ gmake install<br>
 <br>
-Known Limitations (December 2020)<br>
+Known Limitations (June 2022)<br>
 <br>
 0. Be aware that if you use a wrapper script and run Valgrind on the wrapper<br>
    script Valgrind may hit restrictions if the wrapper script runs any<br>
@@ -54,13 +54,11 @@ Known Limitations (December 2020)<br>
    application.<br>
 1. There are some limitations when running Valgrind on code that was compiled<br>
    with clang.  These issues are not present with code compiled with GCC.<br>
-   a) There may be missing source information concerning variables.<br>
-   b) The client request mechanism may not work entirely correctly.<br>
-   c) Code that uses OpenMP will generate spurious errors.<br>
-2. There are some limitations specific to i386<br>
-   a) In some cases signals are mishandled causing Valgrind to terminate and<br>
-      report a SIGSEGV.<br>
-   b) Applications that create and join many threads may crash.<br>
+   a) There may be missing source information concerning variables due<br>
+      to DWARF extensions ised by GCC.<br>
+   b) Code that uses OpenMP will generate spurious errors.<br>
+2. vgdb invoker, which uses ptrace, may cause system calls to be<br>
+   interrupted.<br>
 <br>
 Notes for Developers<br>
 ~~~~~~~~~~~~~~~~~~~~<br>
