@@ -21,7 +21,64 @@
 <div class="titlepage"><div><div><h1 class="title">
 <a name="dist.news"></a>2. NEWS</h1></div></div></div>
 <div class="literallayout"><p><br>
-      Release 3.19.0 (11 Apr 2022)<br>
+      Release 3.20.0 (24 Oct 2022)<br>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
+<br>
+This release supports X86/Linux, AMD64/Linux, ARM32/Linux, ARM64/Linux,<br>
+PPC32/Linux, PPC64BE/Linux, PPC64LE/Linux, S390X/Linux, MIPS32/Linux,<br>
+MIPS64/Linux, ARM/Android, ARM64/Android, MIPS32/Android, X86/Android,<br>
+X86/Solaris, AMD64/Solaris, AMD64/MacOSX 10.12, X86/FreeBSD and<br>
+AMD64/FreeBSD.  There is also preliminary support for X86/macOS 10.13,<br>
+AMD64/macOS 10.13 and nanoMIPS/Linux.<br>
+<br>
+* ==================== CORE CHANGES ===================<br>
+<br>
+* The option "--vgdb-stop-at=event1,event2,..." accepts the new value abexit.<br>
+  This indicates to invoke gdbserver when your program exits abnormally<br>
+  (i.e. with a non zero exit code).<br>
+* Fix Rust v0 name demangling.<br>
+* The Linux rseq syscall is now implemented as (silently) returning ENOSYS.<br>
+* Add FreeBSD syscall wrappers for __specialfd and __realpathat.<br>
+* Remove FreeBSD dependencies on COMPAT10, which fixes compatibility with<br>
+  HardenedBSD<br>
+* The option --enable-debuginfod=&lt;no|yes&gt; [default: yes] has been added on<br>
+  Linux.<br>
+* More DWARF5 support as generated by clang14.<br>
+<br>
+* ==================== FIXED BUGS ====================<br>
+<br>
+The following bugs have been fixed or resolved.  Note that "n-i-bz"<br>
+stands for "not in bugzilla" -- that is, a bug that was reported to us<br>
+but never got a bugzilla entry.  We encourage you to file bugs in<br>
+bugzilla (https://bugs.kde.org/enter_bug.cgi?product=valgrind) rather<br>
+than mailing the developers (or mailing lists) directly -- bugs that<br>
+are not entered into bugzilla tend to get forgotten about or ignored.<br>
+<br>
+131186  writev reports error in (vector[...])<br>
+434764  iconv_open causes ld.so v2.28+ to use optimised strncmp<br>
+446754  Improve error codes from alloc functions under memcheck<br>
+452274  memcheck crashes with Assertion 'sci-&gt;status.what == SsIdle' failed<br>
+452779  Valgrind fails to build on FreeBSD 13.0 with llvm-devel (15.0.0)<br>
+453055  shared_timed_mutex drd test fails with "Lock shared failed" message<br>
+453602  Missing command line option to enable/disable debuginfod<br>
+452802  Handle lld 9+ split RW PT_LOAD segments correctly<br>
+454040  s390x: False-positive memcheck:cond in memmem on arch13 systems <br>
+456171  [PATCH] FreeBSD: Don't record address errors when accessing the 'kern.ps_strings' sysctl struct<br>
+n-i-bz  Implement vgdb invoker on FreeBSD<br>
+458845  PowerPC: The L field for the dcbf and sync instruction should be<br>
+        3 bits in ISA 3.1.<br>
+458915  Remove register cache to fix 458915 gdbserver causes wrong syscall return<br>
+459031  Documentation on --error-exitcode incomplete<br>
+459477  XERROR messages lacks ending '\n' in vgdb<br>
+<br>
+To see details of a given bug, visit<br>
+  https://bugs.kde.org/show_bug.cgi?id=XXXXXX<br>
+where XXXXXX is the bug number as listed above.<br>
+<br>
+(3.20.0.RC1: 20 Oct 2022)<br>
+<br>
+<br>
+Release 3.19.0 (11 Apr 2022)<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
 <br>
 This release supports X86/Linux, AMD64/Linux, ARM32/Linux, ARM64/Linux,<br>
