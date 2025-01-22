@@ -24,8 +24,7 @@
       Installing from ports or via pkg<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
 <br>
-If you are using FreeBSD 11.3 or later, then you should be able to install<br>
-Valgrind using either<br>
+You can install Valgrind using either<br>
 <br>
 pkg install devel/valgrind<br>
 <br>
@@ -33,16 +32,28 @@ or alternatively from ports (if installed)<br>
 <br>
 cd /usr/ports/devel/valgrind &amp;&amp; make install clean<br>
 <br>
+devel/valgrind is updated with official releases of Valgrind, normally<br>
+in April and October each year. There is an alternative port,<br>
+devel/valgrind-devel which occasionally gets updated from the latest<br>
+Valgrind source. If you want to have the latest port, check on<br>
+https://www.freshports.org/ to see which is the most recent. If you<br>
+want to have the very latest version, you will need to build a copy<br>
+from source. See README for instructions on getting the source with git.<br>
+<br>
 <br>
 Building Valgrind<br>
 ~~~~~~~~~~~~~~~~~<br>
 <br>
-Install ports for autoconf, automake, libtool and gmake.<br>
+Install ports for autotools, gmake and python.<br>
 <br>
 $ sh autogen.sh<br>
 $ ./configure --prefix=/where/ever<br>
 $ gmake<br>
 $ gmake install<br>
+<br>
+If you are using a jail for building, make sure that it is configured so that<br>
+"uname -r" returns a string that matches the pattern "XX.Y-*" where XX is the<br>
+major version (12, 13, 14 ...) and Y is the minor version (0, 1, 2, 3).<br>
 <br>
 Known Limitations (June 2022)<br>
 <br>
@@ -55,10 +66,13 @@ Known Limitations (June 2022)<br>
 1. There are some limitations when running Valgrind on code that was compiled<br>
    with clang.  These issues are not present with code compiled with GCC.<br>
    a) There may be missing source information concerning variables due<br>
-      to DWARF extensions ised by GCC.<br>
+      to DWARF extensions used by GCC.<br>
    b) Code that uses OpenMP will generate spurious errors.<br>
 2. vgdb invoker, which uses ptrace, may cause system calls to be<br>
-   interrupted.<br>
+   interrupted. As an example, if the debuggee seems to have be<br>
+   stuck and you press Ctrl-C in gdb the debuggee may execute<br>
+   one more statement before stopping and returning control to<br>
+   gdb.<br>
 <br>
 Notes for Developers<br>
 ~~~~~~~~~~~~~~~~~~~~<br>
@@ -105,9 +119,10 @@ When you add syscalls you will need to modify several files<br>
       or only input arguments just need a BSDX_ macro (before only). Syscalls<br>
       with output arguments need a BSDXY macro (before and after).<br>
    d) If the syscall uses 64bit arguments (long long) then instead of putting<br>
-      the wrapper definitions in syswrap-freebsd.c there will be one definition<br>
-      for each platform amd64 and x86 in syswrap-x86-freebsd.c and<br>
-      syswrap-amd64-freebsd.c.<br>
+      the wrapper definitions in syswrap-freebsd.c there will be two kinds of<br>
+      definition. A 32bit version with split 64bit arguments for x86 in<br>
+      syswrap-x86-freebsd.c and 64bit versions without any splitting for amd64<br>
+      and arm64 in syswrap-amd64-freebsd.c/syswrap-arm64-freebsd.c.<br>
       Each long long needs to be split into two ARGs in the x86 version.<br>
 <br>
 The PRE (before) wrapper<br>
@@ -122,9 +137,8 @@ executed with<br>
 PRE_READ_REGX. This macro lets Valgrind know about the number and types of the<br>
 syscall arguments which allows Valgrind to check that they are initialized.<br>
 X is the number of arguments. It is best that the argument names match<br>
-the man page, but the must match the types and number of arguments in<br>
-syscalls.master.<br>
-Occasionally there are differences between the two.<br>
+the man page, but they must match the types and number of arguments in<br>
+syscalls.master. Occasionally there are differences between the two.<br>
 <br>
 If the syscall takes pointers to memory there will be one of the following for<br>
 each pointer argument.<br>
@@ -147,22 +161,54 @@ These are much easier.<br>
 <br>
 They just contain a POST_MEM_WRITE macro for each output argument.<br>
 <br>
-1. Running regression tests<br>
+1. Frequent causes of problems<br>
+<br>
+- New _umtx_op codes. Valgrind will print "WARNING: _umtx_op unsupported value".<br>
+  See syswrap-freebsd.c and add new cases for the new codes.<br>
+- Additions to auxv. Depending on the entry it may need to be simply copied<br>
+  from the host to the guest, it may need to be modified for the guest or<br>
+  it may need to be ignored. See initimg-freebsd.c.<br>
+- Versioned ioctls. ioctls such as CAMIOCOMMAND are versioned (with<br>
+  CAM_VERSION). When the version number is increased the result is a new<br>
+  ioctl ID. That means that the ioctl checking code no longer gets called.<br>
+  New versions require updates to the version number and the structs that<br>
+  are used. (Backwards compatibility is maintained by adding fixed macros<br>
+  like CAM_VERSION_0x19, but these are not currently supported in Valgrind).<br>
+- ELF PT_LOAD mappings. Either Valgrind will assert or there will be no source<br>
+  information in error reports. See VG_(di_notify_mmap) in debuginfo.c<br>
+- Because they contain many deliberate errors the regression tests are prone<br>
+  to change with changes of compiler. Liberal use of 'volatile' and<br>
+  '-Wno-warning-flag' can help - see configure.ac<br>
+<br>
+2. Running regression tests<br>
 <br>
 In order to run all of the regression tests you will need to install<br>
 the following packages<br>
 gdb<br>
 gsed<br>
 <br>
-In addition to running "make" you will need to run<br>
-"make check" to build the regression test exectutables<br>
-and "make regtest".  Again, more details can be seen in<br>
+In addition to running "gmake" you will need to run<br>
+"gmake check" to build the regression test exectutables<br>
+and "gmake regtest".  Again, more details can be seen in<br>
 README_DEVELOPERS.<br>
 <br>
 If you want to run the 'nightly' script (see nightly/README.txt)<br>
-you will need to install coreutils and modify the<br>
+you will need to install coreutils (for GNU cp) and modify the<br>
 nightly/conf/freebsd.* files. The default configuration<br>
 sends an e-mail to the valgrind-testresults mailing list.<br>
+<br>
+3. Version specific code<br>
+<br>
+For its own use of syscalls and memory layout Valgrind sometimes needs<br>
+to detect which version of FreeBSD it is being built on. Historically<br>
+that was done using 'uname' at configure time. It can also be achieved<br>
+using the __FreeBSD_version macro (in osreldate.h and sys/param.h).<br>
+The former header just defines that macro. To see what changes are associated<br>
+with different values of the macro you can search the FreeBSD source and<br>
+git history. You can also look at<br>
+<br>
+https://docs.freebsd.org/en/books/porters-handbook/versions/<br>
+<br>
 <br>
 Feedback<br>
 ~~~~~~~~<br>
@@ -170,7 +216,7 @@ Feedback<br>
 If you find any problems please create a bugzilla report at<br>
 https://bugs.kde.org using the Valgrind product.<br>
 <br>
-Alternatively you can use the FreeBSD bugilla<br>
+Alternatively you can use the FreeBSD bugzilla<br>
 https://bugs.freebsd.org<br>
 <br>
 Credits<br>

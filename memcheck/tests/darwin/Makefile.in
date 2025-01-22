@@ -125,7 +125,8 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	-Wno-uninitialized -Wno-unused-value # \
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
-check_PROGRAMS = aio$(EXEEXT) deep_badparam$(EXEEXT) env$(EXEEXT) \
+check_PROGRAMS = aio$(EXEEXT) aligned_alloc$(EXEEXT) \
+	bug437790$(EXEEXT) deep_badparam$(EXEEXT) env$(EXEEXT) \
 	ioctl-tiocsbrk$(EXEEXT) pth-supp$(EXEEXT) \
 	pth-undocumented$(EXEEXT) mkfifo$(EXEEXT) scalar$(EXEEXT) \
 	scalar_fork$(EXEEXT) scalar_nocancel$(EXEEXT) \
@@ -144,6 +145,12 @@ CONFIG_CLEAN_VPATH_FILES =
 aio_SOURCES = aio.c
 aio_OBJECTS = aio.$(OBJEXT)
 aio_LDADD = $(LDADD)
+aligned_alloc_SOURCES = aligned_alloc.c
+aligned_alloc_OBJECTS = aligned_alloc.$(OBJEXT)
+aligned_alloc_LDADD = $(LDADD)
+bug437790_SOURCES = bug437790.c
+bug437790_OBJECTS = bug437790.$(OBJEXT)
+bug437790_LDADD = $(LDADD)
 deep_badparam_SOURCES = deep_badparam.c
 deep_badparam_OBJECTS = deep_badparam.$(OBJEXT)
 deep_badparam_LDADD = $(LDADD)
@@ -190,7 +197,8 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/aio.Po ./$(DEPDIR)/deep_badparam.Po \
+am__depfiles_remade = ./$(DEPDIR)/aio.Po ./$(DEPDIR)/aligned_alloc.Po \
+	./$(DEPDIR)/bug437790.Po ./$(DEPDIR)/deep_badparam.Po \
 	./$(DEPDIR)/env.Po ./$(DEPDIR)/ioctl-tiocsbrk.Po \
 	./$(DEPDIR)/mkfifo.Po ./$(DEPDIR)/pth-supp.Po \
 	./$(DEPDIR)/pth-undocumented.Po ./$(DEPDIR)/scalar.Po \
@@ -209,12 +217,12 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = aio.c deep_badparam.c env.c ioctl-tiocsbrk.c mkfifo.c \
-	pth-supp.c pth-undocumented.c scalar.c scalar_fork.c \
-	scalar_nocancel.c scalar_vfork.c
-DIST_SOURCES = aio.c deep_badparam.c env.c ioctl-tiocsbrk.c mkfifo.c \
-	pth-supp.c pth-undocumented.c scalar.c scalar_fork.c \
-	scalar_nocancel.c scalar_vfork.c
+SOURCES = aio.c aligned_alloc.c bug437790.c deep_badparam.c env.c \
+	ioctl-tiocsbrk.c mkfifo.c pth-supp.c pth-undocumented.c \
+	scalar.c scalar_fork.c scalar_nocancel.c scalar_vfork.c
+DIST_SOURCES = aio.c aligned_alloc.c bug437790.c deep_badparam.c env.c \
+	ioctl-tiocsbrk.c mkfifo.c pth-supp.c pth-undocumented.c \
+	scalar.c scalar_fork.c scalar_nocancel.c scalar_vfork.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -277,6 +285,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -294,6 +303,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -308,16 +318,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -368,6 +397,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -378,10 +408,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -536,16 +568,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -556,6 +584,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -572,7 +603,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -632,6 +663,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -664,6 +696,8 @@ dist_noinst_SCRIPTS = filter_stderr
 noinst_HEADERS = scalar.h
 EXTRA_DIST = \
 	aio.stderr.exp aio.vgtest \
+	aligned_alloc.stderr.exp aligned_alloc.vgtest \
+	bug437790.vgtest bug437790.stdout.exp bug437790.stderr.exp \
 	deep_badparam.stderr.exp deep_badparam.stdout.exp deep_badparam.vgtest \
 	env.stderr.exp env.vgtest \
 	ioctl-tiocsbrk.stderr.exp ioctl-tiocsbrk.vgtest \
@@ -717,6 +751,14 @@ aio$(EXEEXT): $(aio_OBJECTS) $(aio_DEPENDENCIES) $(EXTRA_aio_DEPENDENCIES)
 	@rm -f aio$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(aio_OBJECTS) $(aio_LDADD) $(LIBS)
 
+aligned_alloc$(EXEEXT): $(aligned_alloc_OBJECTS) $(aligned_alloc_DEPENDENCIES) $(EXTRA_aligned_alloc_DEPENDENCIES) 
+	@rm -f aligned_alloc$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(aligned_alloc_OBJECTS) $(aligned_alloc_LDADD) $(LIBS)
+
+bug437790$(EXEEXT): $(bug437790_OBJECTS) $(bug437790_DEPENDENCIES) $(EXTRA_bug437790_DEPENDENCIES) 
+	@rm -f bug437790$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bug437790_OBJECTS) $(bug437790_LDADD) $(LIBS)
+
 deep_badparam$(EXEEXT): $(deep_badparam_OBJECTS) $(deep_badparam_DEPENDENCIES) $(EXTRA_deep_badparam_DEPENDENCIES) 
 	@rm -f deep_badparam$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(deep_badparam_OBJECTS) $(deep_badparam_LDADD) $(LIBS)
@@ -764,6 +806,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aio.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aligned_alloc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug437790.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/deep_badparam.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/env.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ioctl-tiocsbrk.Po@am__quote@ # am--include-marker
@@ -923,6 +967,8 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/aio.Po
+	-rm -f ./$(DEPDIR)/aligned_alloc.Po
+	-rm -f ./$(DEPDIR)/bug437790.Po
 	-rm -f ./$(DEPDIR)/deep_badparam.Po
 	-rm -f ./$(DEPDIR)/env.Po
 	-rm -f ./$(DEPDIR)/ioctl-tiocsbrk.Po
@@ -979,6 +1025,8 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/aio.Po
+	-rm -f ./$(DEPDIR)/aligned_alloc.Po
+	-rm -f ./$(DEPDIR)/bug437790.Po
 	-rm -f ./$(DEPDIR)/deep_badparam.Po
 	-rm -f ./$(DEPDIR)/env.Po
 	-rm -f ./$(DEPDIR)/ioctl-tiocsbrk.Po

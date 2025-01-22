@@ -124,13 +124,18 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	-Wno-uninitialized -Wno-unused-value # \
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
-check_PROGRAMS = allexec$(EXEEXT) cvtf_imm$(EXEEXT) \
-	fp_and_simd$(EXEEXT) integer$(EXEEXT) memory$(EXEEXT) \
+check_PROGRAMS = allexec$(EXEEXT) bug484426$(EXEEXT) \
+	bug489338$(EXEEXT) cvtf_imm$(EXEEXT) dc_cvax$(EXEEXT) \
+	fp_and_simd$(EXEEXT) integer$(EXEEXT) memory_test$(EXEEXT) \
 	fmadd_sub$(EXEEXT) ldxp_stxp$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2) $(am__EXEEXT_3)
+	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
+	$(am__EXEEXT_5) $(am__EXEEXT_6)
 @BUILD_ARMV8_CRC_TESTS_TRUE@am__append_12 = crc32
 @BUILD_ARMV81_TESTS_TRUE@am__append_13 = atomics_v81 simd_v81
 @BUILD_ARMV82_TESTS_TRUE@am__append_14 = fp_and_simd_v82
+@HAVE_SHA3_TRUE@am__append_15 = sha512_v82
+@HAVE_CXX17_TRUE@am__append_16 = fcvta_s_u frinta_frintn
+@BUILD_ARMV82_DOTPROD_TESTS_TRUE@am__append_17 = simd_dotprod
 subdir = none/tests/arm64
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -146,6 +151,10 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_ARMV81_TESTS_TRUE@am__EXEEXT_2 = atomics_v81$(EXEEXT) \
 @BUILD_ARMV81_TESTS_TRUE@	simd_v81$(EXEEXT)
 @BUILD_ARMV82_TESTS_TRUE@am__EXEEXT_3 = fp_and_simd_v82$(EXEEXT)
+@HAVE_SHA3_TRUE@am__EXEEXT_4 = sha512_v82$(EXEEXT)
+@HAVE_CXX17_TRUE@am__EXEEXT_5 = fcvta_s_u$(EXEEXT) \
+@HAVE_CXX17_TRUE@	frinta_frintn$(EXEEXT)
+@BUILD_ARMV82_DOTPROD_TESTS_TRUE@am__EXEEXT_6 = simd_dotprod$(EXEEXT)
 allexec_SOURCES = allexec.c
 allexec_OBJECTS = allexec-allexec.$(OBJEXT)
 allexec_LDADD = $(LDADD)
@@ -156,6 +165,14 @@ atomics_v81_OBJECTS = atomics_v81-atomics_v81.$(OBJEXT)
 atomics_v81_LDADD = $(LDADD)
 atomics_v81_LINK = $(CCLD) $(atomics_v81_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_bug484426_OBJECTS = bug484426-bug484426.$(OBJEXT)
+bug484426_OBJECTS = $(am_bug484426_OBJECTS)
+bug484426_LDADD = $(LDADD)
+bug484426_LINK = $(CXXLD) $(bug484426_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+bug489338_SOURCES = bug489338.c
+bug489338_OBJECTS = bug489338.$(OBJEXT)
+bug489338_DEPENDENCIES =
 crc32_SOURCES = crc32.c
 crc32_OBJECTS = crc32-crc32.$(OBJEXT)
 crc32_LDADD = $(LDADD)
@@ -164,18 +181,34 @@ crc32_LINK = $(CCLD) $(crc32_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 cvtf_imm_SOURCES = cvtf_imm.c
 cvtf_imm_OBJECTS = cvtf_imm.$(OBJEXT)
 cvtf_imm_LDADD = $(LDADD)
+dc_cvax_SOURCES = dc_cvax.c
+dc_cvax_OBJECTS = dc_cvax.$(OBJEXT)
+dc_cvax_LDADD = $(LDADD)
+am_fcvta_s_u_OBJECTS = fcvta_s_u-fcvta_s_u.$(OBJEXT)
+fcvta_s_u_OBJECTS = $(am_fcvta_s_u_OBJECTS)
+fcvta_s_u_LDADD = $(LDADD)
+fcvta_s_u_LINK = $(CXXLD) $(fcvta_s_u_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 fmadd_sub_SOURCES = fmadd_sub.c
 fmadd_sub_OBJECTS = fmadd_sub.$(OBJEXT)
 fmadd_sub_LDADD = $(LDADD)
-fp_and_simd_SOURCES = fp_and_simd.c
-fp_and_simd_OBJECTS = fp_and_simd-fp_and_simd.$(OBJEXT)
+am_fp_and_simd_OBJECTS = fp_and_simd-fp_and_simd.$(OBJEXT) \
+	fp_and_simd-simd.$(OBJEXT)
+fp_and_simd_OBJECTS = $(am_fp_and_simd_OBJECTS)
 fp_and_simd_DEPENDENCIES =
 fp_and_simd_LINK = $(CCLD) $(fp_and_simd_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-fp_and_simd_v82_SOURCES = fp_and_simd_v82.c
-fp_and_simd_v82_OBJECTS = fp_and_simd_v82-fp_and_simd_v82.$(OBJEXT)
+am_fp_and_simd_v82_OBJECTS =  \
+	fp_and_simd_v82-fp_and_simd_v82.$(OBJEXT) \
+	fp_and_simd_v82-simd.$(OBJEXT)
+fp_and_simd_v82_OBJECTS = $(am_fp_and_simd_v82_OBJECTS)
 fp_and_simd_v82_DEPENDENCIES =
 fp_and_simd_v82_LINK = $(CCLD) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_frinta_frintn_OBJECTS = frinta_frintn-frinta_frintn.$(OBJEXT)
+frinta_frintn_OBJECTS = $(am_frinta_frintn_OBJECTS)
+frinta_frintn_LDADD = $(LDADD)
+frinta_frintn_LINK = $(CXXLD) $(frinta_frintn_CXXFLAGS) $(CXXFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 integer_SOURCES = integer.c
 integer_OBJECTS = integer-integer.$(OBJEXT)
@@ -185,9 +218,20 @@ integer_LINK = $(CCLD) $(integer_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 ldxp_stxp_SOURCES = ldxp_stxp.c
 ldxp_stxp_OBJECTS = ldxp_stxp.$(OBJEXT)
 ldxp_stxp_LDADD = $(LDADD)
-memory_SOURCES = memory.c
-memory_OBJECTS = memory.$(OBJEXT)
-memory_LDADD = $(LDADD)
+memory_test_SOURCES = memory_test.c
+memory_test_OBJECTS = memory_test.$(OBJEXT)
+memory_test_LDADD = $(LDADD)
+am_sha512_v82_OBJECTS = sha512_v82-sha512_v82.$(OBJEXT) \
+	sha512_v82-simd.$(OBJEXT)
+sha512_v82_OBJECTS = $(am_sha512_v82_OBJECTS)
+sha512_v82_DEPENDENCIES =
+sha512_v82_LINK = $(CCLD) $(sha512_v82_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+simd_dotprod_SOURCES = simd_dotprod.c
+simd_dotprod_OBJECTS = simd_dotprod-simd_dotprod.$(OBJEXT)
+simd_dotprod_LDADD = $(LDADD)
+simd_dotprod_LINK = $(CCLD) $(simd_dotprod_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 simd_v81_SOURCES = simd_v81.c
 simd_v81_OBJECTS = simd_v81-simd_v81.$(OBJEXT)
 simd_v81_DEPENDENCIES =
@@ -211,12 +255,21 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/allexec-allexec.Po \
 	./$(DEPDIR)/atomics_v81-atomics_v81.Po \
+	./$(DEPDIR)/bug484426-bug484426.Po ./$(DEPDIR)/bug489338.Po \
 	./$(DEPDIR)/crc32-crc32.Po ./$(DEPDIR)/cvtf_imm.Po \
+	./$(DEPDIR)/dc_cvax.Po ./$(DEPDIR)/fcvta_s_u-fcvta_s_u.Po \
 	./$(DEPDIR)/fmadd_sub.Po \
 	./$(DEPDIR)/fp_and_simd-fp_and_simd.Po \
+	./$(DEPDIR)/fp_and_simd-simd.Po \
 	./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po \
+	./$(DEPDIR)/fp_and_simd_v82-simd.Po \
+	./$(DEPDIR)/frinta_frintn-frinta_frintn.Po \
 	./$(DEPDIR)/integer-integer.Po ./$(DEPDIR)/ldxp_stxp.Po \
-	./$(DEPDIR)/memory.Po ./$(DEPDIR)/simd_v81-simd_v81.Po
+	./$(DEPDIR)/memory_test.Po \
+	./$(DEPDIR)/sha512_v82-sha512_v82.Po \
+	./$(DEPDIR)/sha512_v82-simd.Po \
+	./$(DEPDIR)/simd_dotprod-simd_dotprod.Po \
+	./$(DEPDIR)/simd_v81-simd_v81.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -234,12 +287,29 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = allexec.c atomics_v81.c crc32.c cvtf_imm.c fmadd_sub.c \
-	fp_and_simd.c fp_and_simd_v82.c integer.c ldxp_stxp.c memory.c \
-	simd_v81.c
-DIST_SOURCES = allexec.c atomics_v81.c crc32.c cvtf_imm.c fmadd_sub.c \
-	fp_and_simd.c fp_and_simd_v82.c integer.c ldxp_stxp.c memory.c \
-	simd_v81.c
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
+SOURCES = allexec.c atomics_v81.c $(bug484426_SOURCES) bug489338.c \
+	crc32.c cvtf_imm.c dc_cvax.c $(fcvta_s_u_SOURCES) fmadd_sub.c \
+	$(fp_and_simd_SOURCES) $(fp_and_simd_v82_SOURCES) \
+	$(frinta_frintn_SOURCES) integer.c ldxp_stxp.c memory_test.c \
+	$(sha512_v82_SOURCES) simd_dotprod.c simd_v81.c
+DIST_SOURCES = allexec.c atomics_v81.c $(bug484426_SOURCES) \
+	bug489338.c crc32.c cvtf_imm.c dc_cvax.c $(fcvta_s_u_SOURCES) \
+	fmadd_sub.c $(fp_and_simd_SOURCES) $(fp_and_simd_v82_SOURCES) \
+	$(frinta_frintn_SOURCES) integer.c ldxp_stxp.c memory_test.c \
+	$(sha512_v82_SOURCES) simd_dotprod.c simd_v81.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -301,6 +371,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -318,6 +389,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -332,16 +404,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -392,6 +483,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -402,10 +494,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -560,16 +654,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -580,6 +670,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -596,7 +689,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -656,6 +749,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -683,37 +777,60 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS) @FLAG_M64@
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_stderr
+dist_noinst_SCRIPTS = filter_stderr filter_nan
 EXTRA_DIST = \
-        crc32.stdout.exp crc32.stderr.exp crc32.vgtest \
-        cvtf_imm.stdout.exp cvtf_imm.stderr.exp cvtf_imm.vgtest \
+	bug484426.stdout.exp bug484426.stderr.exp bug484426.vgtest \
+	bug489338.stdout.exp bug489338.stderr.exp bug489338.vgtest \
+	crc32.stdout.exp crc32.stderr.exp crc32.vgtest \
+	cvtf_imm.stdout.exp cvtf_imm.stderr.exp cvtf_imm.vgtest \
+	dc_cvax.vgtest dc_cvax.stderr.exp \
+	fcvta_s_u.vgtest fcvta_s_u.stderr.exp \
 	fp_and_simd.stdout.exp fp_and_simd.stderr.exp fp_and_simd.vgtest \
+	frinta_frintn.stderr.exp frinta_frintn.vgtest \
 	integer.stdout.exp integer.stderr.exp integer.vgtest \
-	memory.stdout.exp memory.stderr.exp memory.vgtest \
+	memory_test.stdout.exp memory_test.stderr.exp memory_test.vgtest \
+		memory_test.stdout.exp-clang \
 	atomics_v81.stdout.exp atomics_v81.stderr.exp atomics_v81.vgtest \
 	simd_v81.stdout.exp simd_v81.stderr.exp simd_v81.vgtest \
-        fmadd_sub.stdout.exp fmadd_sub.stderr.exp fmadd_sub.vgtest \
+	simd_dotprod.stdout.exp simd_dotprod.stderr.exp simd_dotprod.vgtest \
+	fmadd_sub.stdout.exp fmadd_sub.stderr.exp fmadd_sub.vgtest \
 	fp_and_simd_v82.stdout.exp fp_and_simd_v82.stderr.exp \
 	fp_and_simd_v82.vgtest \
 	ldxp_stxp_basisimpl.stdout.exp ldxp_stxp_basisimpl.stderr.exp \
 	ldxp_stxp_basisimpl.vgtest \
 	ldxp_stxp_fallbackimpl.stdout.exp ldxp_stxp_fallbackimpl.stderr.exp \
-	ldxp_stxp_fallbackimpl.vgtest
+	ldxp_stxp_fallbackimpl.vgtest sha512_v82.stdout.exp sha512_v82.stderr.exp \
+	sha512_v82.vgtest
 
 allexec_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
+bug484426_SOURCES = bug484426.cpp
+bug484426_CXXFLAGS = ${AM_CXXFLAGS} -std=c++11
 crc32_CFLAGS = $(AM_CFLAGS) -march=armv8-a+crc
 atomics_v81_CFLAGS = $(AM_CFLAGS) -march=armv8.1-a
 simd_v81_CFLAGS = $(AM_CFLAGS) -march=armv8.1-a+crypto
+simd_dotprod_CFLAGS = $(AM_CFLAGS) -march=armv8.2-a+dotprod
 fp_and_simd_CFLAGS = $(AM_CFLAGS) -march=armv8-a+crypto
 fp_and_simd_v82_CFLAGS = $(AM_CFLAGS) -march=armv8.2-a+fp16+crypto
+# SHA-512 is not part of SHA-3, either as an algorithm or in Arm features, but
+# GCC lumps SHA-512 and SHA-3 extensions together as "sha3".
+sha512_v82_CFLAGS = $(AM_CFLAGS) -march=armv8.2-a+sha3
+fcvta_s_u_SOURCES = fcvta_s_u.cpp
+fcvta_s_u_CXXFLAGS = ${AM_CXXFLAGS} -std=c++17
+frinta_frintn_SOURCES = frinta_frintn.cpp
+frinta_frintn_CXXFLAGS = ${AM_CXXFLAGS} -std=c++17
 integer_CFLAGS = $(AM_CFLAGS) -g -O0 -DTEST_BFM=0
+fp_and_simd_SOURCES = fp_and_simd.c simd.h simd.c
+fp_and_simd_v82_SOURCES = fp_and_simd_v82.c simd.h simd.c
+sha512_v82_SOURCES = sha512_v82.c simd.h simd.c
+bug489338_LDADD = -lm
 fp_and_simd_LDADD = -lm
 simd_v81_LDADD = -lm
 fp_and_simd_v82_LDADD = -lm
+sha512_v82_LDADD = -lm
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .cpp .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.tool-tests.am $(top_srcdir)/Makefile.all.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -756,6 +873,14 @@ atomics_v81$(EXEEXT): $(atomics_v81_OBJECTS) $(atomics_v81_DEPENDENCIES) $(EXTRA
 	@rm -f atomics_v81$(EXEEXT)
 	$(AM_V_CCLD)$(atomics_v81_LINK) $(atomics_v81_OBJECTS) $(atomics_v81_LDADD) $(LIBS)
 
+bug484426$(EXEEXT): $(bug484426_OBJECTS) $(bug484426_DEPENDENCIES) $(EXTRA_bug484426_DEPENDENCIES) 
+	@rm -f bug484426$(EXEEXT)
+	$(AM_V_CXXLD)$(bug484426_LINK) $(bug484426_OBJECTS) $(bug484426_LDADD) $(LIBS)
+
+bug489338$(EXEEXT): $(bug489338_OBJECTS) $(bug489338_DEPENDENCIES) $(EXTRA_bug489338_DEPENDENCIES) 
+	@rm -f bug489338$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bug489338_OBJECTS) $(bug489338_LDADD) $(LIBS)
+
 crc32$(EXEEXT): $(crc32_OBJECTS) $(crc32_DEPENDENCIES) $(EXTRA_crc32_DEPENDENCIES) 
 	@rm -f crc32$(EXEEXT)
 	$(AM_V_CCLD)$(crc32_LINK) $(crc32_OBJECTS) $(crc32_LDADD) $(LIBS)
@@ -763,6 +888,14 @@ crc32$(EXEEXT): $(crc32_OBJECTS) $(crc32_DEPENDENCIES) $(EXTRA_crc32_DEPENDENCIE
 cvtf_imm$(EXEEXT): $(cvtf_imm_OBJECTS) $(cvtf_imm_DEPENDENCIES) $(EXTRA_cvtf_imm_DEPENDENCIES) 
 	@rm -f cvtf_imm$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(cvtf_imm_OBJECTS) $(cvtf_imm_LDADD) $(LIBS)
+
+dc_cvax$(EXEEXT): $(dc_cvax_OBJECTS) $(dc_cvax_DEPENDENCIES) $(EXTRA_dc_cvax_DEPENDENCIES) 
+	@rm -f dc_cvax$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(dc_cvax_OBJECTS) $(dc_cvax_LDADD) $(LIBS)
+
+fcvta_s_u$(EXEEXT): $(fcvta_s_u_OBJECTS) $(fcvta_s_u_DEPENDENCIES) $(EXTRA_fcvta_s_u_DEPENDENCIES) 
+	@rm -f fcvta_s_u$(EXEEXT)
+	$(AM_V_CXXLD)$(fcvta_s_u_LINK) $(fcvta_s_u_OBJECTS) $(fcvta_s_u_LDADD) $(LIBS)
 
 fmadd_sub$(EXEEXT): $(fmadd_sub_OBJECTS) $(fmadd_sub_DEPENDENCIES) $(EXTRA_fmadd_sub_DEPENDENCIES) 
 	@rm -f fmadd_sub$(EXEEXT)
@@ -776,6 +909,10 @@ fp_and_simd_v82$(EXEEXT): $(fp_and_simd_v82_OBJECTS) $(fp_and_simd_v82_DEPENDENC
 	@rm -f fp_and_simd_v82$(EXEEXT)
 	$(AM_V_CCLD)$(fp_and_simd_v82_LINK) $(fp_and_simd_v82_OBJECTS) $(fp_and_simd_v82_LDADD) $(LIBS)
 
+frinta_frintn$(EXEEXT): $(frinta_frintn_OBJECTS) $(frinta_frintn_DEPENDENCIES) $(EXTRA_frinta_frintn_DEPENDENCIES) 
+	@rm -f frinta_frintn$(EXEEXT)
+	$(AM_V_CXXLD)$(frinta_frintn_LINK) $(frinta_frintn_OBJECTS) $(frinta_frintn_LDADD) $(LIBS)
+
 integer$(EXEEXT): $(integer_OBJECTS) $(integer_DEPENDENCIES) $(EXTRA_integer_DEPENDENCIES) 
 	@rm -f integer$(EXEEXT)
 	$(AM_V_CCLD)$(integer_LINK) $(integer_OBJECTS) $(integer_LDADD) $(LIBS)
@@ -784,9 +921,17 @@ ldxp_stxp$(EXEEXT): $(ldxp_stxp_OBJECTS) $(ldxp_stxp_DEPENDENCIES) $(EXTRA_ldxp_
 	@rm -f ldxp_stxp$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ldxp_stxp_OBJECTS) $(ldxp_stxp_LDADD) $(LIBS)
 
-memory$(EXEEXT): $(memory_OBJECTS) $(memory_DEPENDENCIES) $(EXTRA_memory_DEPENDENCIES) 
-	@rm -f memory$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(memory_OBJECTS) $(memory_LDADD) $(LIBS)
+memory_test$(EXEEXT): $(memory_test_OBJECTS) $(memory_test_DEPENDENCIES) $(EXTRA_memory_test_DEPENDENCIES) 
+	@rm -f memory_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(memory_test_OBJECTS) $(memory_test_LDADD) $(LIBS)
+
+sha512_v82$(EXEEXT): $(sha512_v82_OBJECTS) $(sha512_v82_DEPENDENCIES) $(EXTRA_sha512_v82_DEPENDENCIES) 
+	@rm -f sha512_v82$(EXEEXT)
+	$(AM_V_CCLD)$(sha512_v82_LINK) $(sha512_v82_OBJECTS) $(sha512_v82_LDADD) $(LIBS)
+
+simd_dotprod$(EXEEXT): $(simd_dotprod_OBJECTS) $(simd_dotprod_DEPENDENCIES) $(EXTRA_simd_dotprod_DEPENDENCIES) 
+	@rm -f simd_dotprod$(EXEEXT)
+	$(AM_V_CCLD)$(simd_dotprod_LINK) $(simd_dotprod_OBJECTS) $(simd_dotprod_LDADD) $(LIBS)
 
 simd_v81$(EXEEXT): $(simd_v81_OBJECTS) $(simd_v81_DEPENDENCIES) $(EXTRA_simd_v81_DEPENDENCIES) 
 	@rm -f simd_v81$(EXEEXT)
@@ -800,14 +945,24 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allexec-allexec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atomics_v81-atomics_v81.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug484426-bug484426.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug489338.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crc32-crc32.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cvtf_imm.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dc_cvax.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcvta_s_u-fcvta_s_u.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fmadd_sub.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fp_and_simd-fp_and_simd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fp_and_simd-simd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fp_and_simd_v82-simd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frinta_frintn-frinta_frintn.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/integer-integer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldxp_stxp.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memory.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memory_test.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha512_v82-sha512_v82.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha512_v82-simd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simd_dotprod-simd_dotprod.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simd_v81-simd_v81.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -888,6 +1043,20 @@ fp_and_simd-fp_and_simd.obj: fp_and_simd.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_CFLAGS) $(CFLAGS) -c -o fp_and_simd-fp_and_simd.obj `if test -f 'fp_and_simd.c'; then $(CYGPATH_W) 'fp_and_simd.c'; else $(CYGPATH_W) '$(srcdir)/fp_and_simd.c'; fi`
 
+fp_and_simd-simd.o: simd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_CFLAGS) $(CFLAGS) -MT fp_and_simd-simd.o -MD -MP -MF $(DEPDIR)/fp_and_simd-simd.Tpo -c -o fp_and_simd-simd.o `test -f 'simd.c' || echo '$(srcdir)/'`simd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fp_and_simd-simd.Tpo $(DEPDIR)/fp_and_simd-simd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd.c' object='fp_and_simd-simd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_CFLAGS) $(CFLAGS) -c -o fp_and_simd-simd.o `test -f 'simd.c' || echo '$(srcdir)/'`simd.c
+
+fp_and_simd-simd.obj: simd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_CFLAGS) $(CFLAGS) -MT fp_and_simd-simd.obj -MD -MP -MF $(DEPDIR)/fp_and_simd-simd.Tpo -c -o fp_and_simd-simd.obj `if test -f 'simd.c'; then $(CYGPATH_W) 'simd.c'; else $(CYGPATH_W) '$(srcdir)/simd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fp_and_simd-simd.Tpo $(DEPDIR)/fp_and_simd-simd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd.c' object='fp_and_simd-simd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_CFLAGS) $(CFLAGS) -c -o fp_and_simd-simd.obj `if test -f 'simd.c'; then $(CYGPATH_W) 'simd.c'; else $(CYGPATH_W) '$(srcdir)/simd.c'; fi`
+
 fp_and_simd_v82-fp_and_simd_v82.o: fp_and_simd_v82.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) -MT fp_and_simd_v82-fp_and_simd_v82.o -MD -MP -MF $(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Tpo -c -o fp_and_simd_v82-fp_and_simd_v82.o `test -f 'fp_and_simd_v82.c' || echo '$(srcdir)/'`fp_and_simd_v82.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Tpo $(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po
@@ -901,6 +1070,20 @@ fp_and_simd_v82-fp_and_simd_v82.obj: fp_and_simd_v82.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fp_and_simd_v82.c' object='fp_and_simd_v82-fp_and_simd_v82.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) -c -o fp_and_simd_v82-fp_and_simd_v82.obj `if test -f 'fp_and_simd_v82.c'; then $(CYGPATH_W) 'fp_and_simd_v82.c'; else $(CYGPATH_W) '$(srcdir)/fp_and_simd_v82.c'; fi`
+
+fp_and_simd_v82-simd.o: simd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) -MT fp_and_simd_v82-simd.o -MD -MP -MF $(DEPDIR)/fp_and_simd_v82-simd.Tpo -c -o fp_and_simd_v82-simd.o `test -f 'simd.c' || echo '$(srcdir)/'`simd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fp_and_simd_v82-simd.Tpo $(DEPDIR)/fp_and_simd_v82-simd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd.c' object='fp_and_simd_v82-simd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) -c -o fp_and_simd_v82-simd.o `test -f 'simd.c' || echo '$(srcdir)/'`simd.c
+
+fp_and_simd_v82-simd.obj: simd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) -MT fp_and_simd_v82-simd.obj -MD -MP -MF $(DEPDIR)/fp_and_simd_v82-simd.Tpo -c -o fp_and_simd_v82-simd.obj `if test -f 'simd.c'; then $(CYGPATH_W) 'simd.c'; else $(CYGPATH_W) '$(srcdir)/simd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fp_and_simd_v82-simd.Tpo $(DEPDIR)/fp_and_simd_v82-simd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd.c' object='fp_and_simd_v82-simd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fp_and_simd_v82_CFLAGS) $(CFLAGS) -c -o fp_and_simd_v82-simd.obj `if test -f 'simd.c'; then $(CYGPATH_W) 'simd.c'; else $(CYGPATH_W) '$(srcdir)/simd.c'; fi`
 
 integer-integer.o: integer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(integer_CFLAGS) $(CFLAGS) -MT integer-integer.o -MD -MP -MF $(DEPDIR)/integer-integer.Tpo -c -o integer-integer.o `test -f 'integer.c' || echo '$(srcdir)/'`integer.c
@@ -916,6 +1099,48 @@ integer-integer.obj: integer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(integer_CFLAGS) $(CFLAGS) -c -o integer-integer.obj `if test -f 'integer.c'; then $(CYGPATH_W) 'integer.c'; else $(CYGPATH_W) '$(srcdir)/integer.c'; fi`
 
+sha512_v82-sha512_v82.o: sha512_v82.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -MT sha512_v82-sha512_v82.o -MD -MP -MF $(DEPDIR)/sha512_v82-sha512_v82.Tpo -c -o sha512_v82-sha512_v82.o `test -f 'sha512_v82.c' || echo '$(srcdir)/'`sha512_v82.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sha512_v82-sha512_v82.Tpo $(DEPDIR)/sha512_v82-sha512_v82.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha512_v82.c' object='sha512_v82-sha512_v82.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -c -o sha512_v82-sha512_v82.o `test -f 'sha512_v82.c' || echo '$(srcdir)/'`sha512_v82.c
+
+sha512_v82-sha512_v82.obj: sha512_v82.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -MT sha512_v82-sha512_v82.obj -MD -MP -MF $(DEPDIR)/sha512_v82-sha512_v82.Tpo -c -o sha512_v82-sha512_v82.obj `if test -f 'sha512_v82.c'; then $(CYGPATH_W) 'sha512_v82.c'; else $(CYGPATH_W) '$(srcdir)/sha512_v82.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sha512_v82-sha512_v82.Tpo $(DEPDIR)/sha512_v82-sha512_v82.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sha512_v82.c' object='sha512_v82-sha512_v82.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -c -o sha512_v82-sha512_v82.obj `if test -f 'sha512_v82.c'; then $(CYGPATH_W) 'sha512_v82.c'; else $(CYGPATH_W) '$(srcdir)/sha512_v82.c'; fi`
+
+sha512_v82-simd.o: simd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -MT sha512_v82-simd.o -MD -MP -MF $(DEPDIR)/sha512_v82-simd.Tpo -c -o sha512_v82-simd.o `test -f 'simd.c' || echo '$(srcdir)/'`simd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sha512_v82-simd.Tpo $(DEPDIR)/sha512_v82-simd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd.c' object='sha512_v82-simd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -c -o sha512_v82-simd.o `test -f 'simd.c' || echo '$(srcdir)/'`simd.c
+
+sha512_v82-simd.obj: simd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -MT sha512_v82-simd.obj -MD -MP -MF $(DEPDIR)/sha512_v82-simd.Tpo -c -o sha512_v82-simd.obj `if test -f 'simd.c'; then $(CYGPATH_W) 'simd.c'; else $(CYGPATH_W) '$(srcdir)/simd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sha512_v82-simd.Tpo $(DEPDIR)/sha512_v82-simd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd.c' object='sha512_v82-simd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sha512_v82_CFLAGS) $(CFLAGS) -c -o sha512_v82-simd.obj `if test -f 'simd.c'; then $(CYGPATH_W) 'simd.c'; else $(CYGPATH_W) '$(srcdir)/simd.c'; fi`
+
+simd_dotprod-simd_dotprod.o: simd_dotprod.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simd_dotprod_CFLAGS) $(CFLAGS) -MT simd_dotprod-simd_dotprod.o -MD -MP -MF $(DEPDIR)/simd_dotprod-simd_dotprod.Tpo -c -o simd_dotprod-simd_dotprod.o `test -f 'simd_dotprod.c' || echo '$(srcdir)/'`simd_dotprod.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/simd_dotprod-simd_dotprod.Tpo $(DEPDIR)/simd_dotprod-simd_dotprod.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd_dotprod.c' object='simd_dotprod-simd_dotprod.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simd_dotprod_CFLAGS) $(CFLAGS) -c -o simd_dotprod-simd_dotprod.o `test -f 'simd_dotprod.c' || echo '$(srcdir)/'`simd_dotprod.c
+
+simd_dotprod-simd_dotprod.obj: simd_dotprod.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simd_dotprod_CFLAGS) $(CFLAGS) -MT simd_dotprod-simd_dotprod.obj -MD -MP -MF $(DEPDIR)/simd_dotprod-simd_dotprod.Tpo -c -o simd_dotprod-simd_dotprod.obj `if test -f 'simd_dotprod.c'; then $(CYGPATH_W) 'simd_dotprod.c'; else $(CYGPATH_W) '$(srcdir)/simd_dotprod.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/simd_dotprod-simd_dotprod.Tpo $(DEPDIR)/simd_dotprod-simd_dotprod.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd_dotprod.c' object='simd_dotprod-simd_dotprod.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simd_dotprod_CFLAGS) $(CFLAGS) -c -o simd_dotprod-simd_dotprod.obj `if test -f 'simd_dotprod.c'; then $(CYGPATH_W) 'simd_dotprod.c'; else $(CYGPATH_W) '$(srcdir)/simd_dotprod.c'; fi`
+
 simd_v81-simd_v81.o: simd_v81.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simd_v81_CFLAGS) $(CFLAGS) -MT simd_v81-simd_v81.o -MD -MP -MF $(DEPDIR)/simd_v81-simd_v81.Tpo -c -o simd_v81-simd_v81.o `test -f 'simd_v81.c' || echo '$(srcdir)/'`simd_v81.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/simd_v81-simd_v81.Tpo $(DEPDIR)/simd_v81-simd_v81.Po
@@ -929,6 +1154,64 @@ simd_v81-simd_v81.obj: simd_v81.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simd_v81.c' object='simd_v81-simd_v81.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simd_v81_CFLAGS) $(CFLAGS) -c -o simd_v81-simd_v81.obj `if test -f 'simd_v81.c'; then $(CYGPATH_W) 'simd_v81.c'; else $(CYGPATH_W) '$(srcdir)/simd_v81.c'; fi`
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+bug484426-bug484426.o: bug484426.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug484426_CXXFLAGS) $(CXXFLAGS) -MT bug484426-bug484426.o -MD -MP -MF $(DEPDIR)/bug484426-bug484426.Tpo -c -o bug484426-bug484426.o `test -f 'bug484426.cpp' || echo '$(srcdir)/'`bug484426.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug484426-bug484426.Tpo $(DEPDIR)/bug484426-bug484426.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug484426.cpp' object='bug484426-bug484426.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug484426_CXXFLAGS) $(CXXFLAGS) -c -o bug484426-bug484426.o `test -f 'bug484426.cpp' || echo '$(srcdir)/'`bug484426.cpp
+
+bug484426-bug484426.obj: bug484426.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug484426_CXXFLAGS) $(CXXFLAGS) -MT bug484426-bug484426.obj -MD -MP -MF $(DEPDIR)/bug484426-bug484426.Tpo -c -o bug484426-bug484426.obj `if test -f 'bug484426.cpp'; then $(CYGPATH_W) 'bug484426.cpp'; else $(CYGPATH_W) '$(srcdir)/bug484426.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug484426-bug484426.Tpo $(DEPDIR)/bug484426-bug484426.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug484426.cpp' object='bug484426-bug484426.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug484426_CXXFLAGS) $(CXXFLAGS) -c -o bug484426-bug484426.obj `if test -f 'bug484426.cpp'; then $(CYGPATH_W) 'bug484426.cpp'; else $(CYGPATH_W) '$(srcdir)/bug484426.cpp'; fi`
+
+fcvta_s_u-fcvta_s_u.o: fcvta_s_u.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fcvta_s_u_CXXFLAGS) $(CXXFLAGS) -MT fcvta_s_u-fcvta_s_u.o -MD -MP -MF $(DEPDIR)/fcvta_s_u-fcvta_s_u.Tpo -c -o fcvta_s_u-fcvta_s_u.o `test -f 'fcvta_s_u.cpp' || echo '$(srcdir)/'`fcvta_s_u.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fcvta_s_u-fcvta_s_u.Tpo $(DEPDIR)/fcvta_s_u-fcvta_s_u.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='fcvta_s_u.cpp' object='fcvta_s_u-fcvta_s_u.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fcvta_s_u_CXXFLAGS) $(CXXFLAGS) -c -o fcvta_s_u-fcvta_s_u.o `test -f 'fcvta_s_u.cpp' || echo '$(srcdir)/'`fcvta_s_u.cpp
+
+fcvta_s_u-fcvta_s_u.obj: fcvta_s_u.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fcvta_s_u_CXXFLAGS) $(CXXFLAGS) -MT fcvta_s_u-fcvta_s_u.obj -MD -MP -MF $(DEPDIR)/fcvta_s_u-fcvta_s_u.Tpo -c -o fcvta_s_u-fcvta_s_u.obj `if test -f 'fcvta_s_u.cpp'; then $(CYGPATH_W) 'fcvta_s_u.cpp'; else $(CYGPATH_W) '$(srcdir)/fcvta_s_u.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fcvta_s_u-fcvta_s_u.Tpo $(DEPDIR)/fcvta_s_u-fcvta_s_u.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='fcvta_s_u.cpp' object='fcvta_s_u-fcvta_s_u.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fcvta_s_u_CXXFLAGS) $(CXXFLAGS) -c -o fcvta_s_u-fcvta_s_u.obj `if test -f 'fcvta_s_u.cpp'; then $(CYGPATH_W) 'fcvta_s_u.cpp'; else $(CYGPATH_W) '$(srcdir)/fcvta_s_u.cpp'; fi`
+
+frinta_frintn-frinta_frintn.o: frinta_frintn.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(frinta_frintn_CXXFLAGS) $(CXXFLAGS) -MT frinta_frintn-frinta_frintn.o -MD -MP -MF $(DEPDIR)/frinta_frintn-frinta_frintn.Tpo -c -o frinta_frintn-frinta_frintn.o `test -f 'frinta_frintn.cpp' || echo '$(srcdir)/'`frinta_frintn.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/frinta_frintn-frinta_frintn.Tpo $(DEPDIR)/frinta_frintn-frinta_frintn.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='frinta_frintn.cpp' object='frinta_frintn-frinta_frintn.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(frinta_frintn_CXXFLAGS) $(CXXFLAGS) -c -o frinta_frintn-frinta_frintn.o `test -f 'frinta_frintn.cpp' || echo '$(srcdir)/'`frinta_frintn.cpp
+
+frinta_frintn-frinta_frintn.obj: frinta_frintn.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(frinta_frintn_CXXFLAGS) $(CXXFLAGS) -MT frinta_frintn-frinta_frintn.obj -MD -MP -MF $(DEPDIR)/frinta_frintn-frinta_frintn.Tpo -c -o frinta_frintn-frinta_frintn.obj `if test -f 'frinta_frintn.cpp'; then $(CYGPATH_W) 'frinta_frintn.cpp'; else $(CYGPATH_W) '$(srcdir)/frinta_frintn.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/frinta_frintn-frinta_frintn.Tpo $(DEPDIR)/frinta_frintn-frinta_frintn.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='frinta_frintn.cpp' object='frinta_frintn-frinta_frintn.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(frinta_frintn_CXXFLAGS) $(CXXFLAGS) -c -o frinta_frintn-frinta_frintn.obj `if test -f 'frinta_frintn.cpp'; then $(CYGPATH_W) 'frinta_frintn.cpp'; else $(CYGPATH_W) '$(srcdir)/frinta_frintn.cpp'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1057,14 +1340,24 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/allexec-allexec.Po
 	-rm -f ./$(DEPDIR)/atomics_v81-atomics_v81.Po
+	-rm -f ./$(DEPDIR)/bug484426-bug484426.Po
+	-rm -f ./$(DEPDIR)/bug489338.Po
 	-rm -f ./$(DEPDIR)/crc32-crc32.Po
 	-rm -f ./$(DEPDIR)/cvtf_imm.Po
+	-rm -f ./$(DEPDIR)/dc_cvax.Po
+	-rm -f ./$(DEPDIR)/fcvta_s_u-fcvta_s_u.Po
 	-rm -f ./$(DEPDIR)/fmadd_sub.Po
 	-rm -f ./$(DEPDIR)/fp_and_simd-fp_and_simd.Po
+	-rm -f ./$(DEPDIR)/fp_and_simd-simd.Po
 	-rm -f ./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po
+	-rm -f ./$(DEPDIR)/fp_and_simd_v82-simd.Po
+	-rm -f ./$(DEPDIR)/frinta_frintn-frinta_frintn.Po
 	-rm -f ./$(DEPDIR)/integer-integer.Po
 	-rm -f ./$(DEPDIR)/ldxp_stxp.Po
-	-rm -f ./$(DEPDIR)/memory.Po
+	-rm -f ./$(DEPDIR)/memory_test.Po
+	-rm -f ./$(DEPDIR)/sha512_v82-sha512_v82.Po
+	-rm -f ./$(DEPDIR)/sha512_v82-simd.Po
+	-rm -f ./$(DEPDIR)/simd_dotprod-simd_dotprod.Po
 	-rm -f ./$(DEPDIR)/simd_v81-simd_v81.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -1113,14 +1406,24 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/allexec-allexec.Po
 	-rm -f ./$(DEPDIR)/atomics_v81-atomics_v81.Po
+	-rm -f ./$(DEPDIR)/bug484426-bug484426.Po
+	-rm -f ./$(DEPDIR)/bug489338.Po
 	-rm -f ./$(DEPDIR)/crc32-crc32.Po
 	-rm -f ./$(DEPDIR)/cvtf_imm.Po
+	-rm -f ./$(DEPDIR)/dc_cvax.Po
+	-rm -f ./$(DEPDIR)/fcvta_s_u-fcvta_s_u.Po
 	-rm -f ./$(DEPDIR)/fmadd_sub.Po
 	-rm -f ./$(DEPDIR)/fp_and_simd-fp_and_simd.Po
+	-rm -f ./$(DEPDIR)/fp_and_simd-simd.Po
 	-rm -f ./$(DEPDIR)/fp_and_simd_v82-fp_and_simd_v82.Po
+	-rm -f ./$(DEPDIR)/fp_and_simd_v82-simd.Po
+	-rm -f ./$(DEPDIR)/frinta_frintn-frinta_frintn.Po
 	-rm -f ./$(DEPDIR)/integer-integer.Po
 	-rm -f ./$(DEPDIR)/ldxp_stxp.Po
-	-rm -f ./$(DEPDIR)/memory.Po
+	-rm -f ./$(DEPDIR)/memory_test.Po
+	-rm -f ./$(DEPDIR)/sha512_v82-sha512_v82.Po
+	-rm -f ./$(DEPDIR)/sha512_v82-simd.Po
+	-rm -f ./$(DEPDIR)/simd_dotprod-simd_dotprod.Po
 	-rm -f ./$(DEPDIR)/simd_v81-simd_v81.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

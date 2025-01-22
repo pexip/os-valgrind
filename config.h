@@ -46,32 +46,17 @@
 /* configured to build with lto link time optimisation */
 /* #undef ENABLE_LTO */
 
-/* FREEBSD_VERS value for FreeBSD 10.x */
-/* #undef FREEBSD_10 */
-
-/* FREEBSD_VERS value for FreeBSD 11.x */
-/* #undef FREEBSD_11 */
-
-/* FREEBSD_VERS value for FreeBSD 12.0 to 12.1 */
-/* #undef FREEBSD_12 */
-
-/* FREEBSD_VERS value for FreeBSD 12.2 */
-/* #undef FREEBSD_12_2 */
-
-/* FREEBSD_VERS value for FreeBSD 13.0 */
-/* #undef FREEBSD_13_0 */
-
-/* FREEBSD_VERS value for FreeBSD 13.1+ */
-/* #undef FREEBSD_13_1 */
-
-/* FREEBSD_VERS value for FreeBSD 14.x */
-/* #undef FREEBSD_14 */
+/* Define to 1 if you have the new SYS___realpathat syscall. */
+/* #undef FREEBSD_KQUEUEX_SYSCALL */
 
 /* Define to 1 if you're using FreeBSD */
 /* #undef FREEBSD_LIBC */
 
-/* FreeBSD version */
-/* #undef FREEBSD_VERS */
+/* Define to 1 if you have the new SYS___realpathat syscall. */
+/* #undef FREEBSD_REALPATHAT_SYSCALL */
+
+/* Define to 1 if you have the new SYS_timer_fd_create syscall. */
+/* #undef FREEBSD_TIMERFD_SYSCALL */
 
 /* path to GDB */
 #define GDB_PATH "/usr/bin/gdb"
@@ -82,6 +67,9 @@
 
 /* Define to 1 if strlen() has been optimized heavily (amd64 glibc >= 2.10) */
 #define GLIBC_MANDATORY_STRLEN_REDIRECT 1
+
+/* Define to 1 if you have the `aligned_alloc' function. */
+#define HAVE_ALIGNED_ALLOC 1
 
 /* Define to 1 if you have the <asm/unistd.h> header file. */
 #define HAVE_ASM_UNISTD_H 1
@@ -121,6 +109,9 @@
 /* Define to 1 if you have the `CLOCK_MONOTONIC' constant. */
 #define HAVE_CLOCK_MONOTONIC 1
 
+/* Define to 1 if you have the `close_range' function. */
+#define HAVE_CLOSE_RANGE 1
+
 /* Define to 1 if you have the `copy_file_range' function. */
 #define HAVE_COPY_FILE_RANGE 1
 
@@ -148,8 +139,23 @@
 /* Define to 1 if you have the `eventfd_read' function. */
 #define HAVE_EVENTFD_READ 1
 
+/* Define to 1 if you have the `fdatasync' function. */
+#define HAVE_FDATASYNC 1
+
+/* Define to 1 if you have the `free_aligned_sized' function. */
+/* #undef HAVE_FREE_ALIGNED_SIZED */
+
+/* Define to 1 if you have the `getaddrinfo' function. */
+#define HAVE_GETADDRINFO 1
+
 /* Define to 1 if you have the `getpagesize' function. */
 #define HAVE_GETPAGESIZE 1
+
+/* Define to 1 if you have the `getrandom' function. */
+#define HAVE_GETRANDOM 1
+
+/* Define to 1 if you have GNU libc C17 aligned_alloc. */
+#define HAVE_GNU_LIBC_C17_ALIGNED_ALLOC 1
 
 /* Define to 1 if you have the `features.h' header. */
 #define HAVE_HEADER_FEATURES_H 1
@@ -198,6 +204,9 @@
 
 /* Define to 1 if you have the `mremap' function. */
 #define HAVE_MREMAP 1
+
+/* Define to 1 if you have the `pipe2' function. */
+#define HAVE_PIPE2 1
 
 /* Define to 1 if you have the `ppoll' function. */
 #define HAVE_PPOLL 1
@@ -278,8 +287,20 @@
 /* Define to 1 if you have the `readlinkat' function. */
 #define HAVE_READLINKAT 1
 
+/* Define to 1 if you have the `reallocarray' function. */
+#define HAVE_REALLOCARRAY 1
+
+/* Define to 1 if you have the `sbrk' function. */
+#define HAVE_SBRK 1
+
 /* Define to 1 if you have the `semtimedop' function. */
 #define HAVE_SEMTIMEDOP 1
+
+/* Define to 1 if you have the `sem_clockwait_np' function. */
+/* #undef HAVE_SEM_CLOCKWAIT_NP */
+
+/* Define to 1 if you have the `sem_timedwait' function. */
+#define HAVE_SEM_TIMEDWAIT 1
 
 /* Define to 1 if you have the `setcontext' function. */
 #define HAVE_SETCONTEXT 1
@@ -319,6 +340,12 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
+
+/* Define to 1 if you have the `strlcat' function. */
+#define HAVE_STRLCAT 1
+
+/* Define to 1 if you have the `strlcpy' function. */
+#define HAVE_STRLCPY 1
 
 /* Define to 1 if you have the `strndup' function. */
 #define HAVE_STRNDUP 1
@@ -401,6 +428,15 @@
 /* Define to 1 if you have the `utimensat' function. */
 #define HAVE_UTIMENSAT 1
 
+/* Define to 1 if you have the `wcpncpy' function. */
+#define HAVE_WCPNCPY 1
+
+/* Define to 1 if you have the `wcsncpy' function. */
+#define HAVE_WCSNCPY 1
+
+/* Define to 1 if you have the `wcsxfrm' function. */
+#define HAVE_WCSXFRM 1
+
 /* Define to 1 if you're using Musl libc */
 /* #undef MUSL_LIBC */
 
@@ -414,7 +450,7 @@
 #define PACKAGE_NAME "Valgrind"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Valgrind 3.20.0"
+#define PACKAGE_STRING "Valgrind 3.24.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "valgrind"
@@ -423,7 +459,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.20.0"
+#define PACKAGE_VERSION "3.24.0"
 
 /* Define to 1 if you have the `A_GETSTAT' and `A_SETSTAT' constants. */
 /* #undef SOLARIS_AUDITON_STAT */
@@ -536,7 +572,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "3.20.0"
+#define VERSION "3.24.0"
 
 /* Temporary files directory */
 #define VG_TMPDIR "/tmp"

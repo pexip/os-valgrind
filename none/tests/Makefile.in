@@ -162,15 +162,15 @@ check_PROGRAMS = args$(EXEEXT) async-sigs$(EXEEXT) bitfield1$(EXEEXT) \
 	fdleak_socketpair$(EXEEXT) floored$(EXEEXT) fork$(EXEEXT) \
 	fucomip$(EXEEXT) ioctl_moans$(EXEEXT) libvex_test$(EXEEXT) \
 	libvexmultiarch_test$(EXEEXT) manythreads$(EXEEXT) \
-	mmap_fcntl_bug$(EXEEXT) munmap_exe$(EXEEXT) \
-	map_unaligned$(EXEEXT) map_unmap$(EXEEXT) mq$(EXEEXT) \
-	nocwd$(EXEEXT) pending$(EXEEXT) procfs-cmdline-exe$(EXEEXT) \
-	pselect_alarm$(EXEEXT) pselect_sigmask_null$(EXEEXT) \
-	pth_atfork1$(EXEEXT) pth_blockedsig$(EXEEXT) \
-	pth_cancel1$(EXEEXT) pth_cancel2$(EXEEXT) \
-	pth_cvsimple$(EXEEXT) pth_empty$(EXEEXT) pth_exit$(EXEEXT) \
-	pth_exit2$(EXEEXT) pth_mutexspeed$(EXEEXT) pth_once$(EXEEXT) \
-	pth_rwlock$(EXEEXT) pth_self_kill$(EXEEXT) \
+	mmap_fcntl_bug$(EXEEXT) mmap_o_direct$(EXEEXT) \
+	munmap_exe$(EXEEXT) map_unaligned$(EXEEXT) map_unmap$(EXEEXT) \
+	mq$(EXEEXT) nocwd$(EXEEXT) pending$(EXEEXT) \
+	procfs-cmdline-exe$(EXEEXT) pselect_alarm$(EXEEXT) \
+	pselect_sigmask_null$(EXEEXT) pth_atfork1$(EXEEXT) \
+	pth_blockedsig$(EXEEXT) pth_cancel1$(EXEEXT) \
+	pth_cancel2$(EXEEXT) pth_cvsimple$(EXEEXT) pth_empty$(EXEEXT) \
+	pth_exit$(EXEEXT) pth_exit2$(EXEEXT) pth_mutexspeed$(EXEEXT) \
+	pth_once$(EXEEXT) pth_rwlock$(EXEEXT) pth_self_kill$(EXEEXT) \
 	pth_stackalign$(EXEEXT) pth_2sig$(EXEEXT) \
 	pth_term_signal$(EXEEXT) rcrl$(EXEEXT) readline1$(EXEEXT) \
 	require-text-symbol$(EXEEXT) res_search$(EXEEXT) \
@@ -182,23 +182,29 @@ check_PROGRAMS = args$(EXEEXT) async-sigs$(EXEEXT) bitfield1$(EXEEXT) \
 	syslog$(EXEEXT) system$(EXEEXT) thread-exits$(EXEEXT) \
 	threaded-fork$(EXEEXT) threadederrno$(EXEEXT) \
 	timestamp$(EXEEXT) tls$(EXEEXT) tls.so$(EXEEXT) \
-	tls2.so$(EXEEXT) unit_debuglog$(EXEEXT) \
-	valgrind_cpp_test$(EXEEXT) vgprintf$(EXEEXT) \
-	vgprintf_nvalgrind$(EXEEXT) coolo_sigaction$(EXEEXT) \
-	gxx304$(EXEEXT) process_vm_readv_writev$(EXEEXT) \
-	sigprocmask$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5)
-@HAVE_NESTED_FUNCTIONS_TRUE@am__append_33 = nestedfns
+	tls2.so$(EXEEXT) track-fds-exec-children$(EXEEXT) \
+	unit_debuglog$(EXEEXT) valgrind_cpp_test$(EXEEXT) \
+	vgprintf$(EXEEXT) vgprintf_nvalgrind$(EXEEXT) \
+	coolo_sigaction$(EXEEXT) gxx304$(EXEEXT) \
+	process_vm_readv_writev$(EXEEXT) sigprocmask$(EXEEXT) \
+	socket_close$(EXEEXT) file_dclose$(EXEEXT) fdbaduse$(EXEEXT) \
+	use_after_close$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
+	$(am__EXEEXT_6) $(am__EXEEXT_7) $(am__EXEEXT_8)
+@HAVE_STATIC_LIBC_TRUE@@VGCONF_OS_IS_LINUX_FALSE@am__append_33 = bug491394
+@HAVE_STATIC_LIBC_TRUE@@VGCONF_ARCHS_INCLUDE_AMD64_TRUE@@VGCONF_OS_IS_LINUX_TRUE@am__append_34 = bug491394
+@HAVE_CLOSE_RANGE_TRUE@am__append_35 = double_close_range
+@HAVE_NESTED_FUNCTIONS_TRUE@am__append_36 = nestedfns
 
 # This doesn't appear to be compilable on Darwin.
-@VGCONF_OS_IS_DARWIN_OR_FREEBSD_FALSE@am__append_34 = rlimit64_nofile
-@VGCONF_OS_IS_DARWIN_FALSE@am__append_35 = ppoll_alarm
+@VGCONF_OS_IS_DARWIN_OR_FREEBSD_FALSE@am__append_37 = rlimit64_nofile
+@VGCONF_OS_IS_DARWIN_FALSE@am__append_38 = ppoll_alarm
 
 # older (?) clang does not know -ansi
-@HAVE_ANSI_TRUE@am__append_36 = ansi
-@BUILD_IFUNC_TESTS_TRUE@am__append_37 = ifunc
-@VGCONF_OS_IS_SOLARIS_TRUE@am__append_38 = -U_REENTRANT
-@VGCONF_OS_IS_SOLARIS_TRUE@am__append_39 = -Du_int32_t=uint32_t
+@HAVE_ANSI_TRUE@am__append_39 = ansi
+@BUILD_IFUNC_TESTS_TRUE@am__append_40 = ifunc
+@VGCONF_OS_IS_SOLARIS_TRUE@am__append_41 = -U_REENTRANT
+@VGCONF_OS_IS_SOLARIS_TRUE@am__append_42 = -Du_int32_t=uint32_t
 subdir = none/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -210,11 +216,14 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@HAVE_NESTED_FUNCTIONS_TRUE@am__EXEEXT_1 = nestedfns$(EXEEXT)
-@VGCONF_OS_IS_DARWIN_OR_FREEBSD_FALSE@am__EXEEXT_2 = rlimit64_nofile$(EXEEXT)
-@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_3 = ppoll_alarm$(EXEEXT)
-@HAVE_ANSI_TRUE@am__EXEEXT_4 = ansi$(EXEEXT)
-@BUILD_IFUNC_TESTS_TRUE@am__EXEEXT_5 = ifunc$(EXEEXT)
+@HAVE_STATIC_LIBC_TRUE@@VGCONF_OS_IS_LINUX_FALSE@am__EXEEXT_1 = bug491394$(EXEEXT)
+@HAVE_STATIC_LIBC_TRUE@@VGCONF_ARCHS_INCLUDE_AMD64_TRUE@@VGCONF_OS_IS_LINUX_TRUE@am__EXEEXT_2 = bug491394$(EXEEXT)
+@HAVE_CLOSE_RANGE_TRUE@am__EXEEXT_3 = double_close_range$(EXEEXT)
+@HAVE_NESTED_FUNCTIONS_TRUE@am__EXEEXT_4 = nestedfns$(EXEEXT)
+@VGCONF_OS_IS_DARWIN_OR_FREEBSD_FALSE@am__EXEEXT_5 = rlimit64_nofile$(EXEEXT)
+@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_6 = ppoll_alarm$(EXEEXT)
+@HAVE_ANSI_TRUE@am__EXEEXT_7 = ansi$(EXEEXT)
+@BUILD_IFUNC_TESTS_TRUE@am__EXEEXT_8 = ifunc$(EXEEXT)
 ansi_SOURCES = ansi.c
 ansi_OBJECTS = ansi-ansi.$(OBJEXT)
 ansi_LDADD = $(LDADD)
@@ -235,6 +244,11 @@ bug129866_LDADD = $(LDADD)
 bug234814_SOURCES = bug234814.c
 bug234814_OBJECTS = bug234814.$(OBJEXT)
 bug234814_LDADD = $(LDADD)
+bug491394_SOURCES = bug491394.c
+bug491394_OBJECTS = bug491394-bug491394.$(OBJEXT)
+bug491394_DEPENDENCIES =
+bug491394_LINK = $(CCLD) $(bug491394_CFLAGS) $(CFLAGS) \
+	$(bug491394_LDFLAGS) $(LDFLAGS) -o $@
 closeall_SOURCES = closeall.c
 closeall_OBJECTS = closeall.$(OBJEXT)
 closeall_LDADD = $(LDADD)
@@ -247,6 +261,9 @@ coolo_strlen_LDADD = $(LDADD)
 discard_SOURCES = discard.c
 discard_OBJECTS = discard.$(OBJEXT)
 discard_LDADD = $(LDADD)
+double_close_range_SOURCES = double_close_range.c
+double_close_range_OBJECTS = double_close_range.$(OBJEXT)
+double_close_range_LDADD = $(LDADD)
 exec_sigmask_SOURCES = exec-sigmask.c
 exec_sigmask_OBJECTS = exec-sigmask.$(OBJEXT)
 exec_sigmask_LDADD = $(LDADD)
@@ -261,6 +278,9 @@ faultstatus_LDADD = $(LDADD)
 fcntl_setown_SOURCES = fcntl_setown.c
 fcntl_setown_OBJECTS = fcntl_setown.$(OBJEXT)
 fcntl_setown_DEPENDENCIES =
+fdbaduse_SOURCES = fdbaduse.c
+fdbaduse_OBJECTS = fdbaduse.$(OBJEXT)
+fdbaduse_LDADD = $(LDADD)
 fdleak_cmsg_SOURCES = fdleak_cmsg.c
 fdleak_cmsg_OBJECTS = fdleak_cmsg-fdleak_cmsg.$(OBJEXT)
 fdleak_cmsg_DEPENDENCIES =
@@ -290,6 +310,9 @@ fdleak_pipe_LDADD = $(LDADD)
 fdleak_socketpair_SOURCES = fdleak_socketpair.c
 fdleak_socketpair_OBJECTS = fdleak_socketpair.$(OBJEXT)
 fdleak_socketpair_DEPENDENCIES =
+file_dclose_SOURCES = file_dclose.c
+file_dclose_OBJECTS = file_dclose.$(OBJEXT)
+file_dclose_LDADD = $(LDADD)
 floored_SOURCES = floored.c
 floored_OBJECTS = floored.$(OBJEXT)
 floored_DEPENDENCIES =
@@ -336,6 +359,9 @@ map_unmap_LDADD = $(LDADD)
 mmap_fcntl_bug_SOURCES = mmap_fcntl_bug.c
 mmap_fcntl_bug_OBJECTS = mmap_fcntl_bug.$(OBJEXT)
 mmap_fcntl_bug_LDADD = $(LDADD)
+mmap_o_direct_SOURCES = mmap_o_direct.c
+mmap_o_direct_OBJECTS = mmap_o_direct.$(OBJEXT)
+mmap_o_direct_LDADD = $(LDADD)
 mq_SOURCES = mq.c
 mq_OBJECTS = mq.$(OBJEXT)
 mq_DEPENDENCIES =
@@ -469,6 +495,9 @@ sigstackgrowth_LDADD = $(LDADD)
 sigsusp_SOURCES = sigsusp.c
 sigsusp_OBJECTS = sigsusp.$(OBJEXT)
 sigsusp_DEPENDENCIES =
+socket_close_SOURCES = socket_close.c
+socket_close_OBJECTS = socket_close.$(OBJEXT)
+socket_close_DEPENDENCIES =
 stackgrowth_SOURCES = stackgrowth.c
 stackgrowth_OBJECTS = stackgrowth.$(OBJEXT)
 stackgrowth_LDADD = $(LDADD)
@@ -496,8 +525,10 @@ threadederrno_DEPENDENCIES =
 threadederrno_LINK = $(CCLD) $(threadederrno_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 timestamp_SOURCES = timestamp.c
-timestamp_OBJECTS = timestamp.$(OBJEXT)
+timestamp_OBJECTS = timestamp-timestamp.$(OBJEXT)
 timestamp_LDADD = $(LDADD)
+timestamp_LINK = $(CCLD) $(timestamp_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_tls_OBJECTS = tls.$(OBJEXT) tls2.$(OBJEXT)
 tls_OBJECTS = $(am_tls_OBJECTS)
 tls_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(tls_LDFLAGS) $(LDFLAGS) -o \
@@ -511,9 +542,17 @@ tls2_so_OBJECTS = $(am_tls2_so_OBJECTS)
 tls2_so_LDADD = $(LDADD)
 tls2_so_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(tls2_so_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_track_fds_exec_children_OBJECTS =  \
+	track-fds-exec-children.$(OBJEXT)
+track_fds_exec_children_OBJECTS =  \
+	$(am_track_fds_exec_children_OBJECTS)
+track_fds_exec_children_LDADD = $(LDADD)
 unit_debuglog_SOURCES = unit_debuglog.c
 unit_debuglog_OBJECTS = unit_debuglog.$(OBJEXT)
 unit_debuglog_LDADD = $(LDADD)
+use_after_close_SOURCES = use_after_close.c
+use_after_close_OBJECTS = use_after_close.$(OBJEXT)
+use_after_close_LDADD = $(LDADD)
 am_valgrind_cpp_test_OBJECTS = valgrind_cpp_test.$(OBJEXT)
 valgrind_cpp_test_OBJECTS = $(am_valgrind_cpp_test_OBJECTS)
 valgrind_cpp_test_DEPENDENCIES =
@@ -544,25 +583,28 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/ansi-ansi.Po ./$(DEPDIR)/args.Po \
 	./$(DEPDIR)/async-sigs.Po ./$(DEPDIR)/bitfield1.Po \
 	./$(DEPDIR)/bug129866.Po ./$(DEPDIR)/bug234814.Po \
-	./$(DEPDIR)/closeall.Po ./$(DEPDIR)/coolo_sigaction.Po \
-	./$(DEPDIR)/coolo_strlen.Po ./$(DEPDIR)/discard.Po \
+	./$(DEPDIR)/bug491394-bug491394.Po ./$(DEPDIR)/closeall.Po \
+	./$(DEPDIR)/coolo_sigaction.Po ./$(DEPDIR)/coolo_strlen.Po \
+	./$(DEPDIR)/discard.Po ./$(DEPDIR)/double_close_range.Po \
 	./$(DEPDIR)/exec-sigmask.Po ./$(DEPDIR)/execve-execve.Po \
 	./$(DEPDIR)/faultstatus.Po ./$(DEPDIR)/fcntl_setown.Po \
-	./$(DEPDIR)/fdleak_cmsg-fdleak_cmsg.Po \
+	./$(DEPDIR)/fdbaduse.Po ./$(DEPDIR)/fdleak_cmsg-fdleak_cmsg.Po \
 	./$(DEPDIR)/fdleak_creat.Po ./$(DEPDIR)/fdleak_dup.Po \
 	./$(DEPDIR)/fdleak_dup2.Po ./$(DEPDIR)/fdleak_fcntl.Po \
 	./$(DEPDIR)/fdleak_ipv4.Po ./$(DEPDIR)/fdleak_open.Po \
 	./$(DEPDIR)/fdleak_pipe.Po ./$(DEPDIR)/fdleak_socketpair.Po \
-	./$(DEPDIR)/floored.Po ./$(DEPDIR)/fork.Po \
-	./$(DEPDIR)/fucomip.Po ./$(DEPDIR)/gxx304.Po \
-	./$(DEPDIR)/ifunc-ifunc.Po ./$(DEPDIR)/ioctl_moans.Po \
+	./$(DEPDIR)/file_dclose.Po ./$(DEPDIR)/floored.Po \
+	./$(DEPDIR)/fork.Po ./$(DEPDIR)/fucomip.Po \
+	./$(DEPDIR)/gxx304.Po ./$(DEPDIR)/ifunc-ifunc.Po \
+	./$(DEPDIR)/ioctl_moans.Po \
 	./$(DEPDIR)/libvex_test-libvex_test.Po \
 	./$(DEPDIR)/libvexmultiarch_test-libvex_test.Po \
 	./$(DEPDIR)/manythreads.Po ./$(DEPDIR)/map_unaligned.Po \
 	./$(DEPDIR)/map_unmap.Po ./$(DEPDIR)/mmap_fcntl_bug.Po \
-	./$(DEPDIR)/mq.Po ./$(DEPDIR)/munmap_exe.Po \
-	./$(DEPDIR)/nestedfns-nestedfns.Po ./$(DEPDIR)/nocwd.Po \
-	./$(DEPDIR)/pending.Po ./$(DEPDIR)/ppoll_alarm.Po \
+	./$(DEPDIR)/mmap_o_direct.Po ./$(DEPDIR)/mq.Po \
+	./$(DEPDIR)/munmap_exe.Po ./$(DEPDIR)/nestedfns-nestedfns.Po \
+	./$(DEPDIR)/nocwd.Po ./$(DEPDIR)/pending.Po \
+	./$(DEPDIR)/ppoll_alarm.Po \
 	./$(DEPDIR)/process_vm_readv_writev.Po \
 	./$(DEPDIR)/procfs-cmdline-exe.Po ./$(DEPDIR)/pselect_alarm.Po \
 	./$(DEPDIR)/pselect_sigmask_null.Po ./$(DEPDIR)/pth_2sig.Po \
@@ -581,15 +623,17 @@ am__depfiles_remade = ./$(DEPDIR)/ansi-ansi.Po ./$(DEPDIR)/args.Po \
 	./$(DEPDIR)/semlimit.Po ./$(DEPDIR)/sha1_test-sha1_test.Po \
 	./$(DEPDIR)/shortpush.Po ./$(DEPDIR)/shorts.Po \
 	./$(DEPDIR)/sigprocmask.Po ./$(DEPDIR)/sigstackgrowth.Po \
-	./$(DEPDIR)/sigsusp.Po ./$(DEPDIR)/stackgrowth.Po \
-	./$(DEPDIR)/syscall-restart1.Po \
+	./$(DEPDIR)/sigsusp.Po ./$(DEPDIR)/socket_close.Po \
+	./$(DEPDIR)/stackgrowth.Po ./$(DEPDIR)/syscall-restart1.Po \
 	./$(DEPDIR)/syscall-restart2.Po ./$(DEPDIR)/syslog.Po \
 	./$(DEPDIR)/system.Po ./$(DEPDIR)/thread-exits.Po \
 	./$(DEPDIR)/threaded-fork.Po \
 	./$(DEPDIR)/threadederrno-threadederrno.Po \
-	./$(DEPDIR)/timestamp.Po ./$(DEPDIR)/tls.Po \
+	./$(DEPDIR)/timestamp-timestamp.Po ./$(DEPDIR)/tls.Po \
 	./$(DEPDIR)/tls2.Po ./$(DEPDIR)/tls2_so.Po \
-	./$(DEPDIR)/tls_so-tls_so.Po ./$(DEPDIR)/unit_debuglog.Po \
+	./$(DEPDIR)/tls_so-tls_so.Po \
+	./$(DEPDIR)/track-fds-exec-children.Po \
+	./$(DEPDIR)/unit_debuglog.Po ./$(DEPDIR)/use_after_close.Po \
 	./$(DEPDIR)/valgrind_cpp_test.Po ./$(DEPDIR)/vgprintf.Po \
 	./$(DEPDIR)/vgprintf_nvalgrind-vgprintf.Po
 am__mv = mv -f
@@ -623,53 +667,57 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = ansi.c args.c async-sigs.c bitfield1.c bug129866.c \
-	bug234814.c closeall.c $(coolo_sigaction_SOURCES) \
-	coolo_strlen.c discard.c exec-sigmask.c execve.c faultstatus.c \
-	fcntl_setown.c fdleak_cmsg.c fdleak_creat.c fdleak_dup.c \
-	fdleak_dup2.c fdleak_fcntl.c fdleak_ipv4.c fdleak_open.c \
-	fdleak_pipe.c fdleak_socketpair.c floored.c fork.c fucomip.c \
-	$(gxx304_SOURCES) ifunc.c ioctl_moans.c libvex_test.c \
+	bug234814.c bug491394.c closeall.c $(coolo_sigaction_SOURCES) \
+	coolo_strlen.c discard.c double_close_range.c exec-sigmask.c \
+	execve.c faultstatus.c fcntl_setown.c fdbaduse.c fdleak_cmsg.c \
+	fdleak_creat.c fdleak_dup.c fdleak_dup2.c fdleak_fcntl.c \
+	fdleak_ipv4.c fdleak_open.c fdleak_pipe.c fdleak_socketpair.c \
+	file_dclose.c floored.c fork.c fucomip.c $(gxx304_SOURCES) \
+	ifunc.c ioctl_moans.c libvex_test.c \
 	$(libvexmultiarch_test_SOURCES) manythreads.c map_unaligned.c \
-	map_unmap.c mmap_fcntl_bug.c mq.c munmap_exe.c nestedfns.c \
-	nocwd.c pending.c ppoll_alarm.c process_vm_readv_writev.c \
-	procfs-cmdline-exe.c pselect_alarm.c pselect_sigmask_null.c \
-	pth_2sig.c pth_atfork1.c pth_blockedsig.c pth_cancel1.c \
-	pth_cancel2.c pth_cvsimple.c pth_empty.c pth_exit.c \
-	pth_exit2.c pth_mutexspeed.c pth_once.c pth_rwlock.c \
-	pth_self_kill.c pth_stackalign.c pth_term_signal.c rcrl.c \
-	readline1.c require-text-symbol.c res_search.c resolv.c \
-	rlimit64_nofile.c rlimit_nofile.c selfrun.c sem.c semlimit.c \
-	sha1_test.c shortpush.c shorts.c sigprocmask.c \
-	sigstackgrowth.c sigsusp.c stackgrowth.c syscall-restart1.c \
-	syscall-restart2.c syslog.c system.c thread-exits.c \
-	threaded-fork.c threadederrno.c timestamp.c $(tls_SOURCES) \
-	$(tls_so_SOURCES) $(tls2_so_SOURCES) unit_debuglog.c \
-	$(valgrind_cpp_test_SOURCES) vgprintf.c \
-	$(vgprintf_nvalgrind_SOURCES)
+	map_unmap.c mmap_fcntl_bug.c mmap_o_direct.c mq.c munmap_exe.c \
+	nestedfns.c nocwd.c pending.c ppoll_alarm.c \
+	process_vm_readv_writev.c procfs-cmdline-exe.c pselect_alarm.c \
+	pselect_sigmask_null.c pth_2sig.c pth_atfork1.c \
+	pth_blockedsig.c pth_cancel1.c pth_cancel2.c pth_cvsimple.c \
+	pth_empty.c pth_exit.c pth_exit2.c pth_mutexspeed.c pth_once.c \
+	pth_rwlock.c pth_self_kill.c pth_stackalign.c \
+	pth_term_signal.c rcrl.c readline1.c require-text-symbol.c \
+	res_search.c resolv.c rlimit64_nofile.c rlimit_nofile.c \
+	selfrun.c sem.c semlimit.c sha1_test.c shortpush.c shorts.c \
+	sigprocmask.c sigstackgrowth.c sigsusp.c socket_close.c \
+	stackgrowth.c syscall-restart1.c syscall-restart2.c syslog.c \
+	system.c thread-exits.c threaded-fork.c threadederrno.c \
+	timestamp.c $(tls_SOURCES) $(tls_so_SOURCES) \
+	$(tls2_so_SOURCES) $(track_fds_exec_children_SOURCES) \
+	unit_debuglog.c use_after_close.c $(valgrind_cpp_test_SOURCES) \
+	vgprintf.c $(vgprintf_nvalgrind_SOURCES)
 DIST_SOURCES = ansi.c args.c async-sigs.c bitfield1.c bug129866.c \
-	bug234814.c closeall.c $(coolo_sigaction_SOURCES) \
-	coolo_strlen.c discard.c exec-sigmask.c execve.c faultstatus.c \
-	fcntl_setown.c fdleak_cmsg.c fdleak_creat.c fdleak_dup.c \
-	fdleak_dup2.c fdleak_fcntl.c fdleak_ipv4.c fdleak_open.c \
-	fdleak_pipe.c fdleak_socketpair.c floored.c fork.c fucomip.c \
-	$(gxx304_SOURCES) ifunc.c ioctl_moans.c libvex_test.c \
+	bug234814.c bug491394.c closeall.c $(coolo_sigaction_SOURCES) \
+	coolo_strlen.c discard.c double_close_range.c exec-sigmask.c \
+	execve.c faultstatus.c fcntl_setown.c fdbaduse.c fdleak_cmsg.c \
+	fdleak_creat.c fdleak_dup.c fdleak_dup2.c fdleak_fcntl.c \
+	fdleak_ipv4.c fdleak_open.c fdleak_pipe.c fdleak_socketpair.c \
+	file_dclose.c floored.c fork.c fucomip.c $(gxx304_SOURCES) \
+	ifunc.c ioctl_moans.c libvex_test.c \
 	$(libvexmultiarch_test_SOURCES) manythreads.c map_unaligned.c \
-	map_unmap.c mmap_fcntl_bug.c mq.c munmap_exe.c nestedfns.c \
-	nocwd.c pending.c ppoll_alarm.c process_vm_readv_writev.c \
-	procfs-cmdline-exe.c pselect_alarm.c pselect_sigmask_null.c \
-	pth_2sig.c pth_atfork1.c pth_blockedsig.c pth_cancel1.c \
-	pth_cancel2.c pth_cvsimple.c pth_empty.c pth_exit.c \
-	pth_exit2.c pth_mutexspeed.c pth_once.c pth_rwlock.c \
-	pth_self_kill.c pth_stackalign.c pth_term_signal.c rcrl.c \
-	readline1.c require-text-symbol.c res_search.c resolv.c \
-	rlimit64_nofile.c rlimit_nofile.c selfrun.c sem.c semlimit.c \
-	sha1_test.c shortpush.c shorts.c sigprocmask.c \
-	sigstackgrowth.c sigsusp.c stackgrowth.c syscall-restart1.c \
-	syscall-restart2.c syslog.c system.c thread-exits.c \
-	threaded-fork.c threadederrno.c timestamp.c $(tls_SOURCES) \
-	$(tls_so_SOURCES) $(tls2_so_SOURCES) unit_debuglog.c \
-	$(valgrind_cpp_test_SOURCES) vgprintf.c \
-	$(vgprintf_nvalgrind_SOURCES)
+	map_unmap.c mmap_fcntl_bug.c mmap_o_direct.c mq.c munmap_exe.c \
+	nestedfns.c nocwd.c pending.c ppoll_alarm.c \
+	process_vm_readv_writev.c procfs-cmdline-exe.c pselect_alarm.c \
+	pselect_sigmask_null.c pth_2sig.c pth_atfork1.c \
+	pth_blockedsig.c pth_cancel1.c pth_cancel2.c pth_cvsimple.c \
+	pth_empty.c pth_exit.c pth_exit2.c pth_mutexspeed.c pth_once.c \
+	pth_rwlock.c pth_self_kill.c pth_stackalign.c \
+	pth_term_signal.c rcrl.c readline1.c require-text-symbol.c \
+	res_search.c resolv.c rlimit64_nofile.c rlimit_nofile.c \
+	selfrun.c sem.c semlimit.c sha1_test.c shortpush.c shorts.c \
+	sigprocmask.c sigstackgrowth.c sigsusp.c socket_close.c \
+	stackgrowth.c syscall-restart1.c syscall-restart2.c syslog.c \
+	system.c thread-exits.c threaded-fork.c threadederrno.c \
+	timestamp.c $(tls_SOURCES) $(tls_so_SOURCES) \
+	$(tls2_so_SOURCES) $(track_fds_exec_children_SOURCES) \
+	unit_debuglog.c use_after_close.c $(valgrind_cpp_test_SOURCES) \
+	vgprintf.c $(vgprintf_nvalgrind_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -773,6 +821,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -790,6 +839,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -804,16 +854,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -864,6 +933,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -874,10 +944,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -1032,16 +1104,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -1052,6 +1120,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -1068,7 +1139,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -1128,6 +1199,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -1175,6 +1247,7 @@ dist_noinst_SCRIPTS = \
 	filter_none_discards \
 	filter_stderr \
 	filter_timestamp \
+	filter_xml \
 	allexec_prepare_prereq
 
 noinst_HEADERS = fdleak.h
@@ -1189,6 +1262,7 @@ EXTRA_DIST = \
 	bitfield1.stderr.exp bitfield1.vgtest \
 	bug129866.vgtest bug129866.stderr.exp bug129866.stdout.exp \
 	bug234814.vgtest bug234814.stderr.exp bug234814.stdout.exp \
+	bug491394.vgtest bug491394.stderr.exp \
 	closeall.stderr.exp closeall.vgtest \
 	cmdline0.stderr.exp cmdline0.stdout.exp cmdline0.vgtest \
 	cmdline1.stderr.exp cmdline1.stdout.exp cmdline1.vgtest \
@@ -1199,12 +1273,20 @@ EXTRA_DIST = \
 	cmdline4.stderr.exp cmdline4.vgtest \
 	cmdline5.stderr.exp cmdline5.vgtest \
 	cmdline6.stderr.exp cmdline6.vgtest \
+	cmdline7.stderr.exp cmdline7.vgtest \
+	cmdline8.stderr.exp cmdline8.vgtest \
+	cmdline9.stderr.exp cmdline9.vgtest \
+	cmdline10.stderr.exp cmdline10.vgtest \
+	cmdline11.stderr.exp cmdline11.vgtest \
 	cmd-with-special.stderr.exp cmd-with-special.vgtest \
 	coolo_sigaction.stderr.exp \
 	coolo_sigaction.stdout.exp coolo_sigaction.vgtest \
 	coolo_strlen.stderr.exp coolo_strlen.vgtest \
 	discard.stderr.exp discard.stdout.exp \
 	discard.vgtest \
+	double_close_range_xml.stderr.exp \
+	double_close_range_xml.vgtest \
+	double_close_range_sup.stderr.exp double_close_range_sup.vgtest \
 	empty-exe.vgtest empty-exe.stderr.exp \
 	exec-sigmask.vgtest exec-sigmask.stdout.exp \
 	exec-sigmask.stdout.exp2 exec-sigmask.stdout.exp3 \
@@ -1213,14 +1295,28 @@ EXTRA_DIST = \
 	faultstatus.vgtest faultstatus.stderr.exp faultstatus.stderr.exp-s390x \
 	fcntl_setown.vgtest fcntl_setown.stdout.exp fcntl_setown.stderr.exp \
 	fdleak_cmsg.stderr.exp fdleak_cmsg.vgtest \
+	fdleak_cmsg_xml.stderr.exp fdleak_cmsg_xml.vgtest \
+	fdleak_cmsg_supp.stderr.exp fdleak_cmsg_supp.supp \
+	fdleak_cmsg_supp.vgtest \
 	fdleak_creat.stderr.exp fdleak_creat.vgtest \
+	fdleak_creat_xml.stderr.exp fdleak_creat_xml.vgtest \
+	fdleak_creat_sup.stderr.exp fdleak_creat_sup.supp \
+	fdleak_creat_sup.vgtest \
 	fdleak_dup.stderr.exp fdleak_dup.vgtest \
+	fdleak_dup_xml.stderr.exp fdleak_dup_xml.vgtest \
 	fdleak_dup2.stderr.exp fdleak_dup2.vgtest \
+	fdleak_dup2_xml.stderr.exp fdleak_dup2_xml.vgtest \
 	fdleak_fcntl.stderr.exp fdleak_fcntl.vgtest \
+	fdleak_fcntl_xml.stderr.exp fdleak_fcntl_xml.vgtest \
 	fdleak_ipv4.stderr.exp fdleak_ipv4.stdout.exp fdleak_ipv4.vgtest \
+	fdleak_ipv4_xml.stderr.exp fdleak_ipv4_xml.stdout.exp \
+	fdleak_ipv4_xml.vgtest fdleak_ipv4_xml.stderr.exp-nomain \
 	fdleak_open.stderr.exp fdleak_open.vgtest \
+	fdleak_open_xml.stderr.exp fdleak_open_xml.vgtest \
 	fdleak_pipe.stderr.exp fdleak_pipe.vgtest \
+	fdleak_pipe_xml.stderr.exp fdleak_pipe_xml.vgtest \
 	fdleak_socketpair.stderr.exp fdleak_socketpair.vgtest \
+	fdleak_socketpair_xml.stderr.exp fdleak_socketpair_xml.vgtest \
 	floored.stderr.exp floored.stdout.exp floored.vgtest \
 	fork.stderr.exp fork.stdout.exp fork.vgtest \
 	fucomip.stderr.exp fucomip.vgtest \
@@ -1234,6 +1330,7 @@ EXTRA_DIST = \
 	map_unmap.stderr.exp map_unmap.stdout.exp map_unmap.vgtest \
 	mmap_fcntl_bug.vgtest mmap_fcntl_bug.stdout.exp \
 		mmap_fcntl_bug.stderr.exp \
+	mmap_o_direct.stderr.exp mmap_o_direct.vgtest \
 	mq.stderr.exp mq.vgtest \
 	munmap_exe.stderr.exp munmap_exe.vgtest \
 	nestedfns.stderr.exp nestedfns.stdout.exp nestedfns.vgtest \
@@ -1271,6 +1368,7 @@ EXTRA_DIST = \
 	pth_stackalign.stdout.exp pth_stackalign.vgtest \
 	pth_2sig.stderr.exp-linux pth_2sig.stderr.exp-solaris pth_2sig.vgtest \
 	pth_term_signal.stderr.exp pth_term_signal.vgtest \
+	rc_option_with_spaces.stderr.exp rc_option_with_spaces.vgtest \
 	rcrl.stderr.exp rcrl.stdout.exp rcrl.vgtest \
 	readline1.stderr.exp readline1.stdout.exp \
 	readline1.vgtest \
@@ -1303,22 +1401,45 @@ EXTRA_DIST = \
 	threadederrno.vgtest \
 	timestamp.stderr.exp timestamp.vgtest \
 	tls.vgtest tls.stderr.exp tls.stdout.exp  \
+	track-fds-exec-children.vgtest track-fds-exec-children.stderr.exp \
 	unit_debuglog.stderr.exp unit_debuglog.vgtest \
 	vgprintf.stderr.exp vgprintf.vgtest \
 	vgprintf_nvalgrind.stderr.exp vgprintf_nvalgrind.vgtest \
 	process_vm_readv_writev.stderr.exp process_vm_readv_writev.vgtest \
-	sigprocmask.stderr.exp sigprocmask.vgtest
+	sigprocmask.stderr.exp sigprocmask.vgtest \
+	socket_close.stderr.exp socket_close.vgtest \
+	socket_close_xml.stderr.exp socket_close_xml.vgtest \
+	file_dclose.stderr.exp file_dclose.vgtest \
+	file_dclose_xml.stderr.exp file_dclose_xml.vgtest \
+	file_dclose_xml.stderr.exp-nomain \
+	file_dclose.supp file_dclose_sup.stderr.exp file_dclose_sup.vgtest \
+	double_close_range.stderr.exp double_close_range.vgtest \
+	log-track-fds.stderr.exp log-track-fds.vgtest \
+	xml-track-fds.stderr.exp xml-track-fds.vgtest \
+	fdbaduse.stderr.exp fdbaduse.vgtest \
+	use_after_close.stderr.exp use_after_close.vgtest
 
 
 # Extra stuff for C tests
 ansi_CFLAGS = $(AM_CFLAGS) -ansi
+bug491394_LDADD = -lc
+bug491394_LDFLAGS = -nostdlib -static
+bug491394_CFLAGS = ${AM_CFLAGS} -Os
 execve_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
+@VGCONF_OS_IS_SOLARIS_FALSE@fcntl_setown_LDADD = $(AL_LDFLAGS)
 @VGCONF_OS_IS_SOLARIS_TRUE@fcntl_setown_LDADD = -lsocket -lnsl
+@VGCONF_OS_IS_SOLARIS_FALSE@fdleak_cmsg_CFLAGS = $(AM_CFLAGS)
 @VGCONF_OS_IS_SOLARIS_TRUE@fdleak_cmsg_CFLAGS = $(AM_CFLAGS) -D_XOPEN_SOURCE=600
+@VGCONF_OS_IS_SOLARIS_FALSE@fdleak_cmsg_LDADD = $(AM_LDFLAGS)
 @VGCONF_OS_IS_SOLARIS_TRUE@fdleak_cmsg_LDADD = -lsocket -lnsl
+@VGCONF_OS_IS_SOLARIS_FALSE@fdleak_ipv4_LDADD = $(AM_LDFLAGS)
 @VGCONF_OS_IS_SOLARIS_TRUE@fdleak_ipv4_LDADD = -lsocket -lnsl
+@VGCONF_OS_IS_SOLARIS_FALSE@fdleak_creat_LDADD = $(AM_LDFLAGS)
 @VGCONF_OS_IS_SOLARIS_TRUE@fdleak_creat_LDADD = -lsocket -lnsl
+@VGCONF_OS_IS_SOLARIS_FALSE@fdleak_socketpair_LDADD = $(AM_LDFLAGS)
 @VGCONF_OS_IS_SOLARIS_TRUE@fdleak_socketpair_LDADD = -lsocket -lnsl
+@VGCONF_OS_IS_SOLARIS_FALSE@socket_close_LDADD = $(AM_LDFLAGS)
+@VGCONF_OS_IS_SOLARIS_TRUE@socket_close_LDADD = -lsocket -lnsl
 floored_LDADD = -lm
 ifunc_CFLAGS = $(AM_CFLAGS) -Wno-unused-function
 manythreads_LDADD = -lpthread
@@ -1358,14 +1479,15 @@ pth_term_signal_LDADD = -lpthread
 @VGCONF_OS_IS_FREEBSD_TRUE@res_search_LDADD = -lpthread
 @VGCONF_OS_IS_FREEBSD_FALSE@resolv_LDADD = -lresolv -lpthread
 @VGCONF_OS_IS_FREEBSD_TRUE@resolv_LDADD = -lpthread
-resolv_CFLAGS = $(AM_CFLAGS) $(am__append_38)
+resolv_CFLAGS = $(AM_CFLAGS) $(am__append_41)
 semlimit_LDADD = -lpthread
-sha1_test_CFLAGS = $(AM_CFLAGS) $(am__append_39)
+sha1_test_CFLAGS = $(AM_CFLAGS) $(am__append_42)
 sigsusp_LDADD = -lpthread
 thread_exits_LDADD = -lpthread
 threaded_fork_LDADD = -lpthread
 threadederrno_CFLAGS = $(AM_CFLAGS)
 threadederrno_LDADD = -lpthread
+timestamp_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_USE_AFTER_FREE@
 tls_SOURCES = tls.c tls2.c
 tls_DEPENDENCIES = tls.so tls2.so
 tls_LDFLAGS = -Wl,-rpath,$(abs_top_builddir)/none/tests
@@ -1380,6 +1502,7 @@ tls_so_CFLAGS = $(AM_CFLAGS) -fPIC
 tls2_so_SOURCES = tls2_so.c
 @VGCONF_OS_IS_DARWIN_FALSE@tls2_so_LDFLAGS = -shared
 @VGCONF_OS_IS_DARWIN_TRUE@tls2_so_LDFLAGS = -dynamic -dynamiclib -all_load
+track_fds_exec_children_SOURCES = track-fds-exec-children.c
 vgprintf_nvalgrind_SOURCES = vgprintf.c
 vgprintf_nvalgrind_CFLAGS = ${AM_CFLAGS} -DNVALGRIND
 valgrind_cpp_test_SOURCES = valgrind_cpp_test.cpp
@@ -1450,6 +1573,10 @@ bug234814$(EXEEXT): $(bug234814_OBJECTS) $(bug234814_DEPENDENCIES) $(EXTRA_bug23
 	@rm -f bug234814$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bug234814_OBJECTS) $(bug234814_LDADD) $(LIBS)
 
+bug491394$(EXEEXT): $(bug491394_OBJECTS) $(bug491394_DEPENDENCIES) $(EXTRA_bug491394_DEPENDENCIES) 
+	@rm -f bug491394$(EXEEXT)
+	$(AM_V_CCLD)$(bug491394_LINK) $(bug491394_OBJECTS) $(bug491394_LDADD) $(LIBS)
+
 closeall$(EXEEXT): $(closeall_OBJECTS) $(closeall_DEPENDENCIES) $(EXTRA_closeall_DEPENDENCIES) 
 	@rm -f closeall$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(closeall_OBJECTS) $(closeall_LDADD) $(LIBS)
@@ -1466,6 +1593,10 @@ discard$(EXEEXT): $(discard_OBJECTS) $(discard_DEPENDENCIES) $(EXTRA_discard_DEP
 	@rm -f discard$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(discard_OBJECTS) $(discard_LDADD) $(LIBS)
 
+double_close_range$(EXEEXT): $(double_close_range_OBJECTS) $(double_close_range_DEPENDENCIES) $(EXTRA_double_close_range_DEPENDENCIES) 
+	@rm -f double_close_range$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(double_close_range_OBJECTS) $(double_close_range_LDADD) $(LIBS)
+
 exec-sigmask$(EXEEXT): $(exec_sigmask_OBJECTS) $(exec_sigmask_DEPENDENCIES) $(EXTRA_exec_sigmask_DEPENDENCIES) 
 	@rm -f exec-sigmask$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(exec_sigmask_OBJECTS) $(exec_sigmask_LDADD) $(LIBS)
@@ -1481,6 +1612,10 @@ faultstatus$(EXEEXT): $(faultstatus_OBJECTS) $(faultstatus_DEPENDENCIES) $(EXTRA
 fcntl_setown$(EXEEXT): $(fcntl_setown_OBJECTS) $(fcntl_setown_DEPENDENCIES) $(EXTRA_fcntl_setown_DEPENDENCIES) 
 	@rm -f fcntl_setown$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fcntl_setown_OBJECTS) $(fcntl_setown_LDADD) $(LIBS)
+
+fdbaduse$(EXEEXT): $(fdbaduse_OBJECTS) $(fdbaduse_DEPENDENCIES) $(EXTRA_fdbaduse_DEPENDENCIES) 
+	@rm -f fdbaduse$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(fdbaduse_OBJECTS) $(fdbaduse_LDADD) $(LIBS)
 
 fdleak_cmsg$(EXEEXT): $(fdleak_cmsg_OBJECTS) $(fdleak_cmsg_DEPENDENCIES) $(EXTRA_fdleak_cmsg_DEPENDENCIES) 
 	@rm -f fdleak_cmsg$(EXEEXT)
@@ -1517,6 +1652,10 @@ fdleak_pipe$(EXEEXT): $(fdleak_pipe_OBJECTS) $(fdleak_pipe_DEPENDENCIES) $(EXTRA
 fdleak_socketpair$(EXEEXT): $(fdleak_socketpair_OBJECTS) $(fdleak_socketpair_DEPENDENCIES) $(EXTRA_fdleak_socketpair_DEPENDENCIES) 
 	@rm -f fdleak_socketpair$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fdleak_socketpair_OBJECTS) $(fdleak_socketpair_LDADD) $(LIBS)
+
+file_dclose$(EXEEXT): $(file_dclose_OBJECTS) $(file_dclose_DEPENDENCIES) $(EXTRA_file_dclose_DEPENDENCIES) 
+	@rm -f file_dclose$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(file_dclose_OBJECTS) $(file_dclose_LDADD) $(LIBS)
 
 floored$(EXEEXT): $(floored_OBJECTS) $(floored_DEPENDENCIES) $(EXTRA_floored_DEPENDENCIES) 
 	@rm -f floored$(EXEEXT)
@@ -1565,6 +1704,10 @@ map_unmap$(EXEEXT): $(map_unmap_OBJECTS) $(map_unmap_DEPENDENCIES) $(EXTRA_map_u
 mmap_fcntl_bug$(EXEEXT): $(mmap_fcntl_bug_OBJECTS) $(mmap_fcntl_bug_DEPENDENCIES) $(EXTRA_mmap_fcntl_bug_DEPENDENCIES) 
 	@rm -f mmap_fcntl_bug$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mmap_fcntl_bug_OBJECTS) $(mmap_fcntl_bug_LDADD) $(LIBS)
+
+mmap_o_direct$(EXEEXT): $(mmap_o_direct_OBJECTS) $(mmap_o_direct_DEPENDENCIES) $(EXTRA_mmap_o_direct_DEPENDENCIES) 
+	@rm -f mmap_o_direct$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mmap_o_direct_OBJECTS) $(mmap_o_direct_LDADD) $(LIBS)
 
 mq$(EXEEXT): $(mq_OBJECTS) $(mq_DEPENDENCIES) $(EXTRA_mq_DEPENDENCIES) 
 	@rm -f mq$(EXEEXT)
@@ -1730,6 +1873,10 @@ sigsusp$(EXEEXT): $(sigsusp_OBJECTS) $(sigsusp_DEPENDENCIES) $(EXTRA_sigsusp_DEP
 	@rm -f sigsusp$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(sigsusp_OBJECTS) $(sigsusp_LDADD) $(LIBS)
 
+socket_close$(EXEEXT): $(socket_close_OBJECTS) $(socket_close_DEPENDENCIES) $(EXTRA_socket_close_DEPENDENCIES) 
+	@rm -f socket_close$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(socket_close_OBJECTS) $(socket_close_LDADD) $(LIBS)
+
 stackgrowth$(EXEEXT): $(stackgrowth_OBJECTS) $(stackgrowth_DEPENDENCIES) $(EXTRA_stackgrowth_DEPENDENCIES) 
 	@rm -f stackgrowth$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(stackgrowth_OBJECTS) $(stackgrowth_LDADD) $(LIBS)
@@ -1764,7 +1911,7 @@ threadederrno$(EXEEXT): $(threadederrno_OBJECTS) $(threadederrno_DEPENDENCIES) $
 
 timestamp$(EXEEXT): $(timestamp_OBJECTS) $(timestamp_DEPENDENCIES) $(EXTRA_timestamp_DEPENDENCIES) 
 	@rm -f timestamp$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(timestamp_OBJECTS) $(timestamp_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(timestamp_LINK) $(timestamp_OBJECTS) $(timestamp_LDADD) $(LIBS)
 
 tls$(EXEEXT): $(tls_OBJECTS) $(tls_DEPENDENCIES) $(EXTRA_tls_DEPENDENCIES) 
 	@rm -f tls$(EXEEXT)
@@ -1778,9 +1925,17 @@ tls2.so$(EXEEXT): $(tls2_so_OBJECTS) $(tls2_so_DEPENDENCIES) $(EXTRA_tls2_so_DEP
 	@rm -f tls2.so$(EXEEXT)
 	$(AM_V_CCLD)$(tls2_so_LINK) $(tls2_so_OBJECTS) $(tls2_so_LDADD) $(LIBS)
 
+track-fds-exec-children$(EXEEXT): $(track_fds_exec_children_OBJECTS) $(track_fds_exec_children_DEPENDENCIES) $(EXTRA_track_fds_exec_children_DEPENDENCIES) 
+	@rm -f track-fds-exec-children$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(track_fds_exec_children_OBJECTS) $(track_fds_exec_children_LDADD) $(LIBS)
+
 unit_debuglog$(EXEEXT): $(unit_debuglog_OBJECTS) $(unit_debuglog_DEPENDENCIES) $(EXTRA_unit_debuglog_DEPENDENCIES) 
 	@rm -f unit_debuglog$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(unit_debuglog_OBJECTS) $(unit_debuglog_LDADD) $(LIBS)
+
+use_after_close$(EXEEXT): $(use_after_close_OBJECTS) $(use_after_close_DEPENDENCIES) $(EXTRA_use_after_close_DEPENDENCIES) 
+	@rm -f use_after_close$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(use_after_close_OBJECTS) $(use_after_close_LDADD) $(LIBS)
 
 valgrind_cpp_test$(EXEEXT): $(valgrind_cpp_test_OBJECTS) $(valgrind_cpp_test_DEPENDENCIES) $(EXTRA_valgrind_cpp_test_DEPENDENCIES) 
 	@rm -f valgrind_cpp_test$(EXEEXT)
@@ -1806,14 +1961,17 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitfield1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug129866.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug234814.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug491394-bug491394.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/closeall.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coolo_sigaction.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coolo_strlen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/discard.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/double_close_range.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exec-sigmask.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/execve-execve.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faultstatus.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcntl_setown.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdbaduse.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdleak_cmsg-fdleak_cmsg.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdleak_creat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdleak_dup.Po@am__quote@ # am--include-marker
@@ -1823,6 +1981,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdleak_open.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdleak_pipe.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdleak_socketpair.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file_dclose.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/floored.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fork.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fucomip.Po@am__quote@ # am--include-marker
@@ -1835,6 +1994,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/map_unaligned.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/map_unmap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmap_fcntl_bug.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mmap_o_direct.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mq.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/munmap_exe.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nestedfns-nestedfns.Po@am__quote@ # am--include-marker
@@ -1876,6 +2036,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigprocmask.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigstackgrowth.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigsusp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/socket_close.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stackgrowth.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syscall-restart1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syscall-restart2.Po@am__quote@ # am--include-marker
@@ -1884,12 +2045,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread-exits.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threaded-fork.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threadederrno-threadederrno.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timestamp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timestamp-timestamp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls2_so.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_so-tls_so.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/track-fds-exec-children.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unit_debuglog.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/use_after_close.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/valgrind_cpp_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vgprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vgprintf_nvalgrind-vgprintf.Po@am__quote@ # am--include-marker
@@ -1929,6 +2092,20 @@ ansi-ansi.obj: ansi.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ansi.c' object='ansi-ansi.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ansi_CFLAGS) $(CFLAGS) -c -o ansi-ansi.obj `if test -f 'ansi.c'; then $(CYGPATH_W) 'ansi.c'; else $(CYGPATH_W) '$(srcdir)/ansi.c'; fi`
+
+bug491394-bug491394.o: bug491394.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug491394_CFLAGS) $(CFLAGS) -MT bug491394-bug491394.o -MD -MP -MF $(DEPDIR)/bug491394-bug491394.Tpo -c -o bug491394-bug491394.o `test -f 'bug491394.c' || echo '$(srcdir)/'`bug491394.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug491394-bug491394.Tpo $(DEPDIR)/bug491394-bug491394.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bug491394.c' object='bug491394-bug491394.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug491394_CFLAGS) $(CFLAGS) -c -o bug491394-bug491394.o `test -f 'bug491394.c' || echo '$(srcdir)/'`bug491394.c
+
+bug491394-bug491394.obj: bug491394.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug491394_CFLAGS) $(CFLAGS) -MT bug491394-bug491394.obj -MD -MP -MF $(DEPDIR)/bug491394-bug491394.Tpo -c -o bug491394-bug491394.obj `if test -f 'bug491394.c'; then $(CYGPATH_W) 'bug491394.c'; else $(CYGPATH_W) '$(srcdir)/bug491394.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug491394-bug491394.Tpo $(DEPDIR)/bug491394-bug491394.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bug491394.c' object='bug491394-bug491394.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug491394_CFLAGS) $(CFLAGS) -c -o bug491394-bug491394.obj `if test -f 'bug491394.c'; then $(CYGPATH_W) 'bug491394.c'; else $(CYGPATH_W) '$(srcdir)/bug491394.c'; fi`
 
 execve-execve.o: execve.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(execve_CFLAGS) $(CFLAGS) -MT execve-execve.o -MD -MP -MF $(DEPDIR)/execve-execve.Tpo -c -o execve-execve.o `test -f 'execve.c' || echo '$(srcdir)/'`execve.c
@@ -2083,6 +2260,20 @@ threadederrno-threadederrno.obj: threadederrno.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='threadederrno.c' object='threadederrno-threadederrno.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(threadederrno_CFLAGS) $(CFLAGS) -c -o threadederrno-threadederrno.obj `if test -f 'threadederrno.c'; then $(CYGPATH_W) 'threadederrno.c'; else $(CYGPATH_W) '$(srcdir)/threadederrno.c'; fi`
+
+timestamp-timestamp.o: timestamp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timestamp_CFLAGS) $(CFLAGS) -MT timestamp-timestamp.o -MD -MP -MF $(DEPDIR)/timestamp-timestamp.Tpo -c -o timestamp-timestamp.o `test -f 'timestamp.c' || echo '$(srcdir)/'`timestamp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/timestamp-timestamp.Tpo $(DEPDIR)/timestamp-timestamp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='timestamp.c' object='timestamp-timestamp.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timestamp_CFLAGS) $(CFLAGS) -c -o timestamp-timestamp.o `test -f 'timestamp.c' || echo '$(srcdir)/'`timestamp.c
+
+timestamp-timestamp.obj: timestamp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timestamp_CFLAGS) $(CFLAGS) -MT timestamp-timestamp.obj -MD -MP -MF $(DEPDIR)/timestamp-timestamp.Tpo -c -o timestamp-timestamp.obj `if test -f 'timestamp.c'; then $(CYGPATH_W) 'timestamp.c'; else $(CYGPATH_W) '$(srcdir)/timestamp.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/timestamp-timestamp.Tpo $(DEPDIR)/timestamp-timestamp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='timestamp.c' object='timestamp-timestamp.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(timestamp_CFLAGS) $(CFLAGS) -c -o timestamp-timestamp.obj `if test -f 'timestamp.c'; then $(CYGPATH_W) 'timestamp.c'; else $(CYGPATH_W) '$(srcdir)/timestamp.c'; fi`
 
 tls_so-tls_so.o: tls_so.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tls_so_CFLAGS) $(CFLAGS) -MT tls_so-tls_so.o -MD -MP -MF $(DEPDIR)/tls_so-tls_so.Tpo -c -o tls_so-tls_so.o `test -f 'tls_so.c' || echo '$(srcdir)/'`tls_so.c
@@ -2332,14 +2523,17 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/bitfield1.Po
 	-rm -f ./$(DEPDIR)/bug129866.Po
 	-rm -f ./$(DEPDIR)/bug234814.Po
+	-rm -f ./$(DEPDIR)/bug491394-bug491394.Po
 	-rm -f ./$(DEPDIR)/closeall.Po
 	-rm -f ./$(DEPDIR)/coolo_sigaction.Po
 	-rm -f ./$(DEPDIR)/coolo_strlen.Po
 	-rm -f ./$(DEPDIR)/discard.Po
+	-rm -f ./$(DEPDIR)/double_close_range.Po
 	-rm -f ./$(DEPDIR)/exec-sigmask.Po
 	-rm -f ./$(DEPDIR)/execve-execve.Po
 	-rm -f ./$(DEPDIR)/faultstatus.Po
 	-rm -f ./$(DEPDIR)/fcntl_setown.Po
+	-rm -f ./$(DEPDIR)/fdbaduse.Po
 	-rm -f ./$(DEPDIR)/fdleak_cmsg-fdleak_cmsg.Po
 	-rm -f ./$(DEPDIR)/fdleak_creat.Po
 	-rm -f ./$(DEPDIR)/fdleak_dup.Po
@@ -2349,6 +2543,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/fdleak_open.Po
 	-rm -f ./$(DEPDIR)/fdleak_pipe.Po
 	-rm -f ./$(DEPDIR)/fdleak_socketpair.Po
+	-rm -f ./$(DEPDIR)/file_dclose.Po
 	-rm -f ./$(DEPDIR)/floored.Po
 	-rm -f ./$(DEPDIR)/fork.Po
 	-rm -f ./$(DEPDIR)/fucomip.Po
@@ -2361,6 +2556,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/map_unaligned.Po
 	-rm -f ./$(DEPDIR)/map_unmap.Po
 	-rm -f ./$(DEPDIR)/mmap_fcntl_bug.Po
+	-rm -f ./$(DEPDIR)/mmap_o_direct.Po
 	-rm -f ./$(DEPDIR)/mq.Po
 	-rm -f ./$(DEPDIR)/munmap_exe.Po
 	-rm -f ./$(DEPDIR)/nestedfns-nestedfns.Po
@@ -2402,6 +2598,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/sigprocmask.Po
 	-rm -f ./$(DEPDIR)/sigstackgrowth.Po
 	-rm -f ./$(DEPDIR)/sigsusp.Po
+	-rm -f ./$(DEPDIR)/socket_close.Po
 	-rm -f ./$(DEPDIR)/stackgrowth.Po
 	-rm -f ./$(DEPDIR)/syscall-restart1.Po
 	-rm -f ./$(DEPDIR)/syscall-restart2.Po
@@ -2410,12 +2607,14 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/thread-exits.Po
 	-rm -f ./$(DEPDIR)/threaded-fork.Po
 	-rm -f ./$(DEPDIR)/threadederrno-threadederrno.Po
-	-rm -f ./$(DEPDIR)/timestamp.Po
+	-rm -f ./$(DEPDIR)/timestamp-timestamp.Po
 	-rm -f ./$(DEPDIR)/tls.Po
 	-rm -f ./$(DEPDIR)/tls2.Po
 	-rm -f ./$(DEPDIR)/tls2_so.Po
 	-rm -f ./$(DEPDIR)/tls_so-tls_so.Po
+	-rm -f ./$(DEPDIR)/track-fds-exec-children.Po
 	-rm -f ./$(DEPDIR)/unit_debuglog.Po
+	-rm -f ./$(DEPDIR)/use_after_close.Po
 	-rm -f ./$(DEPDIR)/valgrind_cpp_test.Po
 	-rm -f ./$(DEPDIR)/vgprintf.Po
 	-rm -f ./$(DEPDIR)/vgprintf_nvalgrind-vgprintf.Po
@@ -2470,14 +2669,17 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/bitfield1.Po
 	-rm -f ./$(DEPDIR)/bug129866.Po
 	-rm -f ./$(DEPDIR)/bug234814.Po
+	-rm -f ./$(DEPDIR)/bug491394-bug491394.Po
 	-rm -f ./$(DEPDIR)/closeall.Po
 	-rm -f ./$(DEPDIR)/coolo_sigaction.Po
 	-rm -f ./$(DEPDIR)/coolo_strlen.Po
 	-rm -f ./$(DEPDIR)/discard.Po
+	-rm -f ./$(DEPDIR)/double_close_range.Po
 	-rm -f ./$(DEPDIR)/exec-sigmask.Po
 	-rm -f ./$(DEPDIR)/execve-execve.Po
 	-rm -f ./$(DEPDIR)/faultstatus.Po
 	-rm -f ./$(DEPDIR)/fcntl_setown.Po
+	-rm -f ./$(DEPDIR)/fdbaduse.Po
 	-rm -f ./$(DEPDIR)/fdleak_cmsg-fdleak_cmsg.Po
 	-rm -f ./$(DEPDIR)/fdleak_creat.Po
 	-rm -f ./$(DEPDIR)/fdleak_dup.Po
@@ -2487,6 +2689,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/fdleak_open.Po
 	-rm -f ./$(DEPDIR)/fdleak_pipe.Po
 	-rm -f ./$(DEPDIR)/fdleak_socketpair.Po
+	-rm -f ./$(DEPDIR)/file_dclose.Po
 	-rm -f ./$(DEPDIR)/floored.Po
 	-rm -f ./$(DEPDIR)/fork.Po
 	-rm -f ./$(DEPDIR)/fucomip.Po
@@ -2499,6 +2702,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/map_unaligned.Po
 	-rm -f ./$(DEPDIR)/map_unmap.Po
 	-rm -f ./$(DEPDIR)/mmap_fcntl_bug.Po
+	-rm -f ./$(DEPDIR)/mmap_o_direct.Po
 	-rm -f ./$(DEPDIR)/mq.Po
 	-rm -f ./$(DEPDIR)/munmap_exe.Po
 	-rm -f ./$(DEPDIR)/nestedfns-nestedfns.Po
@@ -2540,6 +2744,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/sigprocmask.Po
 	-rm -f ./$(DEPDIR)/sigstackgrowth.Po
 	-rm -f ./$(DEPDIR)/sigsusp.Po
+	-rm -f ./$(DEPDIR)/socket_close.Po
 	-rm -f ./$(DEPDIR)/stackgrowth.Po
 	-rm -f ./$(DEPDIR)/syscall-restart1.Po
 	-rm -f ./$(DEPDIR)/syscall-restart2.Po
@@ -2548,12 +2753,14 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/thread-exits.Po
 	-rm -f ./$(DEPDIR)/threaded-fork.Po
 	-rm -f ./$(DEPDIR)/threadederrno-threadederrno.Po
-	-rm -f ./$(DEPDIR)/timestamp.Po
+	-rm -f ./$(DEPDIR)/timestamp-timestamp.Po
 	-rm -f ./$(DEPDIR)/tls.Po
 	-rm -f ./$(DEPDIR)/tls2.Po
 	-rm -f ./$(DEPDIR)/tls2_so.Po
 	-rm -f ./$(DEPDIR)/tls_so-tls_so.Po
+	-rm -f ./$(DEPDIR)/track-fds-exec-children.Po
 	-rm -f ./$(DEPDIR)/unit_debuglog.Po
+	-rm -f ./$(DEPDIR)/use_after_close.Po
 	-rm -f ./$(DEPDIR)/valgrind_cpp_test.Po
 	-rm -f ./$(DEPDIR)/vgprintf.Po
 	-rm -f ./$(DEPDIR)/vgprintf_nvalgrind-vgprintf.Po

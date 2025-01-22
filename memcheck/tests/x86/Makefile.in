@@ -127,8 +127,10 @@ host_triplet = @host@
 check_PROGRAMS = bug152022$(EXEEXT) espindola2$(EXEEXT) \
 	fpeflags$(EXEEXT) fprem$(EXEEXT) fxsave$(EXEEXT) \
 	more_x86_fp$(EXEEXT) pushfpopf$(EXEEXT) pushfw_x86$(EXEEXT) \
-	pushpopmem$(EXEEXT) sh-mem-vec128$(EXEEXT) sse_memory$(EXEEXT) \
-	tronical$(EXEEXT) xor-undef-x86$(EXEEXT)
+	pushpopmem$(EXEEXT) pcmpgt$(EXEEXT) sh-mem-vec128$(EXEEXT) \
+	sse_memory$(EXEEXT) tronical$(EXEEXT) xor-undef-x86$(EXEEXT) \
+	$(am__EXEEXT_1)
+@HAVE_CXX17_TRUE@am__append_12 = bug487993
 subdir = memcheck/tests/x86
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -140,9 +142,16 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = filter_pushfpopf
 CONFIG_CLEAN_VPATH_FILES =
+@HAVE_CXX17_TRUE@am__EXEEXT_1 = bug487993$(EXEEXT)
 bug152022_SOURCES = bug152022.c
 bug152022_OBJECTS = bug152022.$(OBJEXT)
 bug152022_LDADD = $(LDADD)
+am__bug487993_SOURCES_DIST = bug487993.cpp
+@HAVE_CXX17_TRUE@am_bug487993_OBJECTS = bug487993-bug487993.$(OBJEXT)
+bug487993_OBJECTS = $(am_bug487993_OBJECTS)
+bug487993_LDADD = $(LDADD)
+bug487993_LINK = $(CXXLD) $(bug487993_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 espindola2_SOURCES = espindola2.c
 espindola2_OBJECTS = espindola2.$(OBJEXT)
 espindola2_LDADD = $(LDADD)
@@ -160,6 +169,11 @@ fxsave_LDADD = $(LDADD)
 more_x86_fp_SOURCES = more_x86_fp.c
 more_x86_fp_OBJECTS = more_x86_fp.$(OBJEXT)
 more_x86_fp_DEPENDENCIES =
+am_pcmpgt_OBJECTS = pcmpgt-pcmpgt.$(OBJEXT)
+pcmpgt_OBJECTS = $(am_pcmpgt_OBJECTS)
+pcmpgt_LDADD = $(LDADD)
+pcmpgt_LINK = $(CXXLD) $(pcmpgt_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_pushfpopf_OBJECTS = pushfpopf-pushfpopf_c.$(OBJEXT) \
 	pushfpopf_s.$(OBJEXT)
 pushfpopf_OBJECTS = $(am_pushfpopf_OBJECTS)
@@ -186,7 +200,7 @@ tronical_LDADD = $(LDADD)
 xor_undef_x86_SOURCES = xor-undef-x86.c
 xor_undef_x86_OBJECTS = xor-undef-x86.$(OBJEXT)
 xor_undef_x86_LDADD = $(LDADD)
-SCRIPTS = $(dist_noinst_SCRIPTS)
+SCRIPTS = $(dist_noinst_SCRIPTS) $(noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -203,9 +217,10 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/bug152022.Po \
-	./$(DEPDIR)/espindola2.Po ./$(DEPDIR)/fpeflags-fpeflags.Po \
-	./$(DEPDIR)/fprem.Po ./$(DEPDIR)/fxsave.Po \
-	./$(DEPDIR)/more_x86_fp.Po \
+	./$(DEPDIR)/bug487993-bug487993.Po ./$(DEPDIR)/espindola2.Po \
+	./$(DEPDIR)/fpeflags-fpeflags.Po ./$(DEPDIR)/fprem.Po \
+	./$(DEPDIR)/fxsave.Po ./$(DEPDIR)/more_x86_fp.Po \
+	./$(DEPDIR)/pcmpgt-pcmpgt.Po \
 	./$(DEPDIR)/pushfpopf-pushfpopf_c.Po \
 	./$(DEPDIR)/pushfpopf_s.Po ./$(DEPDIR)/pushfw_x86.Po \
 	./$(DEPDIR)/pushpopmem-pushpopmem.Po \
@@ -234,14 +249,27 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = bug152022.c espindola2.c fpeflags.c fprem.c fxsave.c \
-	more_x86_fp.c $(pushfpopf_SOURCES) pushfw_x86.c pushpopmem.c \
-	sh-mem-vec128.c sse_memory.c $(tronical_SOURCES) \
-	xor-undef-x86.c
-DIST_SOURCES = bug152022.c espindola2.c fpeflags.c fprem.c fxsave.c \
-	more_x86_fp.c $(pushfpopf_SOURCES) pushfw_x86.c pushpopmem.c \
-	sh-mem-vec128.c sse_memory.c $(tronical_SOURCES) \
-	xor-undef-x86.c
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
+SOURCES = bug152022.c $(bug487993_SOURCES) espindola2.c fpeflags.c \
+	fprem.c fxsave.c more_x86_fp.c $(pcmpgt_SOURCES) \
+	$(pushfpopf_SOURCES) pushfw_x86.c pushpopmem.c sh-mem-vec128.c \
+	sse_memory.c $(tronical_SOURCES) xor-undef-x86.c
+DIST_SOURCES = bug152022.c $(am__bug487993_SOURCES_DIST) espindola2.c \
+	fpeflags.c fprem.c fxsave.c more_x86_fp.c $(pcmpgt_SOURCES) \
+	$(pushfpopf_SOURCES) pushfw_x86.c pushpopmem.c sh-mem-vec128.c \
+	sse_memory.c $(tronical_SOURCES) xor-undef-x86.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -304,6 +332,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -321,6 +350,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -335,16 +365,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -395,6 +444,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -405,10 +455,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -563,16 +615,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -583,6 +631,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -599,7 +650,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -659,6 +710,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -687,10 +739,12 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS) @FLAG_M32@
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_stderr filter_pushfpopf filter_tronical
+dist_noinst_SCRIPTS = filter_stderr filter_tronical
+noinst_SCRIPTS = filter_pushfpopf
 INSN_TESTS = insn_basic insn_fpu insn_cmov insn_mmx insn_mmxext insn_sse insn_sse2
 EXTRA_DIST = \
 	bug152022.vgtest bug152022.stderr.exp bug152022.stdout.exp \
+	bug487993.vgtest bug487993.stderr.exp \
 	espindola2.vgtest espindola2.stderr.exp \
 	fpeflags.stderr.exp fpeflags.vgtest \
 	fxsave.vgtest fxsave.stdout.exp fxsave.stderr.exp \
@@ -700,6 +754,7 @@ EXTRA_DIST = \
 	pushfpopf.stderr.exp pushfpopf.stdout.exp pushfpopf.vgtest \
 	pushfw_x86.vgtest pushfw_x86.stdout.exp pushfw_x86.stderr.exp \
 	pushpopmem.stderr.exp pushpopmem.stdout.exp pushpopmem.vgtest \
+	pcmpgt.stderr.exp pcmpgt.vgtest \
 	sh-mem-vec128-plo-no.vgtest \
 		sh-mem-vec128-plo-no.stderr.exp \
 		sh-mem-vec128-plo-no.stdout.exp \
@@ -714,6 +769,8 @@ EXTRA_DIST = \
 	xor-undef-x86.stderr.exp xor-undef-x86.stdout.exp \
 	xor-undef-x86.vgtest
 
+@HAVE_CXX17_TRUE@bug487993_SOURCES = bug487993.cpp
+@HAVE_CXX17_TRUE@bug487993_CXXFLAGS = ${AM_CXXFLAGS} -std=c++17
 
 # fpeflags must use these flags -- bug only occurred with them.
 fpeflags_CFLAGS = $(AM_CFLAGS) -march=i686
@@ -723,10 +780,13 @@ pushfpopf_SOURCES = pushfpopf_c.c pushfpopf_s.S
 @VGCONF_OS_IS_DARWIN_TRUE@pushpopmem_CFLAGS = $(AM_CFLAGS) -mdynamic-no-pic
 tronical_SOURCES = tronical.S
 more_x86_fp_LDADD = -lm
+pcmpgt_SOURCES = pcmpgt.cpp
+@VGCONF_OS_IS_FREEBSD_FALSE@pcmpgt_CXXFLAGS = $(AM_CXXFLAGS)
+@VGCONF_OS_IS_FREEBSD_TRUE@pcmpgt_CXXFLAGS = $(AM_CXXFLAGS) $(FLAG_32ON64_GXX)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .S .c .o .obj
+.SUFFIXES: .S .c .cpp .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.tool-tests.am $(top_srcdir)/Makefile.all.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -767,6 +827,10 @@ bug152022$(EXEEXT): $(bug152022_OBJECTS) $(bug152022_DEPENDENCIES) $(EXTRA_bug15
 	@rm -f bug152022$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bug152022_OBJECTS) $(bug152022_LDADD) $(LIBS)
 
+bug487993$(EXEEXT): $(bug487993_OBJECTS) $(bug487993_DEPENDENCIES) $(EXTRA_bug487993_DEPENDENCIES) 
+	@rm -f bug487993$(EXEEXT)
+	$(AM_V_CXXLD)$(bug487993_LINK) $(bug487993_OBJECTS) $(bug487993_LDADD) $(LIBS)
+
 espindola2$(EXEEXT): $(espindola2_OBJECTS) $(espindola2_DEPENDENCIES) $(EXTRA_espindola2_DEPENDENCIES) 
 	@rm -f espindola2$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(espindola2_OBJECTS) $(espindola2_LDADD) $(LIBS)
@@ -786,6 +850,10 @@ fxsave$(EXEEXT): $(fxsave_OBJECTS) $(fxsave_DEPENDENCIES) $(EXTRA_fxsave_DEPENDE
 more_x86_fp$(EXEEXT): $(more_x86_fp_OBJECTS) $(more_x86_fp_DEPENDENCIES) $(EXTRA_more_x86_fp_DEPENDENCIES) 
 	@rm -f more_x86_fp$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(more_x86_fp_OBJECTS) $(more_x86_fp_LDADD) $(LIBS)
+
+pcmpgt$(EXEEXT): $(pcmpgt_OBJECTS) $(pcmpgt_DEPENDENCIES) $(EXTRA_pcmpgt_DEPENDENCIES) 
+	@rm -f pcmpgt$(EXEEXT)
+	$(AM_V_CXXLD)$(pcmpgt_LINK) $(pcmpgt_OBJECTS) $(pcmpgt_LDADD) $(LIBS)
 
 pushfpopf$(EXEEXT): $(pushfpopf_OBJECTS) $(pushfpopf_DEPENDENCIES) $(EXTRA_pushfpopf_DEPENDENCIES) 
 	@rm -f pushfpopf$(EXEEXT)
@@ -822,11 +890,13 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug152022.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug487993-bug487993.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/espindola2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpeflags-fpeflags.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fprem.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fxsave.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/more_x86_fp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcmpgt-pcmpgt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pushfpopf-pushfpopf_c.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pushfpopf_s.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pushfw_x86.Po@am__quote@ # am--include-marker
@@ -915,6 +985,50 @@ pushpopmem-pushpopmem.obj: pushpopmem.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pushpopmem.c' object='pushpopmem-pushpopmem.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pushpopmem_CFLAGS) $(CFLAGS) -c -o pushpopmem-pushpopmem.obj `if test -f 'pushpopmem.c'; then $(CYGPATH_W) 'pushpopmem.c'; else $(CYGPATH_W) '$(srcdir)/pushpopmem.c'; fi`
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+bug487993-bug487993.o: bug487993.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug487993_CXXFLAGS) $(CXXFLAGS) -MT bug487993-bug487993.o -MD -MP -MF $(DEPDIR)/bug487993-bug487993.Tpo -c -o bug487993-bug487993.o `test -f 'bug487993.cpp' || echo '$(srcdir)/'`bug487993.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug487993-bug487993.Tpo $(DEPDIR)/bug487993-bug487993.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug487993.cpp' object='bug487993-bug487993.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug487993_CXXFLAGS) $(CXXFLAGS) -c -o bug487993-bug487993.o `test -f 'bug487993.cpp' || echo '$(srcdir)/'`bug487993.cpp
+
+bug487993-bug487993.obj: bug487993.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug487993_CXXFLAGS) $(CXXFLAGS) -MT bug487993-bug487993.obj -MD -MP -MF $(DEPDIR)/bug487993-bug487993.Tpo -c -o bug487993-bug487993.obj `if test -f 'bug487993.cpp'; then $(CYGPATH_W) 'bug487993.cpp'; else $(CYGPATH_W) '$(srcdir)/bug487993.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug487993-bug487993.Tpo $(DEPDIR)/bug487993-bug487993.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug487993.cpp' object='bug487993-bug487993.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug487993_CXXFLAGS) $(CXXFLAGS) -c -o bug487993-bug487993.obj `if test -f 'bug487993.cpp'; then $(CYGPATH_W) 'bug487993.cpp'; else $(CYGPATH_W) '$(srcdir)/bug487993.cpp'; fi`
+
+pcmpgt-pcmpgt.o: pcmpgt.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcmpgt_CXXFLAGS) $(CXXFLAGS) -MT pcmpgt-pcmpgt.o -MD -MP -MF $(DEPDIR)/pcmpgt-pcmpgt.Tpo -c -o pcmpgt-pcmpgt.o `test -f 'pcmpgt.cpp' || echo '$(srcdir)/'`pcmpgt.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcmpgt-pcmpgt.Tpo $(DEPDIR)/pcmpgt-pcmpgt.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pcmpgt.cpp' object='pcmpgt-pcmpgt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcmpgt_CXXFLAGS) $(CXXFLAGS) -c -o pcmpgt-pcmpgt.o `test -f 'pcmpgt.cpp' || echo '$(srcdir)/'`pcmpgt.cpp
+
+pcmpgt-pcmpgt.obj: pcmpgt.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcmpgt_CXXFLAGS) $(CXXFLAGS) -MT pcmpgt-pcmpgt.obj -MD -MP -MF $(DEPDIR)/pcmpgt-pcmpgt.Tpo -c -o pcmpgt-pcmpgt.obj `if test -f 'pcmpgt.cpp'; then $(CYGPATH_W) 'pcmpgt.cpp'; else $(CYGPATH_W) '$(srcdir)/pcmpgt.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pcmpgt-pcmpgt.Tpo $(DEPDIR)/pcmpgt-pcmpgt.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pcmpgt.cpp' object='pcmpgt-pcmpgt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pcmpgt_CXXFLAGS) $(CXXFLAGS) -c -o pcmpgt-pcmpgt.obj `if test -f 'pcmpgt.cpp'; then $(CYGPATH_W) 'pcmpgt.cpp'; else $(CYGPATH_W) '$(srcdir)/pcmpgt.cpp'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1042,11 +1156,13 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/bug152022.Po
+	-rm -f ./$(DEPDIR)/bug487993-bug487993.Po
 	-rm -f ./$(DEPDIR)/espindola2.Po
 	-rm -f ./$(DEPDIR)/fpeflags-fpeflags.Po
 	-rm -f ./$(DEPDIR)/fprem.Po
 	-rm -f ./$(DEPDIR)/fxsave.Po
 	-rm -f ./$(DEPDIR)/more_x86_fp.Po
+	-rm -f ./$(DEPDIR)/pcmpgt-pcmpgt.Po
 	-rm -f ./$(DEPDIR)/pushfpopf-pushfpopf_c.Po
 	-rm -f ./$(DEPDIR)/pushfpopf_s.Po
 	-rm -f ./$(DEPDIR)/pushfw_x86.Po
@@ -1101,11 +1217,13 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/bug152022.Po
+	-rm -f ./$(DEPDIR)/bug487993-bug487993.Po
 	-rm -f ./$(DEPDIR)/espindola2.Po
 	-rm -f ./$(DEPDIR)/fpeflags-fpeflags.Po
 	-rm -f ./$(DEPDIR)/fprem.Po
 	-rm -f ./$(DEPDIR)/fxsave.Po
 	-rm -f ./$(DEPDIR)/more_x86_fp.Po
+	-rm -f ./$(DEPDIR)/pcmpgt-pcmpgt.Po
 	-rm -f ./$(DEPDIR)/pushfpopf-pushfpopf_c.Po
 	-rm -f ./$(DEPDIR)/pushfpopf_s.Po
 	-rm -f ./$(DEPDIR)/pushfw_x86.Po

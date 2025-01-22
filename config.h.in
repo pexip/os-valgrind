@@ -45,32 +45,17 @@
 /* configured to build with lto link time optimisation */
 #undef ENABLE_LTO
 
-/* FREEBSD_VERS value for FreeBSD 10.x */
-#undef FREEBSD_10
-
-/* FREEBSD_VERS value for FreeBSD 11.x */
-#undef FREEBSD_11
-
-/* FREEBSD_VERS value for FreeBSD 12.0 to 12.1 */
-#undef FREEBSD_12
-
-/* FREEBSD_VERS value for FreeBSD 12.2 */
-#undef FREEBSD_12_2
-
-/* FREEBSD_VERS value for FreeBSD 13.0 */
-#undef FREEBSD_13_0
-
-/* FREEBSD_VERS value for FreeBSD 13.1+ */
-#undef FREEBSD_13_1
-
-/* FREEBSD_VERS value for FreeBSD 14.x */
-#undef FREEBSD_14
+/* Define to 1 if you have the new SYS___realpathat syscall. */
+#undef FREEBSD_KQUEUEX_SYSCALL
 
 /* Define to 1 if you're using FreeBSD */
 #undef FREEBSD_LIBC
 
-/* FreeBSD version */
-#undef FREEBSD_VERS
+/* Define to 1 if you have the new SYS___realpathat syscall. */
+#undef FREEBSD_REALPATHAT_SYSCALL
+
+/* Define to 1 if you have the new SYS_timer_fd_create syscall. */
+#undef FREEBSD_TIMERFD_SYSCALL
 
 /* path to GDB */
 #undef GDB_PATH
@@ -81,6 +66,9 @@
 
 /* Define to 1 if strlen() has been optimized heavily (amd64 glibc >= 2.10) */
 #undef GLIBC_MANDATORY_STRLEN_REDIRECT
+
+/* Define to 1 if you have the `aligned_alloc' function. */
+#undef HAVE_ALIGNED_ALLOC
 
 /* Define to 1 if you have the <asm/unistd.h> header file. */
 #undef HAVE_ASM_UNISTD_H
@@ -120,6 +108,9 @@
 /* Define to 1 if you have the `CLOCK_MONOTONIC' constant. */
 #undef HAVE_CLOCK_MONOTONIC
 
+/* Define to 1 if you have the `close_range' function. */
+#undef HAVE_CLOSE_RANGE
+
 /* Define to 1 if you have the `copy_file_range' function. */
 #undef HAVE_COPY_FILE_RANGE
 
@@ -147,8 +138,23 @@
 /* Define to 1 if you have the `eventfd_read' function. */
 #undef HAVE_EVENTFD_READ
 
+/* Define to 1 if you have the `fdatasync' function. */
+#undef HAVE_FDATASYNC
+
+/* Define to 1 if you have the `free_aligned_sized' function. */
+#undef HAVE_FREE_ALIGNED_SIZED
+
+/* Define to 1 if you have the `getaddrinfo' function. */
+#undef HAVE_GETADDRINFO
+
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
+
+/* Define to 1 if you have the `getrandom' function. */
+#undef HAVE_GETRANDOM
+
+/* Define to 1 if you have GNU libc C17 aligned_alloc. */
+#undef HAVE_GNU_LIBC_C17_ALIGNED_ALLOC
 
 /* Define to 1 if you have the `features.h' header. */
 #undef HAVE_HEADER_FEATURES_H
@@ -197,6 +203,9 @@
 
 /* Define to 1 if you have the `mremap' function. */
 #undef HAVE_MREMAP
+
+/* Define to 1 if you have the `pipe2' function. */
+#undef HAVE_PIPE2
 
 /* Define to 1 if you have the `ppoll' function. */
 #undef HAVE_PPOLL
@@ -277,8 +286,20 @@
 /* Define to 1 if you have the `readlinkat' function. */
 #undef HAVE_READLINKAT
 
+/* Define to 1 if you have the `reallocarray' function. */
+#undef HAVE_REALLOCARRAY
+
+/* Define to 1 if you have the `sbrk' function. */
+#undef HAVE_SBRK
+
 /* Define to 1 if you have the `semtimedop' function. */
 #undef HAVE_SEMTIMEDOP
+
+/* Define to 1 if you have the `sem_clockwait_np' function. */
+#undef HAVE_SEM_CLOCKWAIT_NP
+
+/* Define to 1 if you have the `sem_timedwait' function. */
+#undef HAVE_SEM_TIMEDWAIT
 
 /* Define to 1 if you have the `setcontext' function. */
 #undef HAVE_SETCONTEXT
@@ -318,6 +339,12 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strlcat' function. */
+#undef HAVE_STRLCAT
+
+/* Define to 1 if you have the `strlcpy' function. */
+#undef HAVE_STRLCPY
 
 /* Define to 1 if you have the `strndup' function. */
 #undef HAVE_STRNDUP
@@ -399,6 +426,15 @@
 
 /* Define to 1 if you have the `utimensat' function. */
 #undef HAVE_UTIMENSAT
+
+/* Define to 1 if you have the `wcpncpy' function. */
+#undef HAVE_WCPNCPY
+
+/* Define to 1 if you have the `wcsncpy' function. */
+#undef HAVE_WCSNCPY
+
+/* Define to 1 if you have the `wcsxfrm' function. */
+#undef HAVE_WCSXFRM
 
 /* Define to 1 if you're using Musl libc */
 #undef MUSL_LIBC
