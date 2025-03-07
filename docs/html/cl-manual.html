@@ -6,7 +6,7 @@
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="Valgrind Documentation">
 <link rel="up" href="manual.html" title="Valgrind User Manual">
-<link rel="prev" href="cg-manual.html" title="5. Cachegrind: a cache and branch-prediction profiler">
+<link rel="prev" href="cg-manual.html" title="5. Cachegrind: a high-precision tracing profiler">
 <link rel="next" href="hg-manual.html" title="7. Helgrind: a thread error detector">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -116,7 +116,7 @@ for profiling functions called from multiple call sites, and where
 optimization opportunities depend on changing code in the callers, in
 particular by reducing the call count.</p>
 <p>Callgrind's cache simulation is based on that of Cachegrind.
-Read the documentation for <a class="xref" href="cg-manual.html" title="5. Cachegrind: a cache and branch-prediction profiler">Cachegrind: a cache and branch-prediction profiler</a> first.  The material
+Read the documentation for <a class="xref" href="cg-manual.html" title="5. Cachegrind: a high-precision tracing profiler">Cachegrind: a cache and branch-prediction profiler</a> first.  The material
 below describes the features supported in addition to Cachegrind's
 features.</p>
 <p>Callgrind's ability to detect function calls and returns depends
@@ -859,7 +859,7 @@ Also see <a class="xref" href="cl-manual.html#cl-manual.cycles" title="6.2.4. A
       Cache misses on instruction reads ("I1mr"/"ILmr"),
       data read accesses ("Dr") and related cache misses ("D1mr"/"DLmr"),
       data write accesses ("Dw") and related cache misses ("D1mw"/"DLmw").
-      For more information, see <a class="xref" href="cg-manual.html" title="5. Cachegrind: a cache and branch-prediction profiler">Cachegrind: a cache and branch-prediction profiler</a>.
+      For more information, see <a class="xref" href="cg-manual.html" title="5. Cachegrind: a high-precision tracing profiler">Cachegrind: a cache and branch-prediction profiler</a>.
       </p></dd>
 <dt>
 <a name="clopt.branch-sim"></a><span class="term">
@@ -973,6 +973,17 @@ Also see <a class="xref" href="cl-manual.html#cl-manual.cycles" title="6.2.4. A
 <a name="cl-manual.monitor-commands"></a>6.4. Callgrind Monitor Commands</h2></div></div></div>
 <p>The Callgrind tool provides monitor commands handled by the Valgrind
 gdbserver (see <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-commandhandling" title="3.2.5. Monitor command handling by the Valgrind gdbserver">Monitor command handling by the Valgrind gdbserver</a>).
+Valgrind python code provides GDB front end commands giving an easier usage of
+the callgrind monitor commands (see
+<a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-gdbmonitorfrontend" title="3.2.6. GDB front end commands for Valgrind gdbserver monitor commands">GDB front end commands for Valgrind gdbserver monitor commands</a>).  To launch a
+callgrind monitor command via its GDB front end command, instead of prefixing
+the command with "monitor", you must use the GDB <code class="varname">callgrind</code>
+command (or the shorter aliases <code class="varname">cg</code>).  Using the callgrind GDB
+front end command provide a more flexible usage, such as auto-completion of the
+command by GDB. In GDB, you can use <code class="varname">help callgrind</code> to get
+help about the callgrind front end monitor commands and you can
+use <code class="varname">apropos callgrind</code> to get all the commands mentionning the
+word "callgrind" in their name or on-line help.
 </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem"><p><code class="varname">dump [&lt;dump_hint&gt;]</code> requests to dump the
@@ -1186,7 +1197,7 @@ their arguments.</p>
 <br><table class="nav" width="100%" cellspacing="3" cellpadding="2" border="0" summary="Navigation footer">
 <tr>
 <td rowspan="2" width="40%" align="left">
-<a accesskey="p" href="cg-manual.html">&lt;&lt; 5. Cachegrind: a cache and branch-prediction profiler</a> </td>
+<a accesskey="p" href="cg-manual.html">&lt;&lt; 5. Cachegrind: a high-precision tracing profiler</a> </td>
 <td width="20%" align="center"><a accesskey="u" href="manual.html">Up</a></td>
 <td rowspan="2" width="40%" align="right"> <a accesskey="n" href="hg-manual.html">7. Helgrind: a thread error detector &gt;&gt;</a>
 </td>

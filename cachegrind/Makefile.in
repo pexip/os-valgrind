@@ -115,16 +115,18 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_FALSE@@VGCONF_HAVE_PLATFORM_SEC_TRUE@am__append_8 = \
 @COMPILER_IS_CLANG_FALSE@@VGCONF_HAVE_PLATFORM_SEC_TRUE@	$(top_builddir)/coregrind/libgcc-sup-@VGCONF_ARCH_SEC@-@VGCONF_OS@.a
 
+@COMPILER_IS_CLANG_TRUE@@VGCONF_PLATFORMS_INCLUDE_ARM64_LINUX_TRUE@am__append_9 = \
+@COMPILER_IS_CLANG_TRUE@@VGCONF_PLATFORMS_INCLUDE_ARM64_LINUX_TRUE@	$(top_builddir)/coregrind/libgcc-sup-@VGCONF_ARCH_PRI@-@VGCONF_OS@.a
+
+@COMPILER_IS_CLANG_TRUE@@VGCONF_HAVE_PLATFORM_SEC_TRUE@@VGCONF_PLATFORMS_INCLUDE_ARM64_LINUX_TRUE@am__append_10 = \
+@COMPILER_IS_CLANG_TRUE@@VGCONF_HAVE_PLATFORM_SEC_TRUE@@VGCONF_PLATFORMS_INCLUDE_ARM64_LINUX_TRUE@	$(top_builddir)/coregrind/libgcc-sup-@VGCONF_ARCH_SEC@-@VGCONF_OS@.a
+
 
 # On Android we must ask for non-executable stack, not sure why.
-@VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@@VGCONF_PLATVARIANT_IS_ANDROID_TRUE@am__append_9 = -Wl,-z,noexecstack
-bin_PROGRAMS = cg_merge$(EXEEXT)
-# If there is no secondary platform, and the platforms include x86-darwin,
-# then the primary platform must be x86-darwin.  Hence:
-@VGCONF_HAVE_PLATFORM_SEC_FALSE@@VGCONF_PLATFORMS_INCLUDE_X86_DARWIN_TRUE@am__append_10 = -Wl,-read_only_relocs -Wl,suppress
+@VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@@VGCONF_PLATVARIANT_IS_ANDROID_TRUE@am__append_11 = -Wl,-z,noexecstack
 noinst_PROGRAMS = cachegrind-@VGCONF_ARCH_PRI@-@VGCONF_OS@$(EXEEXT) \
 	$(am__EXEEXT_1)
-@VGCONF_HAVE_PLATFORM_SEC_TRUE@am__append_11 = cachegrind-@VGCONF_ARCH_SEC@-@VGCONF_OS@
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@am__append_12 = cachegrind-@VGCONF_ARCH_SEC@-@VGCONF_OS@
 @VGCONF_HAVE_PLATFORM_SEC_FALSE@cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_DEPENDENCIES =
 subdir = cachegrind
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -132,14 +134,13 @@ am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(noinst_HEADERS) \
-	$(am__DIST_COMMON)
+	$(pkginclude_HEADERS) $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = cg_annotate cg_diff
+CONFIG_CLEAN_FILES = cg_annotate cg_diff cg_merge
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@am__EXEEXT_1 = cachegrind-@VGCONF_ARCH_SEC@-@VGCONF_OS@$(EXEEXT)
-PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
+PROGRAMS = $(noinst_PROGRAMS)
 am__objects_1 =  \
 	cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_main.$(OBJEXT) \
 	cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_arch.$(OBJEXT)
@@ -156,11 +157,6 @@ am__objects_2 =  \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	$(am__objects_2)
 cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_OBJECTS =  \
 	$(am_cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_OBJECTS)
-am_cg_merge_OBJECTS = cg_merge-cg_merge.$(OBJEXT)
-cg_merge_OBJECTS = $(am_cg_merge_OBJECTS)
-cg_merge_LDADD = $(LDADD)
-cg_merge_LINK = $(CCLD) $(cg_merge_CFLAGS) $(CFLAGS) \
-	$(cg_merge_LDFLAGS) $(LDFLAGS) -o $@
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -188,6 +184,7 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgincludedir)"
 SCRIPTS = $(bin_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -207,8 +204,7 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_arch.Po \
 	./$(DEPDIR)/cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_main.Po \
 	./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.Po \
-	./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_main.Po \
-	./$(DEPDIR)/cg_merge-cg_merge.Po
+	./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_main.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -227,11 +223,9 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@_SOURCES) \
-	$(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_SOURCES) \
-	$(cg_merge_SOURCES)
+	$(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_SOURCES)
 DIST_SOURCES = $(cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@_SOURCES) \
-	$(am__cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_SOURCES_DIST) \
-	$(cg_merge_SOURCES)
+	$(am__cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -245,7 +239,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(noinst_HEADERS)
+HEADERS = $(noinst_HEADERS) $(pkginclude_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -273,8 +267,9 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/cg_annotate.in \
-	$(srcdir)/cg_diff.in $(top_srcdir)/Makefile.all.am \
-	$(top_srcdir)/Makefile.tool.am $(top_srcdir)/depcomp
+	$(srcdir)/cg_diff.in $(srcdir)/cg_merge.in \
+	$(top_srcdir)/Makefile.all.am $(top_srcdir)/Makefile.tool.am \
+	$(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -337,6 +332,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -354,6 +350,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -368,16 +365,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -428,6 +444,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -438,10 +455,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -597,16 +616,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -617,6 +632,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -633,7 +651,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -693,6 +711,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -716,10 +735,11 @@ TOOL_DEPENDENCIES_@VGCONF_PLATFORM_PRI_CAPS@ = \
 TOOL_LDADD_COMMON = -lgcc
 TOOL_LDADD_@VGCONF_PLATFORM_PRI_CAPS@ =  \
 	$(TOOL_DEPENDENCIES_@VGCONF_PLATFORM_PRI_CAPS@) \
-	$(TOOL_LDADD_COMMON) $(am__append_7)
+	$(TOOL_LDADD_COMMON) $(am__append_7) $(am__append_9)
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@TOOL_LDADD_@VGCONF_PLATFORM_SEC_CAPS@ = $(TOOL_DEPENDENCIES_@VGCONF_PLATFORM_SEC_CAPS@) \
 @VGCONF_HAVE_PLATFORM_SEC_TRUE@	$(TOOL_LDADD_COMMON) \
-@VGCONF_HAVE_PLATFORM_SEC_TRUE@	$(am__append_8)
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@	$(am__append_8) \
+@VGCONF_HAVE_PLATFORM_SEC_TRUE@	$(am__append_10)
 
 # -Wl,--build-id=none is needed when linking tools with a linker that only
 # knows -Ttext and not -Ttext-segment. Without this flag newer ld versions
@@ -762,12 +782,15 @@ TOOL_LDFLAGS_PPC64LE_LINUX = \
 	$(TOOL_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 
 TOOL_LDFLAGS_ARM_LINUX = $(TOOL_LDFLAGS_COMMON_LINUX) @FLAG_M32@ \
-	$(am__append_9)
+	$(am__append_11)
 TOOL_LDFLAGS_ARM64_LINUX = \
 	$(TOOL_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 
+TOOL_LDFLAGS_ARM64_FREEBSD = \
+	$(TOOL_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+
 TOOL_LDFLAGS_S390X_LINUX = \
-	$(TOOL_LDFLAGS_COMMON_LINUX) @FLAG_M64@
+	$(TOOL_LDFLAGS_COMMON_LINUX) @FLAG_M64@ @FLAG_S390_PGSTE@
 
 TOOL_LDFLAGS_X86_DARWIN = \
 	$(TOOL_LDFLAGS_COMMON_DARWIN) -arch i386
@@ -833,6 +856,9 @@ LIBREPLACEMALLOC_ARM64_LINUX = \
 
 LIBREPLACEMALLOC_AMD64_FREEBSD = \
 	$(top_builddir)/coregrind/libreplacemalloc_toolpreload-amd64-freebsd.a
+
+LIBREPLACEMALLOC_ARM64_FREEBSD = \
+	$(top_builddir)/coregrind/libreplacemalloc_toolpreload-arm64-freebsd.a
 
 LIBREPLACEMALLOC_X86_DARWIN = \
 	$(top_builddir)/coregrind/libreplacemalloc_toolpreload-x86-darwin.a
@@ -900,6 +926,11 @@ LIBREPLACEMALLOC_LDFLAGS_AMD64_FREEBSD = \
 	$(LIBREPLACEMALLOC_AMD64_FREEBSD) \
 	-Wl,--no-whole-archive
 
+LIBREPLACEMALLOC_LDFLAGS_ARM64_FREEBSD = \
+	-Wl,--whole-archive \
+	$(LIBREPLACEMALLOC_ARM64_FREEBSD) \
+	-Wl,--no-whole-archive
+
 LIBREPLACEMALLOC_LDFLAGS_X86_DARWIN = \
 	$(LIBREPLACEMALLOC_X86_DARWIN)
 
@@ -941,17 +972,13 @@ EXTRA_DIST = \
 #----------------------------------------------------------------------------
 # Headers, etc
 #----------------------------------------------------------------------------
-bin_SCRIPTS = cg_annotate cg_diff
+pkginclude_HEADERS = cachegrind.h
+bin_SCRIPTS = cg_annotate cg_diff cg_merge
 noinst_HEADERS = \
 	cg_arch.h \
 	cg_branchpred.c \
 	cg_sim.c
 
-cg_merge_SOURCES = cg_merge.c
-cg_merge_CPPFLAGS = $(AM_CPPFLAGS_PRI)
-cg_merge_CFLAGS = $(AM_CFLAGS_PRI)
-cg_merge_CCASFLAGS = $(AM_CCASFLAGS_PRI)
-cg_merge_LDFLAGS = $(AM_CFLAGS_PRI) $(am__append_10)
 CACHEGRIND_SOURCES_COMMON = \
 	cg_main.c \
 	cg_arch.c
@@ -1044,48 +1071,8 @@ cg_annotate: $(top_builddir)/config.status $(srcdir)/cg_annotate.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 cg_diff: $(top_builddir)/config.status $(srcdir)/cg_diff.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
-	fi; \
-	for p in $$list; do echo "$$p $$p"; done | \
-	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p \
-	  ; then echo "$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n;h' \
-	    -e 's|.*|.|' \
-	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
-	sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
-	    else { print "f", $$3 "/" $$4, $$1; } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
-	    } \
-	; done
-
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' \
-	`; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(bindir)" && rm -f $$files
-
-clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+cg_merge: $(top_builddir)/config.status $(srcdir)/cg_merge.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 clean-noinstPROGRAMS:
 	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
@@ -1097,10 +1084,6 @@ cachegrind-@VGCONF_ARCH_PRI@-@VGCONF_OS@$(EXEEXT): $(cachegrind_@VGCONF_ARCH_PRI
 cachegrind-@VGCONF_ARCH_SEC@-@VGCONF_OS@$(EXEEXT): $(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_OBJECTS) $(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_DEPENDENCIES) $(EXTRA_cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_DEPENDENCIES) 
 	@rm -f cachegrind-@VGCONF_ARCH_SEC@-@VGCONF_OS@$(EXEEXT)
 	$(AM_V_GEN)$(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_LINK) $(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_OBJECTS) $(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_LDADD) $(LIBS)
-
-cg_merge$(EXEEXT): $(cg_merge_OBJECTS) $(cg_merge_DEPENDENCIES) $(EXTRA_cg_merge_DEPENDENCIES) 
-	@rm -f cg_merge$(EXEEXT)
-	$(AM_V_CCLD)$(cg_merge_LINK) $(cg_merge_OBJECTS) $(cg_merge_LDADD) $(LIBS)
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
@@ -1147,7 +1130,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_main.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cg_merge-cg_merge.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -1226,20 +1208,27 @@ cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.obj: cg_arch.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cg_arch.c' object='cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_CPPFLAGS) $(CPPFLAGS) $(cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@_CFLAGS) $(CFLAGS) -c -o cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.obj `if test -f 'cg_arch.c'; then $(CYGPATH_W) 'cg_arch.c'; else $(CYGPATH_W) '$(srcdir)/cg_arch.c'; fi`
+install-pkgincludeHEADERS: $(pkginclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgincludedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgincludedir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(pkgincludedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(pkgincludedir)" || exit $$?; \
+	done
 
-cg_merge-cg_merge.o: cg_merge.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cg_merge_CPPFLAGS) $(CPPFLAGS) $(cg_merge_CFLAGS) $(CFLAGS) -MT cg_merge-cg_merge.o -MD -MP -MF $(DEPDIR)/cg_merge-cg_merge.Tpo -c -o cg_merge-cg_merge.o `test -f 'cg_merge.c' || echo '$(srcdir)/'`cg_merge.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cg_merge-cg_merge.Tpo $(DEPDIR)/cg_merge-cg_merge.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cg_merge.c' object='cg_merge-cg_merge.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cg_merge_CPPFLAGS) $(CPPFLAGS) $(cg_merge_CFLAGS) $(CFLAGS) -c -o cg_merge-cg_merge.o `test -f 'cg_merge.c' || echo '$(srcdir)/'`cg_merge.c
-
-cg_merge-cg_merge.obj: cg_merge.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cg_merge_CPPFLAGS) $(CPPFLAGS) $(cg_merge_CFLAGS) $(CFLAGS) -MT cg_merge-cg_merge.obj -MD -MP -MF $(DEPDIR)/cg_merge-cg_merge.Tpo -c -o cg_merge-cg_merge.obj `if test -f 'cg_merge.c'; then $(CYGPATH_W) 'cg_merge.c'; else $(CYGPATH_W) '$(srcdir)/cg_merge.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cg_merge-cg_merge.Tpo $(DEPDIR)/cg_merge-cg_merge.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cg_merge.c' object='cg_merge-cg_merge.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cg_merge_CPPFLAGS) $(CPPFLAGS) $(cg_merge_CFLAGS) $(CFLAGS) -c -o cg_merge-cg_merge.obj `if test -f 'cg_merge.c'; then $(CYGPATH_W) 'cg_merge.c'; else $(CYGPATH_W) '$(srcdir)/cg_merge.c'; fi`
+uninstall-pkgincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pkgincludedir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -1402,7 +1391,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(HEADERS) all-local
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1437,15 +1426,14 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-local \
-	clean-noinstPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-local clean-noinstPROGRAMS \
+	mostlyclean-am
 
 distclean: distclean-recursive
 		-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_arch.Po
 	-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_main.Po
 	-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.Po
 	-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_main.Po
-	-rm -f ./$(DEPDIR)/cg_merge-cg_merge.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1462,14 +1450,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am:
+install-data-am: install-pkgincludeHEADERS
 
 install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS install-binSCRIPTS \
-	install-exec-local
+install-exec-am: install-binSCRIPTS install-exec-local
 
 install-html: install-html-recursive
 
@@ -1496,7 +1483,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_PRI@_@VGCONF_OS@-cg_main.Po
 	-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_arch.Po
 	-rm -f ./$(DEPDIR)/cachegrind_@VGCONF_ARCH_SEC@_@VGCONF_OS@-cg_main.Po
-	-rm -f ./$(DEPDIR)/cg_merge-cg_merge.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1512,26 +1498,27 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
-	uninstall-local
+uninstall-am: uninstall-binSCRIPTS uninstall-local \
+	uninstall-pkgincludeHEADERS
 
 .MAKE: $(am__recursive_targets) install-am install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am all-local \
-	am--depfiles check check-am clean clean-binPROGRAMS \
-	clean-generic clean-local clean-noinstPROGRAMS cscopelist-am \
-	ctags ctags-am distclean distclean-compile distclean-generic \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-binSCRIPTS \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-exec-local install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
+	am--depfiles check check-am clean clean-generic clean-local \
+	clean-noinstPROGRAMS cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binSCRIPTS install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-local \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am \
+	install-pkgincludeHEADERS install-ps install-ps-am \
 	install-strip installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-generic \
 	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
 	ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-binSCRIPTS uninstall-local
+	uninstall-binSCRIPTS uninstall-local \
+	uninstall-pkgincludeHEADERS
 
 .PRECIOUS: Makefile
 
@@ -1626,6 +1613,24 @@ clean-local: clean-noinst_DSYMS
 install-exec-local: install-noinst_PROGRAMS install-noinst_DSYMS
 
 uninstall-local: uninstall-noinst_PROGRAMS uninstall-noinst_DSYMS
+
+#----------------------------------------------------------------------------
+# Miscellaneous
+#----------------------------------------------------------------------------
+
+# "Build" `cg_annotate`. The `+` avoids warnings about the jobserver.
+pyann:
+	+../auxprogs/pybuild.sh ../auxprogs cg_annotate.in cg_annotate
+
+# "Build" `cg_diff`. The `+` avoids warnings about the jobserver.
+pydiff:
+	+../auxprogs/pybuild.sh ../auxprogs cg_diff.in cg_diff
+
+# "Build" `cg_merge`. The `+` avoids warnings about the jobserver.
+pymerge:
+	+../auxprogs/pybuild.sh ../auxprogs cg_merge.in cg_merge
+
+.PHONY: pyann pydiff pymerge
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

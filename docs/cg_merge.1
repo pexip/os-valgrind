@@ -2,12 +2,12 @@
 .\"     Title: cg_merge
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/24/2022
+.\"      Date: 11/01/2024
 .\"    Manual: cg_merge
-.\"    Source: Release 3.20.0
+.\"    Source: Release 3.24.0
 .\"  Language: English
 .\"
-.TH "CG_MERGE" "1" "10/24/2022" "Release 3\&.20\&.0" "cg_merge"
+.TH "CG_MERGE" "1" "11/01/2024" "Release 3\&.24\&.0" "cg_merge"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,21 +28,23 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-cg_merge \- merges multiple Cachegrind output files into one
+cg_merge \- (deprecated) merges multiple Cachegrind output files into one
 .SH "SYNOPSIS"
 .HP \w'\fBcg_merge\fR\ 'u
 \fBcg_merge\fR [\fIoptions\fR] [\fIcachegrind\-out\-files\fR...]
 .SH "DESCRIPTION"
 .PP
 \fBcg_merge\fR
-sums together the outputs of multiple Cachegrind runs into a single output file\&.
+sums together multiple Cachegrind output files into a single Cachegrind output file\&. It is deprecated because
+\fBcg_annotate\fR
+can now do much the same thing, but better\&.
 .SH "OPTIONS"
 .PP
 \fB\-o outfile\fR
 .RS 4
-Write the profile data to
+Write the output to to
 outfile
-rather than to standard output\&.
+instead of standard output\&.
 .RE
 .SH "SEE ALSO"
 .PP

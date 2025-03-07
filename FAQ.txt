@@ -1,7 +1,7 @@
 
 
 Valgrind FAQ
-Release 3.17.0 19 Mar 2021
+Release 3.24.0 31 Oct 2024
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Table of Contents
@@ -337,6 +337,36 @@ Unfortunately, Memcheck doesn't do bounds checking on global or stack
 arrays. We'd like to, but it's just not possible to do in a reasonable 
 way that fits with how Memcheck works. Sorry. 
 
+------------------------------------------------------------------------
+
+4.7. Why does Memcheck report many "Mismatched free() / delete / delete 
+[]" errors when my code is correct? 
+
+There are two possible causes of this. 
+First, check if you are using an optimized build of Google tcmalloc 
+(part of Google perftools). This library uses a single alias for 
+free/scalar delete/array delete as an unmeasurable micro-optimization. 
+There is simply no way for Memcheck to tell which of these was 
+originally used. There are a few possible workarounds. Build tcmalloc 
+with "CPPFLAGS=-DTCMALLOC_NO_ALIASES" (best).Use a debug build of 
+tcmalloc (debug builds turn off the alias micro-optimization).Do not 
+link with tcmalloc for the builds that you use for Memecheck testing. 
+
+Second, if you are replacing operator new or operator delete make sure 
+that the compiler does not perform optimizations such as inlining on 
+calls to these functions. Such optimizations can prevent Memcheck from 
+correctly identifying the allocator or deallocator that is being used. 
+
+The following two code snippets show how you can do this with GCC and 
+LLVM (clang). 
+
+      // GCC
+      void operator delete(void*) noexcept __attribute__((__externally_visible__));
+    
+      // LLVM (clang)
+      __attribute__((__visibility__("default"))) void operator delete(void*) noexcept;
+    
+If all else fails, you might have to use "--show-mismatched-frees=no" 
 
 ------------------------------------------------------------------------
 5. Miscellaneous

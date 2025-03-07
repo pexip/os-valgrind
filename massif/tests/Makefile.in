@@ -125,13 +125,16 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
 check_PROGRAMS = alloc-fns$(EXEEXT) basic$(EXEEXT) big-alloc$(EXEEXT) \
-	culling1$(EXEEXT) culling2$(EXEEXT) custom_alloc$(EXEEXT) \
-	deep$(EXEEXT) ignored$(EXEEXT) ignoring$(EXEEXT) \
-	inlinfomalloc$(EXEEXT) insig$(EXEEXT) long-names$(EXEEXT) \
-	long-time$(EXEEXT) mmapunmap$(EXEEXT) malloc_usable$(EXEEXT) \
-	new-cpp$(EXEEXT) null$(EXEEXT) one$(EXEEXT) \
-	overloaded-new$(EXEEXT) pages_as_heap$(EXEEXT) peak$(EXEEXT) \
-	realloc$(EXEEXT) thresholds$(EXEEXT) zero$(EXEEXT)
+	bug469146$(EXEEXT) culling1$(EXEEXT) culling2$(EXEEXT) \
+	custom_alloc$(EXEEXT) deep$(EXEEXT) ignored$(EXEEXT) \
+	ignoring$(EXEEXT) inlinfomalloc$(EXEEXT) insig$(EXEEXT) \
+	long-names$(EXEEXT) long-time$(EXEEXT) mmapunmap$(EXEEXT) \
+	malloc_usable$(EXEEXT) new-cpp$(EXEEXT) null$(EXEEXT) \
+	one$(EXEEXT) peak$(EXEEXT) realloc$(EXEEXT) \
+	thresholds$(EXEEXT) zero$(EXEEXT) $(am__EXEEXT_1) \
+	$(am__EXEEXT_2)
+@HAVE_SBRK_TRUE@am__append_12 = pages_as_heap
+@HAVE_ALIGNED_CXX_ALLOC_TRUE@am__append_13 = overloaded-new
 subdir = massif/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -143,6 +146,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@HAVE_SBRK_TRUE@am__EXEEXT_1 = pages_as_heap$(EXEEXT)
+@HAVE_ALIGNED_CXX_ALLOC_TRUE@am__EXEEXT_2 = overloaded-new$(EXEEXT)
 alloc_fns_SOURCES = alloc-fns.c
 alloc_fns_OBJECTS = alloc_fns-alloc-fns.$(OBJEXT)
 alloc_fns_LDADD = $(LDADD)
@@ -156,6 +161,11 @@ big_alloc_OBJECTS = big_alloc-big-alloc.$(OBJEXT)
 big_alloc_LDADD = $(LDADD)
 big_alloc_LINK = $(CCLD) $(big_alloc_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_bug469146_OBJECTS = bug469146-bug469146.$(OBJEXT)
+bug469146_OBJECTS = $(am_bug469146_OBJECTS)
+bug469146_LDADD = $(LDADD)
+bug469146_LINK = $(CXXLD) $(bug469146_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 culling1_SOURCES = culling1.c
 culling1_OBJECTS = culling1-culling1.$(OBJEXT)
 culling1_LDADD = $(LDADD)
@@ -259,6 +269,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/alloc_fns-alloc-fns.Po \
 	./$(DEPDIR)/basic.Po ./$(DEPDIR)/big_alloc-big-alloc.Po \
+	./$(DEPDIR)/bug469146-bug469146.Po \
 	./$(DEPDIR)/culling1-culling1.Po \
 	./$(DEPDIR)/culling2-culling2.Po ./$(DEPDIR)/custom_alloc.Po \
 	./$(DEPDIR)/deep-deep.Po ./$(DEPDIR)/ignored.Po \
@@ -303,16 +314,18 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = alloc-fns.c basic.c big-alloc.c culling1.c culling2.c \
-	custom_alloc.c deep.c ignored.c ignoring.c inlinfomalloc.c \
-	insig.c long-names.c long-time.c malloc_usable.c mmapunmap.c \
-	$(new_cpp_SOURCES) null.c one.c $(overloaded_new_SOURCES) \
-	pages_as_heap.c peak.c realloc.c thresholds.c zero.c
-DIST_SOURCES = alloc-fns.c basic.c big-alloc.c culling1.c culling2.c \
-	custom_alloc.c deep.c ignored.c ignoring.c inlinfomalloc.c \
-	insig.c long-names.c long-time.c malloc_usable.c mmapunmap.c \
-	$(new_cpp_SOURCES) null.c one.c $(overloaded_new_SOURCES) \
-	pages_as_heap.c peak.c realloc.c thresholds.c zero.c
+SOURCES = alloc-fns.c basic.c big-alloc.c $(bug469146_SOURCES) \
+	culling1.c culling2.c custom_alloc.c deep.c ignored.c \
+	ignoring.c inlinfomalloc.c insig.c long-names.c long-time.c \
+	malloc_usable.c mmapunmap.c $(new_cpp_SOURCES) null.c one.c \
+	$(overloaded_new_SOURCES) pages_as_heap.c peak.c realloc.c \
+	thresholds.c zero.c
+DIST_SOURCES = alloc-fns.c basic.c big-alloc.c $(bug469146_SOURCES) \
+	culling1.c culling2.c custom_alloc.c deep.c ignored.c \
+	ignoring.c inlinfomalloc.c insig.c long-names.c long-time.c \
+	malloc_usable.c mmapunmap.c $(new_cpp_SOURCES) null.c one.c \
+	$(overloaded_new_SOURCES) pages_as_heap.c peak.c realloc.c \
+	thresholds.c zero.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -374,6 +387,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -391,6 +405,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -405,16 +420,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -465,6 +499,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -475,10 +510,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -633,16 +670,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -653,6 +686,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -669,7 +705,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -729,6 +765,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -757,7 +794,7 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_stderr filter_verbose
+dist_noinst_SCRIPTS = filter_stderr filter_verbose filter_new_aligned
 EXTRA_DIST = \
 	alloc-fns-A.post.exp alloc-fns-A.stderr.exp alloc-fns-A.vgtest \
 	alloc-fns-B.post.exp alloc-fns-B.stderr.exp alloc-fns-B.vgtest \
@@ -766,6 +803,7 @@ EXTRA_DIST = \
 	big-alloc.post.exp big-alloc.post.exp-64bit big-alloc.post.exp-ppc64 \
 	big-alloc.stderr.exp big-alloc.vgtest \
 	big-alloc.post.exp-x86-freebsd \
+	bug469146.post.exp bug469146.stderr.exp bug469146.vgtest \
 	deep-A.post.exp deep-A.stderr.exp deep-A.vgtest \
 	deep-B.post.exp deep-B.stderr.exp deep-B.vgtest \
 	deep-C.post.exp deep-C.stderr.exp deep-C.vgtest \
@@ -783,13 +821,11 @@ EXTRA_DIST = \
 	mmapunmap.post.exp mmapunmap.post.exp-ppc64 \
 	mmapunmap.stderr.exp mmapunmap.vgtest \
 	new-cpp.post.exp new-cpp.stderr.exp new-cpp.vgtest \
-		new-cpp.post.exp-freebsd new-cpp.post.exp-x86-freebsd-gcc \
 	no-stack-no-heap.post.exp no-stack-no-heap.stderr.exp no-stack-no-heap.vgtest \
 	null.post.exp null.stderr.exp null.vgtest \
 	one.post.exp one.post.exp2 one.stderr.exp one.vgtest \
 	overloaded-new.post.exp overloaded-new.post.exp-mips32 \
 	overloaded-new.stderr.exp overloaded-new.vgtest \
-		overloaded-new.post.exp-freebsd overloaded-new.post.exp-x86-freebsd-gcc \
 	pages_as_heap.stderr.exp pages_as_heap.vgtest \
 	peak.post.exp peak.stderr.exp peak.vgtest \
 	peak2.post.exp peak2.stderr.exp peak2.vgtest \
@@ -807,18 +843,19 @@ EXTRA_DIST = \
 	thresholds_10_10.post.exp \
 	thresholds_10_10.stderr.exp thresholds_10_10.vgtest \
 	zero1.post.exp zero1.stderr.exp zero1.vgtest \
-	zero2.post.exp zero2.stderr.exp zero2.vgtest \
-	overloaded-new.post.exp-freebsd
+	zero2.post.exp zero2.stderr.exp zero2.vgtest
 
 inlinfomalloc_CFLAGS = $(AM_CFLAGS) -w
 
 # C++ tests
+bug469146_SOURCES = bug469146.cpp
+# -fno-optimize-sibling-calls because otherwise some platforms will have
+# tail call optimization which messes up --ignore-fn
+bug469146_CXXFLAGS = $(AM_CXXFLAGS) -O2 -fno-optimize-sibling-calls @FLAG_W_NO_USE_AFTER_FREE@ @FLAG_W_NO_ATTRIBUTES@
 new_cpp_SOURCES = new-cpp.cpp
 overloaded_new_SOURCES = overloaded-new.cpp
-# pre C++11 compilers don't have exception specs
-# C++11 and later compilers may complain about not having
-# exception specs
-overloaded_new_CXXFLAGS = $(AM_CXXFLAGS) -Wno-implicit-exception-spec-mismatch -Wno-missing-exception-spec
+# aligned new needs C++17
+overloaded_new_CXXFLAGS = $(AM_CXXFLAGS) -Wno-implicit-exception-spec-mismatch -Wno-missing-exception-spec -std=c++17
 
 # Suppress warnings for issues we are testing for
 alloc_fns_CFLAGS = $(AM_CFLAGS) -Wno-unused-result
@@ -831,7 +868,7 @@ insig_CFLAGS = $(AM_CFLAGS) -Wno-unused-result
 long_names_CFLAGS = $(AM_CFLAGS) -Wno-unused-result
 one_CFLAGS = $(AM_CFLAGS) -Wno-unused-result
 thresholds_CFLAGS = $(AM_CFLAGS) -Wno-unused-result
-realloc_CFLAGS = $(AM_CFLAGS) -Wno-free-nonheap-object
+realloc_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_FREE_NONHEAP_OBJECT@
 all: all-am
 
 .SUFFIXES:
@@ -881,6 +918,10 @@ basic$(EXEEXT): $(basic_OBJECTS) $(basic_DEPENDENCIES) $(EXTRA_basic_DEPENDENCIE
 big-alloc$(EXEEXT): $(big_alloc_OBJECTS) $(big_alloc_DEPENDENCIES) $(EXTRA_big_alloc_DEPENDENCIES) 
 	@rm -f big-alloc$(EXEEXT)
 	$(AM_V_CCLD)$(big_alloc_LINK) $(big_alloc_OBJECTS) $(big_alloc_LDADD) $(LIBS)
+
+bug469146$(EXEEXT): $(bug469146_OBJECTS) $(bug469146_DEPENDENCIES) $(EXTRA_bug469146_DEPENDENCIES) 
+	@rm -f bug469146$(EXEEXT)
+	$(AM_V_CXXLD)$(bug469146_LINK) $(bug469146_OBJECTS) $(bug469146_LDADD) $(LIBS)
 
 culling1$(EXEEXT): $(culling1_OBJECTS) $(culling1_DEPENDENCIES) $(EXTRA_culling1_DEPENDENCIES) 
 	@rm -f culling1$(EXEEXT)
@@ -975,6 +1016,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alloc_fns-alloc-fns.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/big_alloc-big-alloc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug469146-bug469146.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/culling1-culling1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/culling2-culling2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/custom_alloc.Po@am__quote@ # am--include-marker
@@ -1203,6 +1245,20 @@ thresholds-thresholds.obj: thresholds.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
+bug469146-bug469146.o: bug469146.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug469146_CXXFLAGS) $(CXXFLAGS) -MT bug469146-bug469146.o -MD -MP -MF $(DEPDIR)/bug469146-bug469146.Tpo -c -o bug469146-bug469146.o `test -f 'bug469146.cpp' || echo '$(srcdir)/'`bug469146.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug469146-bug469146.Tpo $(DEPDIR)/bug469146-bug469146.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug469146.cpp' object='bug469146-bug469146.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug469146_CXXFLAGS) $(CXXFLAGS) -c -o bug469146-bug469146.o `test -f 'bug469146.cpp' || echo '$(srcdir)/'`bug469146.cpp
+
+bug469146-bug469146.obj: bug469146.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug469146_CXXFLAGS) $(CXXFLAGS) -MT bug469146-bug469146.obj -MD -MP -MF $(DEPDIR)/bug469146-bug469146.Tpo -c -o bug469146-bug469146.obj `if test -f 'bug469146.cpp'; then $(CYGPATH_W) 'bug469146.cpp'; else $(CYGPATH_W) '$(srcdir)/bug469146.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug469146-bug469146.Tpo $(DEPDIR)/bug469146-bug469146.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug469146.cpp' object='bug469146-bug469146.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug469146_CXXFLAGS) $(CXXFLAGS) -c -o bug469146-bug469146.obj `if test -f 'bug469146.cpp'; then $(CYGPATH_W) 'bug469146.cpp'; else $(CYGPATH_W) '$(srcdir)/bug469146.cpp'; fi`
+
 overloaded_new-overloaded-new.o: overloaded-new.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(overloaded_new_CXXFLAGS) $(CXXFLAGS) -MT overloaded_new-overloaded-new.o -MD -MP -MF $(DEPDIR)/overloaded_new-overloaded-new.Tpo -c -o overloaded_new-overloaded-new.o `test -f 'overloaded-new.cpp' || echo '$(srcdir)/'`overloaded-new.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/overloaded_new-overloaded-new.Tpo $(DEPDIR)/overloaded_new-overloaded-new.Po
@@ -1345,6 +1401,7 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/alloc_fns-alloc-fns.Po
 	-rm -f ./$(DEPDIR)/basic.Po
 	-rm -f ./$(DEPDIR)/big_alloc-big-alloc.Po
+	-rm -f ./$(DEPDIR)/bug469146-bug469146.Po
 	-rm -f ./$(DEPDIR)/culling1-culling1.Po
 	-rm -f ./$(DEPDIR)/culling2-culling2.Po
 	-rm -f ./$(DEPDIR)/custom_alloc.Po
@@ -1414,6 +1471,7 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/alloc_fns-alloc-fns.Po
 	-rm -f ./$(DEPDIR)/basic.Po
 	-rm -f ./$(DEPDIR)/big_alloc-big-alloc.Po
+	-rm -f ./$(DEPDIR)/bug469146-bug469146.Po
 	-rm -f ./$(DEPDIR)/culling1-culling1.Po
 	-rm -f ./$(DEPDIR)/culling2-culling2.Po
 	-rm -f ./$(DEPDIR)/custom_alloc.Po

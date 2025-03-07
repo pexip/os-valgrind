@@ -2,12 +2,12 @@
 .\"     Title: vgdb
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/24/2022
+.\"      Date: 11/01/2024
 .\"    Manual: vgdb
-.\"    Source: Release 3.20.0
+.\"    Source: Release 3.24.0
 .\"  Language: English
 .\"
-.TH "VGDB" "1" "10/24/2022" "Release 3\&.20\&.0" "vgdb"
+.TH "VGDB" "1" "11/01/2024" "Release 3\&.24\&.0" "vgdb"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,7 +35,7 @@ vgdb \- intermediary between Valgrind and GDB or a shell
 .SH "DESCRIPTION"
 .PP
 \fBvgdb\fR
-("Valgrind to GDB") is used as an intermediary between Valgrind and GDB or a shell\&. It has two usage modes:
+("Valgrind to GDB") is used as an intermediary between Valgrind and GDB or a shell\&. It has three usage modes:
 .sp
 .RS 4
 .ie n \{\
@@ -59,6 +59,23 @@ option\&.
 .IP "  2." 4.2
 .\}
 In combination with GDB "target remote |" command, it is used as the relay application between GDB and the Valgrind gdbserver\&. For this usage, only OPTION(s) can be given, but no COMMAND can be given\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+In the
+\fB\-\-multi\fR
+mode, vgdb uses the extended remote protocol to communicate with GDB\&. This allows you to view output from both valgrind and GDB in the GDB session\&. This is accomplished via the "target extended\-remote | vgdb \-\-multi"\&. In this mode you no longer need to start valgrind yourself\&. vgdb will start up valgrind when gdb tells it to run a new program\&. For this usage, the vgdb OPTIONS(s) can also include
+\fB\-\-valgrind\fR
+and
+\fB\-\-vargs\fR
+to describe how valgrind should be started\&.
 .RE
 .SH "OPTIONS"
 .PP
@@ -143,6 +160,24 @@ gdb prog
 .\}
 .sp
 where targetip is the ip address or hostname of the target computer\&.
+.RE
+.PP
+\fB\-\-vgdb\-multi\fR
+.RS 4
+Makes vgdb start in extended\-remote mode and to wait for gdb to tell us what to run\&.
+.RE
+.PP
+\fB\-\-valgrind\fR
+.RS 4
+The path to valgrind to use, in extended\-remote mode\&. If not specified, the system valgrind will be launched\&.
+.RE
+.PP
+\fB\-\-vargs\fR
+.RS 4
+Options to run valgrind with, in extended\-remote mode\&. For example
+\fB\-q\fR\&. Everything following
+\fB\-\-vargs\fR
+will be provided as arguments to valgrind as is\&.
 .RE
 .PP
 \fB\-c\fR

@@ -125,9 +125,7 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	-Wno-uninitialized -Wno-unused-value # \
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
-@BUILD_DFP_TESTS_TRUE@am__append_12 = dfp-1 dfp-2 dfp-3 dfp-4 dfptest dfpext dfpconv srnmt pfpo
-@HAS_MLONG_DOUBLE_128_TRUE@am__append_13 = fpext fixbr
-check_PROGRAMS = $(am__EXEEXT_3) allexec$(EXEEXT) op00$(EXEEXT)
+check_PROGRAMS = $(am__EXEEXT_1) allexec$(EXEEXT) op00$(EXEEXT)
 subdir = none/tests/s390x
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -139,14 +137,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@BUILD_DFP_TESTS_TRUE@am__EXEEXT_1 = dfp-1$(EXEEXT) dfp-2$(EXEEXT) \
-@BUILD_DFP_TESTS_TRUE@	dfp-3$(EXEEXT) dfp-4$(EXEEXT) \
-@BUILD_DFP_TESTS_TRUE@	dfptest$(EXEEXT) dfpext$(EXEEXT) \
-@BUILD_DFP_TESTS_TRUE@	dfpconv$(EXEEXT) srnmt$(EXEEXT) \
-@BUILD_DFP_TESTS_TRUE@	pfpo$(EXEEXT)
-@HAS_MLONG_DOUBLE_128_TRUE@am__EXEEXT_2 = fpext$(EXEEXT) \
-@HAS_MLONG_DOUBLE_128_TRUE@	fixbr$(EXEEXT)
-am__EXEEXT_3 = clc$(EXEEXT) clcle$(EXEEXT) cvb$(EXEEXT) cvd$(EXEEXT) \
+am__EXEEXT_1 = clc$(EXEEXT) clcle$(EXEEXT) cvb$(EXEEXT) cvd$(EXEEXT) \
 	icm$(EXEEXT) lpr$(EXEEXT) tcxb$(EXEEXT) lam_stam$(EXEEXT) \
 	xc$(EXEEXT) mvst$(EXEEXT) add$(EXEEXT) sub$(EXEEXT) \
 	mul$(EXEEXT) and$(EXEEXT) or$(EXEEXT) xor$(EXEEXT) \
@@ -183,7 +174,10 @@ am__EXEEXT_3 = clc$(EXEEXT) clcle$(EXEEXT) cvb$(EXEEXT) cvd$(EXEEXT) \
 	vector_string$(EXEEXT) vector_integer$(EXEEXT) \
 	vector_float$(EXEEXT) add-z14$(EXEEXT) sub-z14$(EXEEXT) \
 	mul-z14$(EXEEXT) bic$(EXEEXT) misc3$(EXEEXT) vec2$(EXEEXT) \
-	$(am__EXEEXT_1) $(am__EXEEXT_2)
+	vec2_float$(EXEEXT) dfp-1$(EXEEXT) dfp-2$(EXEEXT) \
+	dfp-3$(EXEEXT) dfp-4$(EXEEXT) dfpconv$(EXEEXT) dfpext$(EXEEXT) \
+	dfptest$(EXEEXT) pfpo$(EXEEXT) srnmt$(EXEEXT) fpext$(EXEEXT) \
+	fixbr$(EXEEXT)
 add_SOURCES = add.c
 add_OBJECTS = add.$(OBJEXT)
 add_LDADD = $(LDADD)
@@ -369,10 +363,8 @@ fgx_SOURCES = fgx.c
 fgx_OBJECTS = fgx.$(OBJEXT)
 fgx_LDADD = $(LDADD)
 fixbr_SOURCES = fixbr.c
-fixbr_OBJECTS = fixbr-fixbr.$(OBJEXT)
+fixbr_OBJECTS = fixbr.$(OBJEXT)
 fixbr_LDADD = $(LDADD)
-fixbr_LINK = $(CCLD) $(fixbr_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
 flogr_SOURCES = flogr.c
 flogr_OBJECTS = flogr.$(OBJEXT)
 flogr_LDADD = $(LDADD)
@@ -383,10 +375,8 @@ fpconv_SOURCES = fpconv.c
 fpconv_OBJECTS = fpconv.$(OBJEXT)
 fpconv_LDADD = $(LDADD)
 fpext_SOURCES = fpext.c
-fpext_OBJECTS = fpext-fpext.$(OBJEXT)
+fpext_OBJECTS = fpext.$(OBJEXT)
 fpext_LDADD = $(LDADD)
-fpext_LINK = $(CCLD) $(fpext_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
 fpext_warn_SOURCES = fpext_warn.c
 fpext_warn_OBJECTS = fpext_warn.$(OBJEXT)
 fpext_warn_LDADD = $(LDADD)
@@ -592,6 +582,11 @@ vec2_OBJECTS = vec2-vec2.$(OBJEXT)
 vec2_LDADD = $(LDADD)
 vec2_LINK = $(CCLD) $(vec2_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+vec2_float_SOURCES = vec2_float.c
+vec2_float_OBJECTS = vec2_float-vec2_float.$(OBJEXT)
+vec2_float_LDADD = $(LDADD)
+vec2_float_LINK = $(CCLD) $(vec2_float_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 vector_SOURCES = vector.c
 vector_OBJECTS = vector-vector.$(OBJEXT)
 vector_LDADD = $(LDADD)
@@ -660,13 +655,13 @@ am__depfiles_remade = ./$(DEPDIR)/add-z14.Po ./$(DEPDIR)/add.Po \
 	./$(DEPDIR)/dfpext.Po ./$(DEPDIR)/dfptest.Po \
 	./$(DEPDIR)/div.Po ./$(DEPDIR)/ecag.Po ./$(DEPDIR)/ex.Po \
 	./$(DEPDIR)/ex_clone.Po ./$(DEPDIR)/ex_sig.Po \
-	./$(DEPDIR)/exrl.Po ./$(DEPDIR)/fgx.Po \
-	./$(DEPDIR)/fixbr-fixbr.Po ./$(DEPDIR)/flogr.Po \
-	./$(DEPDIR)/fold_And16.Po ./$(DEPDIR)/fpconv.Po \
-	./$(DEPDIR)/fpext-fpext.Po ./$(DEPDIR)/fpext_warn.Po \
-	./$(DEPDIR)/high-word.Po ./$(DEPDIR)/icm.Po \
-	./$(DEPDIR)/insert.Po ./$(DEPDIR)/insert_EI.Po \
-	./$(DEPDIR)/laa.Po ./$(DEPDIR)/lam_stam.Po ./$(DEPDIR)/lpr.Po \
+	./$(DEPDIR)/exrl.Po ./$(DEPDIR)/fgx.Po ./$(DEPDIR)/fixbr.Po \
+	./$(DEPDIR)/flogr.Po ./$(DEPDIR)/fold_And16.Po \
+	./$(DEPDIR)/fpconv.Po ./$(DEPDIR)/fpext.Po \
+	./$(DEPDIR)/fpext_warn.Po ./$(DEPDIR)/high-word.Po \
+	./$(DEPDIR)/icm.Po ./$(DEPDIR)/insert.Po \
+	./$(DEPDIR)/insert_EI.Po ./$(DEPDIR)/laa.Po \
+	./$(DEPDIR)/lam_stam.Po ./$(DEPDIR)/lpr.Po \
 	./$(DEPDIR)/lsc2-lsc2.Po ./$(DEPDIR)/misc3.Po \
 	./$(DEPDIR)/mul-z14.Po ./$(DEPDIR)/mul.Po \
 	./$(DEPDIR)/mul_GE.Po ./$(DEPDIR)/mvc.Po ./$(DEPDIR)/mvcl.Po \
@@ -693,7 +688,8 @@ am__depfiles_remade = ./$(DEPDIR)/add-z14.Po ./$(DEPDIR)/add.Po \
 	./$(DEPDIR)/tm.Po ./$(DEPDIR)/tmll.Po ./$(DEPDIR)/tr.Po \
 	./$(DEPDIR)/traps.Po ./$(DEPDIR)/tre.Po ./$(DEPDIR)/troo.Po \
 	./$(DEPDIR)/trot.Po ./$(DEPDIR)/trto.Po ./$(DEPDIR)/trtt.Po \
-	./$(DEPDIR)/vec2-vec2.Po ./$(DEPDIR)/vector-vector.Po \
+	./$(DEPDIR)/vec2-vec2.Po ./$(DEPDIR)/vec2_float-vec2_float.Po \
+	./$(DEPDIR)/vector-vector.Po \
 	./$(DEPDIR)/vector_float-vector_float.Po \
 	./$(DEPDIR)/vector_integer-vector_integer.Po \
 	./$(DEPDIR)/vector_string-vector_string.Po ./$(DEPDIR)/xc.Po \
@@ -735,8 +731,8 @@ SOURCES = add.c add-z14.c add_EI.c add_GE.c allexec.c and.c and_EI.c \
 	srnmb.c srnmt.c srst.c stck.c stcke.c stckf.c stfle.c stmg.c \
 	sub.c sub-z14.c sub_EI.c tcxb.c test_fork.c test_sig.c tm.c \
 	tmll.c tr.c traps.c tre.c troo.c trot.c trto.c trtt.c vec2.c \
-	vector.c vector_float.c vector_integer.c vector_string.c xc.c \
-	xor.c xor_EI.c
+	vec2_float.c vector.c vector_float.c vector_integer.c \
+	vector_string.c xc.c xor.c xor_EI.c
 DIST_SOURCES = add.c add-z14.c add_EI.c add_GE.c allexec.c and.c \
 	and_EI.c bfp-1.c bfp-2.c bfp-3.c bfp-4.c bic.c cds.c cdsg.c \
 	cgij.c cgrj.c cij.c cksm.c clc.c clcl.c clcle.c clgij.c \
@@ -757,9 +753,9 @@ DIST_SOURCES = add.c add-z14.c add_EI.c add_GE.c allexec.c and.c \
 	spechelper-tm.c spechelper-tmll.c srnm.c srnmb.c srnmt.c \
 	srst.c stck.c stcke.c stckf.c stfle.c stmg.c sub.c sub-z14.c \
 	sub_EI.c tcxb.c test_fork.c test_sig.c tm.c tmll.c tr.c \
-	traps.c tre.c troo.c trot.c trto.c trtt.c vec2.c vector.c \
-	vector_float.c vector_integer.c vector_string.c xc.c xor.c \
-	xor_EI.c
+	traps.c tre.c troo.c trot.c trto.c trtt.c vec2.c vec2_float.c \
+	vector.c vector_float.c vector_integer.c vector_string.c xc.c \
+	xor.c xor_EI.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -822,6 +818,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -839,6 +836,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -853,16 +851,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -913,6 +930,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -923,10 +941,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -1081,16 +1101,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -1101,6 +1117,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -1117,7 +1136,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -1177,6 +1196,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -1205,22 +1225,28 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 AM_CCASFLAGS = $(AM_CPPFLAGS) @FLAG_M64@
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
 dist_noinst_SCRIPTS = filter_stderr
-INSN_TESTS = clc clcle cvb cvd icm lpr tcxb lam_stam xc mvst add sub \
-	mul and or xor insert div srst fold_And16 flogr sub_EI add_EI \
-	and_EI or_EI xor_EI insert_EI mul_GE add_GE condloadstore \
-	op_exception fgx stck stckf stcke stfle cksm mvcl clcl troo \
-	trto trot trtt tr tre cij cgij clij clgij crj cgrj clrj clgrj \
-	cs csg cds cdsg cu21 cu21_1 cu24 cu24_1 cu42 cu12 cu12_1 \
-	ex_sig ex_clone cu14 cu14_1 cu41 fpconv ecag fpext_warn \
-	rounding-1 rounding-2 rounding-3 rounding-4 rounding-5 bfp-1 \
-	bfp-2 bfp-3 bfp-4 srnm srnmb comp-1 comp-2 exrl tmll tm stmg \
-	ex clst mvc test_fork test_sig rounding-6 rxsbg popcnt \
-	high-word traps spechelper-alr spechelper-algr spechelper-slr \
-	spechelper-slgr spechelper-cr spechelper-clr spechelper-ltr \
-	spechelper-or spechelper-icm-1 spechelper-icm-2 \
-	spechelper-tmll spechelper-tm laa vector lsc2 ppno \
-	vector_string vector_integer vector_float add-z14 sub-z14 \
-	mul-z14 bic misc3 vec2 $(am__append_12) $(am__append_13)
+INSN_TESTS = clc clcle cvb cvd icm lpr tcxb lam_stam xc mvst add sub mul \
+             and or xor insert div srst fold_And16 flogr sub_EI add_EI \
+             and_EI or_EI xor_EI insert_EI mul_GE add_GE condloadstore \
+             op_exception fgx stck stckf stcke stfle cksm mvcl clcl troo \
+             trto trot trtt tr tre cij cgij clij clgij crj cgrj clrj clgrj \
+             cs csg cds cdsg cu21 cu21_1 cu24 cu24_1 cu42 cu12 cu12_1 \
+             ex_sig ex_clone cu14 cu14_1 cu41 fpconv ecag fpext_warn \
+             rounding-1 rounding-2 rounding-3 rounding-4 rounding-5 bfp-1 \
+             bfp-2 bfp-3 bfp-4 srnm srnmb comp-1 comp-2 exrl tmll tm stmg \
+	     ex clst mvc test_fork test_sig rounding-6 rxsbg popcnt \
+	     high-word traps \
+	     spechelper-alr spechelper-algr \
+	     spechelper-slr spechelper-slgr \
+	     spechelper-cr  spechelper-clr  \
+	     spechelper-ltr spechelper-or   \
+	     spechelper-icm-1  spechelper-icm-2 spechelper-tmll \
+	     spechelper-tm laa vector lsc2 ppno vector_string vector_integer \
+	     vector_float add-z14 sub-z14 mul-z14 bic \
+	     misc3 vec2 vec2_float \
+	     dfp-1 dfp-2 dfp-3 dfp-4 dfpconv dfpext dfptest pfpo srnmt \
+	     fpext fixbr
+
 noinst_HEADERS = vector.h
 EXTRA_DIST = \
 	$(addsuffix .stderr.exp,$(INSN_TESTS)) \
@@ -1228,7 +1254,8 @@ EXTRA_DIST = \
 	$(addsuffix .vgtest,$(INSN_TESTS)) \
 	ecag.stdout.exp-z10ec ecag.stdout.exp-z196 ecag.stdout.exp-zec12 \
 	ecag.stdout.exp-z13 ecag.stdout.exp-z14 ecag.stdout.exp-z15 \
-	op00.stderr.exp1 op00.stderr.exp2 op00.vgtest \
+	ecag.stdout.exp-z16 \
+	op00.stderr.exp op00.vgtest \
 	fixbr.vgtest fixbr.stderr.exp fixbr.stdout.exp \
 	fpext.vgtest fpext.stderr.exp fpext.stdout.exp \
 	fpext_fail.vgtest fpext_fail.stderr.exp fpext_fail.stdout.exp \
@@ -1242,6 +1269,7 @@ EXTRA_DIST = \
 	dfpext.stderr.exp dfpext.stdout.exp dfpext.vgtest \
 	dfpconv.stderr.exp dfpconv.stdout.exp dfpconv.vgtest \
 	srnmt.stderr.exp srnmt.stdout.exp srnmt.vgtest \
+	stfle.stdout.exp-z16 \
 	pfpo.stderr.exp pfpo.stdout.exp pfpo.vgtest
 
 allexec_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
@@ -1249,8 +1277,6 @@ cu12_1_CFLAGS = $(AM_CFLAGS) -DM3=1
 cu14_1_CFLAGS = $(AM_CFLAGS) -DM3=1
 cu21_1_CFLAGS = $(AM_CFLAGS) -DM3=1
 cu24_1_CFLAGS = $(AM_CFLAGS) -DM3=1
-fixbr_CFLAGS = $(AM_CFLAGS) @FLAG_MLONG_DOUBLE_128@
-fpext_CFLAGS = $(AM_CFLAGS) @FLAG_MLONG_DOUBLE_128@
 ex_clone_LDADD = -lpthread
 vector_CFLAGS = $(AM_CFLAGS) -march=z13
 lsc2_CFLAGS = -march=z13 -DS390_TESTS_NOCOLOR
@@ -1258,6 +1284,7 @@ vector_string_CFLAGS = $(AM_CFLAGS) -march=z13 -DS390_TEST_COUNT=5
 vector_integer_CFLAGS = $(AM_CFLAGS) -march=z13 -DS390_TEST_COUNT=4
 vector_float_CFLAGS = $(AM_CFLAGS) -march=z13 -DS390_TEST_COUNT=4
 vec2_CFLAGS = $(AM_CFLAGS) -march=z13
+vec2_float_CFLAGS = $(AM_CFLAGS) -march=z13
 all: all-am
 
 .SUFFIXES:
@@ -1530,7 +1557,7 @@ fgx$(EXEEXT): $(fgx_OBJECTS) $(fgx_DEPENDENCIES) $(EXTRA_fgx_DEPENDENCIES)
 
 fixbr$(EXEEXT): $(fixbr_OBJECTS) $(fixbr_DEPENDENCIES) $(EXTRA_fixbr_DEPENDENCIES) 
 	@rm -f fixbr$(EXEEXT)
-	$(AM_V_CCLD)$(fixbr_LINK) $(fixbr_OBJECTS) $(fixbr_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(fixbr_OBJECTS) $(fixbr_LDADD) $(LIBS)
 
 flogr$(EXEEXT): $(flogr_OBJECTS) $(flogr_DEPENDENCIES) $(EXTRA_flogr_DEPENDENCIES) 
 	@rm -f flogr$(EXEEXT)
@@ -1546,7 +1573,7 @@ fpconv$(EXEEXT): $(fpconv_OBJECTS) $(fpconv_DEPENDENCIES) $(EXTRA_fpconv_DEPENDE
 
 fpext$(EXEEXT): $(fpext_OBJECTS) $(fpext_DEPENDENCIES) $(EXTRA_fpext_DEPENDENCIES) 
 	@rm -f fpext$(EXEEXT)
-	$(AM_V_CCLD)$(fpext_LINK) $(fpext_OBJECTS) $(fpext_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) $(fpext_OBJECTS) $(fpext_LDADD) $(LIBS)
 
 fpext_warn$(EXEEXT): $(fpext_warn_OBJECTS) $(fpext_warn_DEPENDENCIES) $(EXTRA_fpext_warn_DEPENDENCIES) 
 	@rm -f fpext_warn$(EXEEXT)
@@ -1816,6 +1843,10 @@ vec2$(EXEEXT): $(vec2_OBJECTS) $(vec2_DEPENDENCIES) $(EXTRA_vec2_DEPENDENCIES)
 	@rm -f vec2$(EXEEXT)
 	$(AM_V_CCLD)$(vec2_LINK) $(vec2_OBJECTS) $(vec2_LDADD) $(LIBS)
 
+vec2_float$(EXEEXT): $(vec2_float_OBJECTS) $(vec2_float_DEPENDENCIES) $(EXTRA_vec2_float_DEPENDENCIES) 
+	@rm -f vec2_float$(EXEEXT)
+	$(AM_V_CCLD)$(vec2_float_LINK) $(vec2_float_OBJECTS) $(vec2_float_LDADD) $(LIBS)
+
 vector$(EXEEXT): $(vector_OBJECTS) $(vector_DEPENDENCIES) $(EXTRA_vector_DEPENDENCIES) 
 	@rm -f vector$(EXEEXT)
 	$(AM_V_CCLD)$(vector_LINK) $(vector_OBJECTS) $(vector_LDADD) $(LIBS)
@@ -1908,11 +1939,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ex_sig.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exrl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fgx.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fixbr-fixbr.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fixbr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/flogr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fold_And16.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpconv.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpext-fpext.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpext.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpext_warn.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/high-word.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icm.Po@am__quote@ # am--include-marker
@@ -1980,6 +2011,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trto.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trtt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vec2-vec2.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vec2_float-vec2_float.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vector-vector.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vector_float-vector_float.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vector_integer-vector_integer.Po@am__quote@ # am--include-marker
@@ -2080,34 +2112,6 @@ cu24_1-cu24_1.obj: cu24_1.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cu24_1_CFLAGS) $(CFLAGS) -c -o cu24_1-cu24_1.obj `if test -f 'cu24_1.c'; then $(CYGPATH_W) 'cu24_1.c'; else $(CYGPATH_W) '$(srcdir)/cu24_1.c'; fi`
 
-fixbr-fixbr.o: fixbr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fixbr_CFLAGS) $(CFLAGS) -MT fixbr-fixbr.o -MD -MP -MF $(DEPDIR)/fixbr-fixbr.Tpo -c -o fixbr-fixbr.o `test -f 'fixbr.c' || echo '$(srcdir)/'`fixbr.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fixbr-fixbr.Tpo $(DEPDIR)/fixbr-fixbr.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fixbr.c' object='fixbr-fixbr.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fixbr_CFLAGS) $(CFLAGS) -c -o fixbr-fixbr.o `test -f 'fixbr.c' || echo '$(srcdir)/'`fixbr.c
-
-fixbr-fixbr.obj: fixbr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fixbr_CFLAGS) $(CFLAGS) -MT fixbr-fixbr.obj -MD -MP -MF $(DEPDIR)/fixbr-fixbr.Tpo -c -o fixbr-fixbr.obj `if test -f 'fixbr.c'; then $(CYGPATH_W) 'fixbr.c'; else $(CYGPATH_W) '$(srcdir)/fixbr.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fixbr-fixbr.Tpo $(DEPDIR)/fixbr-fixbr.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fixbr.c' object='fixbr-fixbr.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fixbr_CFLAGS) $(CFLAGS) -c -o fixbr-fixbr.obj `if test -f 'fixbr.c'; then $(CYGPATH_W) 'fixbr.c'; else $(CYGPATH_W) '$(srcdir)/fixbr.c'; fi`
-
-fpext-fpext.o: fpext.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fpext_CFLAGS) $(CFLAGS) -MT fpext-fpext.o -MD -MP -MF $(DEPDIR)/fpext-fpext.Tpo -c -o fpext-fpext.o `test -f 'fpext.c' || echo '$(srcdir)/'`fpext.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fpext-fpext.Tpo $(DEPDIR)/fpext-fpext.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fpext.c' object='fpext-fpext.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fpext_CFLAGS) $(CFLAGS) -c -o fpext-fpext.o `test -f 'fpext.c' || echo '$(srcdir)/'`fpext.c
-
-fpext-fpext.obj: fpext.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fpext_CFLAGS) $(CFLAGS) -MT fpext-fpext.obj -MD -MP -MF $(DEPDIR)/fpext-fpext.Tpo -c -o fpext-fpext.obj `if test -f 'fpext.c'; then $(CYGPATH_W) 'fpext.c'; else $(CYGPATH_W) '$(srcdir)/fpext.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fpext-fpext.Tpo $(DEPDIR)/fpext-fpext.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fpext.c' object='fpext-fpext.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fpext_CFLAGS) $(CFLAGS) -c -o fpext-fpext.obj `if test -f 'fpext.c'; then $(CYGPATH_W) 'fpext.c'; else $(CYGPATH_W) '$(srcdir)/fpext.c'; fi`
-
 lsc2-lsc2.o: lsc2.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lsc2_CFLAGS) $(CFLAGS) -MT lsc2-lsc2.o -MD -MP -MF $(DEPDIR)/lsc2-lsc2.Tpo -c -o lsc2-lsc2.o `test -f 'lsc2.c' || echo '$(srcdir)/'`lsc2.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/lsc2-lsc2.Tpo $(DEPDIR)/lsc2-lsc2.Po
@@ -2135,6 +2139,20 @@ vec2-vec2.obj: vec2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vec2.c' object='vec2-vec2.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vec2_CFLAGS) $(CFLAGS) -c -o vec2-vec2.obj `if test -f 'vec2.c'; then $(CYGPATH_W) 'vec2.c'; else $(CYGPATH_W) '$(srcdir)/vec2.c'; fi`
+
+vec2_float-vec2_float.o: vec2_float.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vec2_float_CFLAGS) $(CFLAGS) -MT vec2_float-vec2_float.o -MD -MP -MF $(DEPDIR)/vec2_float-vec2_float.Tpo -c -o vec2_float-vec2_float.o `test -f 'vec2_float.c' || echo '$(srcdir)/'`vec2_float.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/vec2_float-vec2_float.Tpo $(DEPDIR)/vec2_float-vec2_float.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vec2_float.c' object='vec2_float-vec2_float.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vec2_float_CFLAGS) $(CFLAGS) -c -o vec2_float-vec2_float.o `test -f 'vec2_float.c' || echo '$(srcdir)/'`vec2_float.c
+
+vec2_float-vec2_float.obj: vec2_float.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vec2_float_CFLAGS) $(CFLAGS) -MT vec2_float-vec2_float.obj -MD -MP -MF $(DEPDIR)/vec2_float-vec2_float.Tpo -c -o vec2_float-vec2_float.obj `if test -f 'vec2_float.c'; then $(CYGPATH_W) 'vec2_float.c'; else $(CYGPATH_W) '$(srcdir)/vec2_float.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/vec2_float-vec2_float.Tpo $(DEPDIR)/vec2_float-vec2_float.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vec2_float.c' object='vec2_float-vec2_float.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vec2_float_CFLAGS) $(CFLAGS) -c -o vec2_float-vec2_float.obj `if test -f 'vec2_float.c'; then $(CYGPATH_W) 'vec2_float.c'; else $(CYGPATH_W) '$(srcdir)/vec2_float.c'; fi`
 
 vector-vector.o: vector.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vector_CFLAGS) $(CFLAGS) -MT vector-vector.o -MD -MP -MF $(DEPDIR)/vector-vector.Tpo -c -o vector-vector.o `test -f 'vector.c' || echo '$(srcdir)/'`vector.c
@@ -2375,11 +2393,11 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/ex_sig.Po
 	-rm -f ./$(DEPDIR)/exrl.Po
 	-rm -f ./$(DEPDIR)/fgx.Po
-	-rm -f ./$(DEPDIR)/fixbr-fixbr.Po
+	-rm -f ./$(DEPDIR)/fixbr.Po
 	-rm -f ./$(DEPDIR)/flogr.Po
 	-rm -f ./$(DEPDIR)/fold_And16.Po
 	-rm -f ./$(DEPDIR)/fpconv.Po
-	-rm -f ./$(DEPDIR)/fpext-fpext.Po
+	-rm -f ./$(DEPDIR)/fpext.Po
 	-rm -f ./$(DEPDIR)/fpext_warn.Po
 	-rm -f ./$(DEPDIR)/high-word.Po
 	-rm -f ./$(DEPDIR)/icm.Po
@@ -2447,6 +2465,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/trto.Po
 	-rm -f ./$(DEPDIR)/trtt.Po
 	-rm -f ./$(DEPDIR)/vec2-vec2.Po
+	-rm -f ./$(DEPDIR)/vec2_float-vec2_float.Po
 	-rm -f ./$(DEPDIR)/vector-vector.Po
 	-rm -f ./$(DEPDIR)/vector_float-vector_float.Po
 	-rm -f ./$(DEPDIR)/vector_integer-vector_integer.Po
@@ -2557,11 +2576,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/ex_sig.Po
 	-rm -f ./$(DEPDIR)/exrl.Po
 	-rm -f ./$(DEPDIR)/fgx.Po
-	-rm -f ./$(DEPDIR)/fixbr-fixbr.Po
+	-rm -f ./$(DEPDIR)/fixbr.Po
 	-rm -f ./$(DEPDIR)/flogr.Po
 	-rm -f ./$(DEPDIR)/fold_And16.Po
 	-rm -f ./$(DEPDIR)/fpconv.Po
-	-rm -f ./$(DEPDIR)/fpext-fpext.Po
+	-rm -f ./$(DEPDIR)/fpext.Po
 	-rm -f ./$(DEPDIR)/fpext_warn.Po
 	-rm -f ./$(DEPDIR)/high-word.Po
 	-rm -f ./$(DEPDIR)/icm.Po
@@ -2629,6 +2648,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/trto.Po
 	-rm -f ./$(DEPDIR)/trtt.Po
 	-rm -f ./$(DEPDIR)/vec2-vec2.Po
+	-rm -f ./$(DEPDIR)/vec2_float-vec2_float.Po
 	-rm -f ./$(DEPDIR)/vector-vector.Po
 	-rm -f ./$(DEPDIR)/vector_float-vector_float.Po
 	-rm -f ./$(DEPDIR)/vector_integer-vector_integer.Po

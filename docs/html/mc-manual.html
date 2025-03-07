@@ -7,7 +7,7 @@
 <link rel="home" href="index.html" title="Valgrind Documentation">
 <link rel="up" href="manual.html" title="Valgrind User Manual">
 <link rel="prev" href="manual-core-adv.html" title="3. Using and understanding the Valgrind core: Advanced Topics">
-<link rel="next" href="cg-manual.html" title="5. Cachegrind: a cache and branch-prediction profiler">
+<link rel="next" href="cg-manual.html" title="5. Cachegrind: a high-precision tracing profiler">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <div><table class="nav" width="100%" cellspacing="3" cellpadding="3" border="0" summary="Navigation header"><tr>
@@ -35,7 +35,9 @@
 function</a></span></dt>
 <dt><span class="sect2"><a href="mc-manual.html#mc-manual.overlap">4.2.6. Overlapping source and destination blocks</a></span></dt>
 <dt><span class="sect2"><a href="mc-manual.html#mc-manual.fishyvalue">4.2.7. Fishy argument values</a></span></dt>
-<dt><span class="sect2"><a href="mc-manual.html#mc-manual.leaks">4.2.8. Memory leak detection</a></span></dt>
+<dt><span class="sect2"><a href="mc-manual.html#mc-manual.realocsizezero">4.2.8. Realloc size zero</a></span></dt>
+<dt><span class="sect2"><a href="mc-manual.html#mc-manual.alignment">4.2.9. Alignment Errors</a></span></dt>
+<dt><span class="sect2"><a href="mc-manual.html#mc-manual.leaks">4.2.10. Memory leak detection</a></span></dt>
 </dl></dd>
 <dt><span class="sect1"><a href="mc-manual.html#mc-manual.options">4.3. Memcheck Command-Line Options</a></span></dt>
 <dt><span class="sect1"><a href="mc-manual.html#mc-manual.suppfiles">4.4. Writing suppression files</a></span></dt>
@@ -74,11 +76,16 @@ problems that are common in C and C++ programs.</p>
     it has been freed.</p></li>
 <li class="listitem"><p>Using undefined values, i.e. values that have not been initialised,
     or that have been derived from other undefined values.</p></li>
-<li class="listitem"><p>Incorrect freeing of heap memory, such as double-freeing heap
+<li class="listitem">
+<p>Incorrect freeing of heap memory, such as double-freeing heap
     blocks, or mismatched use of
     <code class="function">malloc</code>/<code class="computeroutput">new</code>/<code class="computeroutput">new[]</code>
     versus
-    <code class="function">free</code>/<code class="computeroutput">delete</code>/<code class="computeroutput">delete[]</code></p></li>
+    <code class="function">free</code>/<code class="computeroutput">delete</code>/<code class="computeroutput">delete[]</code></p>
+<p>Mismatches will also be reported for <code class="computeroutput">sized</code> and <code class="computeroutput">aligned</code>
+    allocation and deallocation functions if the deallocation value
+    does not match the allocation value.</p>
+</li>
 <li class="listitem"><p>Overlapping <code class="computeroutput">src</code> and
     <code class="computeroutput">dst</code> pointers in
     <code class="computeroutput">memcpy</code> and related
@@ -86,6 +93,10 @@ problems that are common in C and C++ programs.</p>
 <li class="listitem"><p>Passing a fishy (presumably negative) value to the
     <code class="computeroutput">size</code> parameter of a memory
     allocation function.</p></li>
+<li class="listitem"><p>Using a <code class="computeroutput">size</code> value of 0
+    with realloc.</p></li>
+<li class="listitem"><p>Using an <code class="computeroutput">alignment</code> value that
+    is not a power of two.</p></li>
 <li class="listitem"><p>Memory leaks.</p></li>
 </ul></div>
 <p>Problems like these can be difficult to find by other means,
@@ -287,7 +298,21 @@ Mismatched free() / delete / delete []
    by 0x4C21788F: OLEFilter::convert(QCString const &amp;) (olefilter.cc:272)
 </pre>
 <p>In <code class="literal">C++</code> it's important to deallocate memory in a
-way compatible with how it was allocated.  The deal is:</p>
+way compatible with how it was allocated.</p>
+<p>Most of the time in C++ you will write code that
+uses <code class="function">new expression</code> and <code class="function">delete
+expression</code>
+(see <a class="ulink" href="https://en.cppreference.com/w/cpp/language/new" target="_top">cppreference
+new expression</a>
+and <a class="ulink" href="https://en.cppreference.com/w/cpp/language/delete" target="_top">cppreference
+delete expression</a>). A new expression will
+call <code class="function">operator new</code> to perform the allocation and
+then call the constructor (if one exists) on the object. Similarly a
+delete expression will call the destructor on the object (if one
+exists) and then call <code class="function">operator delete</code>. The array
+overloads call constructors/destructors for each object in the
+array.</p>
+<p>The deal is:</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem"><p>If allocated with
     <code class="function">malloc</code>,
@@ -301,18 +326,24 @@ way compatible with how it was allocated.  The deal is:</p>
 <li class="listitem"><p>If allocated with <code class="function">new[]</code>, you must
     deallocate with <code class="function">delete[]</code>.</p></li>
 </ul></div>
-<p>The worst thing is that on Linux apparently it doesn't matter if
-you do mix these up, but the same program may then crash on a
-different platform, Solaris for example.  So it's best to fix it
-properly.  According to the KDE folks "it's amazing how many C++
-programmers don't know this".</p>
+<p>Mixing types of allocators and deallocators is undefined
+behaviour.  That means that on some platforms you might not have any
+problems, but the same program may then crash on a different platform,
+Solaris for example.  So it's best to fix it properly.  According to
+the KDE folks "it's amazing how many C++ programmers don't know
+this".</p>
 <p>The reason behind the requirement is as follows.  In some C++
 implementations, <code class="function">delete[]</code> must be used for
 objects allocated by <code class="function">new[]</code> because the compiler
 stores the size of the array and the pointer-to-member to the
 destructor of the array's content just before the pointer actually
-returned.  <code class="function">delete</code> doesn't account for this and will get
-confused, possibly corrupting the heap.</p>
+returned.  <code class="function">delete</code> doesn't account for this and
+will get confused, possibly corrupting the heap. Even if there is no
+corruption there are likely to be resource leaks since using the wrong
+delete may result in the wrong number of destructors being
+called.</p>
+<p>C++ aligned allocations need to be freed using aligned delete
+with the same alignment.</p>
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
@@ -370,11 +401,13 @@ is checked for being fishy:
 <code class="function">calloc</code>,
 <code class="function">realloc</code>,
 <code class="function">memalign</code>,
+<code class="function">posix_memalign</code>,
+<code class="function">aligned_alloc</code>,
 <code class="function">new</code>,
 <code class="function">new []</code>. 
 <code class="function">__builtin_new</code>,
 <code class="function">__builtin_vec_new</code>,
-For <code class="function">calloc</code> both arguments are being checked.
+For <code class="function">calloc</code> both arguments are checked.
 </p>
 <p>For example:</p>
 <pre class="programlisting">
@@ -389,7 +422,60 @@ as "silly arguments" and no back-trace was included.
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="mc-manual.leaks"></a>4.2.8. Memory leak detection</h3></div></div></div>
+<a name="mc-manual.realocsizezero"></a>4.2.8. Realloc size zero</h3></div></div></div>
+<p>The (ab)use or realloc to also do the job of <code class="function">free</code>
+has been poorly understood for a long time. In the C17 standard
+ISO/IEC 9899:2017] the behaviour of realloc when the size argument
+is zero is specified as implementation defined. Memcheck warns about
+the non-portable use or realloc.</p>
+<p>For example:</p>
+<pre class="programlisting">
+==77609== realloc() with size 0
+==77609==    at 0x48502B8: realloc (vg_replace_malloc.c:1450)
+==77609==    by 0x201989: main (realloczero.c:8)
+==77609==  Address 0x5464040 is 0 bytes inside a block of size 4 alloc'd
+==77609==    at 0x484CBB4: malloc (vg_replace_malloc.c:397)
+==77609==    by 0x201978: main (realloczero.c:7)
+</pre>
+</div>
+<div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="mc-manual.alignment"></a>4.2.9. Alignment Errors</h3></div></div></div>
+<p>C and C++ have several functions that allow the user to obtain aligned memory.
+Typically this is done for performance reasons so that the memory will be cache line
+or memory page aligned. C has the functions <code class="computeroutput">memalign</code>,
+<code class="computeroutput">posix_memalign</code> and <code class="computeroutput">aligned_alloc</code>.
+C++ has numerous overloads of <code class="computeroutput">operator new</code> and <code class="computeroutput">
+operator delete</code>. Of these, posix_memalign is quite clearly
+specified, the others vary quite widely between implementations. Valgrind will generate
+errors for values of alignment that are invalid on any platform.</p>
+<p><code class="computeroutput">memalign</code> will produce errors if the alignment
+is zero or not a multiple of two.</p>
+<p><code class="computeroutput">posix_memalign</code> will produce errors if the alignment
+is less than sizeof(size_t), not a multiple of two or if the size is zero.</p>
+<p><code class="computeroutput">aligned_alloc</code> will produce errors if the alignment
+is not a multiple of two , if the size is zero or if the size is not an integral
+multiple of the alignment.</p>
+<p><code class="computeroutput">aligned new</code> will produce errors if the alignment
+is zero or not a multiple of two. The <code class="computeroutput">nothrow</code> overloads
+will return a NULL pointer. The non-nothrow overloads will abort Valgrind.</p>
+<p><code class="computeroutput">aligned delete</code> will produce errors if the alignment
+is zero or not a multiple of two or if the alignment is not the same as that used by
+<code class="computeroutput">aligned new</code>.</p>
+<p><code class="computeroutput">sized delete</code> will produce errors if the size
+is not the same as that used by <code class="computeroutput">new</code>.</p>
+<p><code class="computeroutput">sized aligned delete</code> combines the error conditions
+of the individual sized and aligned delete operators.</p>
+<p>Example output:</p>
+<pre class="programlisting">
+==65825== Invalid alignment value: 3 (should be power of 2)
+==65825==    at 0x485197E: memalign (vg_replace_malloc.c:1740)
+==65825==    by 0x201CD2: main (memalign.c:39)
+</pre>
+</div>
+<div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="mc-manual.leaks"></a>4.2.10. Memory leak detection</h3></div></div></div>
 <p>Memcheck keeps track of all heap blocks issued in response to
 calls to
 <code class="function">malloc</code>/<code class="function">new</code> et al.
@@ -427,7 +513,8 @@ several ways we know of that an interior-pointer can occur:</p>
     this case, some compilers store a "magic cookie" containing the array
     length at the start of the allocated block, and return a pointer to just
     past that magic cookie, i.e. an interior-pointer.
-    See <a class="ulink" href="https://docs.freebsd.org/info/gxxint/gxxint.info.Free_Store.html" target="_top">this
+    
+    See <a class="ulink" href="https://www.math.utah.edu/docs/info/gxxint_1.html#SEC17" target="_top">this
     page</a> for more information.</p></li>
 <li class="listitem"><p>It might be a pointer to an inner part of a C++ object using
     multiple inheritance. </p></li>
@@ -756,7 +843,7 @@ is <code class="option">--errors-for-leak-kinds=definite,possible</code>
         automatically sets the options <code class="option">--leak-check=full</code>
         and <code class="option">--show-leak-kinds=all</code>, to allow
         xtree visualisation tools such as kcachegrind to select what kind
-        to leak to visualise.
+        to leak to visualize.
         The produced file will contain the following events:</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem"><p><code class="option">RB</code> : Reachable Bytes</p></li>
@@ -1087,6 +1174,16 @@ is <code class="option">--errors-for-leak-kinds=definite,possible</code>
       these checks.  It is not generally advisable to disable them,
       though, because you may miss real errors as a result.</p>
 </dd>
+<dt>
+<a name="opt.show-realloc-size-zero"></a><span class="term">
+      <code class="option">--show-realloc-size-zero=&lt;yes|no&gt; [default: yes] </code>
+    </span>
+</dt>
+<dd><p>When enabled, Memcheck checks for uses of <code class="varname">realloc</code> with a size of zero.
+      This usage of <code class="varname">realloc</code> is unsafe since it is not portable. On some systems it
+      will behave like <code class="varname">free</code>. On other systems it will either do nothing or else
+      behave like a call to <code class="varname">free</code> followed by a call to <code class="varname">malloc</code>
+      with a size of zero.</p></dd>
 <dt>
 <a name="opt.ignore-ranges"></a><span class="term">
       <code class="option">--ignore-ranges=0xPP-0xQQ[,0xRR-0xSS] </code>
@@ -1477,8 +1574,19 @@ is:</p>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
 <a name="mc-manual.monitor-commands"></a>4.6. Memcheck Monitor Commands</h2></div></div></div>
-<p>The Memcheck tool provides monitor commands handled by Valgrind's
-built-in gdbserver (see <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-commandhandling" title="3.2.5. Monitor command handling by the Valgrind gdbserver">Monitor command handling by the Valgrind gdbserver</a>).
+<p>The Memcheck tool provides monitor commands handled by Valgrind's built-in
+  gdbserver (see <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-commandhandling" title="3.2.5. Monitor command handling by the Valgrind gdbserver">Monitor command handling by the Valgrind gdbserver</a>).
+  Valgrind python code provides GDB front end commands giving an easier usage of
+  the memcheck monitor commands (see
+  <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-gdbmonitorfrontend" title="3.2.6. GDB front end commands for Valgrind gdbserver monitor commands">GDB front end commands for Valgrind gdbserver monitor commands</a>).  To launch a
+  memcheck monitor command via its GDB front end command, instead of prefixing
+  the command with "monitor", you must use the GDB <code class="varname">memcheck</code>
+  command (or the shorter aliases <code class="varname">mc</code>).  Using the memcheck
+  GDB front end command provide a more flexible usage, such as evaluation of
+  address and length arguments by GDB. In GDB, you can use <code class="varname">help
+  memcheck</code> to get help about the memcheck front end monitor commands
+  and you can use <code class="varname">apropos memcheck</code> to get all the commands
+  mentionning the word "memcheck" in their name or on-line help.
 </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
@@ -1519,6 +1627,22 @@ $4 = (char (*)[10]) 0x804a2f0
 Address 0x804A2F0 len 10 has 1 bytes unaddressable
 (gdb)
 </pre>
+<p>The GDB memcheck front end command <code class="varname">memcheck xb ADDR
+      [LEN]</code> accepts any address expression for its first ADDR
+      argument. The second optional argument is any integer expression. Note
+      that these 2 arguments must be separated by a space.
+      The following example shows how to get the definedness of
+      <code class="varname">string10</code> using the memcheck xb front end command.
+    </p>
+<pre class="programlisting">
+(gdb) mc xb &amp;string10 sizeof(string10)
+                  ff      00      ff      00      ff      __      ff      00
+0x804A2F0:      0x3f    0x6e    0x3f    0x65    0x3f    0x??     0x3f    0x65
+                  ff      00
+0x804A2F8:      0x3f    0x00
+Address 0x804A2F0 len 10 has 1 bytes unaddressable
+(gdb)
+</pre>
 <p> The command xb cannot be used with registers. To get
       the validity bits of a register, you must start Valgrind with the
       option <code class="option">--vgdb-shadow-registers=yes</code>. The validity
@@ -1547,15 +1671,19 @@ $10 = 0x0
     with their V bits values.
     </p>
 <p>
-    The following example shows the result of <code class="varname">get_vibts</code>
-    on the <code class="varname">string10</code> used in the  <code class="varname">xb</code>
-    command explanation.
+    The following example shows the result of <code class="varname">get_vbits</code> on
+    the <code class="varname">string10</code> used in the <code class="varname">xb</code> command
+    explanation. The GDB memcheck equivalent front end command <code class="varname">memcheck
+    get_vbits ADDR [LEN]</code>accepts any ADDR expression and any LEN
+    expression (separated by a space).
     </p>
 <pre class="programlisting">
 (gdb) monitor get_vbits 0x804a2f0 10
 ff00ff00 ff__ff00 ff00
 Address 0x804A2F0 len 10 has 1 bytes unaddressable
-(gdb) 
+(gdb) memcheck get_vbits &amp;string10 sizeof(string10)
+ff00ff00 ff__ff00 ff00
+Address 0x804A2F0 len 10 has 1 bytes unaddressable
 </pre>
 </li>
 <li class="listitem">
@@ -1574,14 +1702,25 @@ Address 0x804A2F0 len 10 has 1 bytes unaddressable
     that the first letter of <code class="varname">Definedifaddressable</code>
     is an uppercase D to avoid confusion with <code class="varname">defined</code>.
     </p>
+<p>The GDB equivalent memcheck front end commands <code class="varname">memcheck
+      make_memory [noaccess|undefined|defined|Definedifaddressable] ADDR
+      [LEN]</code> accept any address expression for their first ADDR
+      argument. The second optional argument is any integer expression. Note
+      that these 2 arguments must be separated by a space.
+    </p>
 <p>
     In the following example, the first byte of the
-    <code class="varname">string10</code> is marked as defined:
+    <code class="varname">string10</code> is marked as defined and then is marked
+    noaccess:
     </p>
 <pre class="programlisting">
 (gdb) monitor make_memory defined 0x8049e28  1
 (gdb) monitor get_vbits 0x8049e28 10
 0000ff00 ff00ff00 ff00
+(gdb) memcheck make_memory noaccess &amp;string10[0]
+(gdb) memcheck get_vbits &amp;string10 sizeof(string10)
+__00ff00 ff00ff00 ff00
+Address 0x8049E28 len 10 has 1 bytes unaddressable
 (gdb) 
 </pre>
 </li>
@@ -1601,12 +1740,18 @@ Address 0x8049E28 len 1 defined
 ==14698==  declared at prog.c:10, in frame #0 of thread 1
 (gdb) 
 </pre>
+<p>The GDB equivalent memcheck front end commands <code class="varname">memcheck
+      check_memory [addressable|defined] ADDR [LEN]</code> accept any address
+      expression for their first ADDR argument. The second optional argument is
+      any integer expression. Note that these 2 arguments must be separated by a
+      space.
+    </p>
 </li>
 <li class="listitem">
 <p><code class="varname">leak_check [full*|summary|xtleak]
                               [kinds &lt;set&gt;|reachable|possibleleak*|definiteleak]
                               [heuristics heur1,heur2,...]
-                              [increased*|changed|any]
+                              [new|increased*|changed|any]
                               [unlimited*|limited &lt;max_loss_records_output&gt;]
           </code>
     performs a leak check. The <code class="varname">*</code> in the arguments
@@ -1652,18 +1797,22 @@ Address 0x8049E28 len 1 defined
     The default value for the <code class="varname">heuristics</code> argument is
     <code class="varname">heuristics none</code>.
     </p>
-<p>The <code class="varname">[increased*|changed|any]</code> argument controls what
-    kinds of changes are shown for a <code class="varname">full</code> leak search. The
-    value <code class="varname">increased</code> specifies that only block
+<p>The <code class="varname">[new|increased*|changed|any]</code> argument controls
+    what kinds of changes are shown for a <code class="varname">full</code> leak search.
+    The value <code class="varname">increased</code> specifies that only block
     allocation stacks with an increased number of leaked bytes or
     blocks since the previous leak check should be shown.  The
     value <code class="varname">changed</code> specifies that allocation stacks
     with any change since the previous leak check should be shown.
+    The value <code class="varname">new</code> specifies to show only the block
+    allocation stacks that are new since the previous leak search.
     The value <code class="varname">any</code> specifies that all leak entries
-    should be shown, regardless of any increase or decrease.  When
-    If <code class="varname">increased</code> or <code class="varname">changed</code> are
-    specified, the leak report entries will show the delta relative to
-    the previous leak report.
+    should be shown, regardless of any increase or decrease.
+    If <code class="varname">new</code> or <code class="varname">increased</code> or
+    <code class="varname">changed</code> are specified, the leak report entries will show
+    the delta relative to the previous leak report and the new loss records
+    will have a "new" marker (even when <code class="varname">increased</code> or
+    <code class="varname">changed</code> were specified).
     </p>
 <p>The following example shows usage of the 
     <code class="varname">leak_check</code> monitor command on
@@ -1675,7 +1824,7 @@ Address 0x8049E28 len 1 defined
     there was no increase since the previous leak search.</p>
 <pre class="programlisting">
 (gdb) monitor leak_check full possibleleak increased
-==19520== 16 (+16) bytes in 1 (+1) blocks are possibly lost in loss record 9 of 12
+==19520== 16 (+16) bytes in 1 (+1) blocks are possibly lost in new loss record 9 of 12
 ==19520==    at 0x40070B4: malloc (vg_replace_malloc.c:263)
 ==19520==    by 0x80484D5: mk (leak-cases.c:52)
 ==19520==    by 0x804855F: f (leak-cases.c:81)
@@ -1710,6 +1859,13 @@ Address 0x8049E28 len 1 defined
     using the GDB command <code class="computeroutput">monitor leak_check full
     reachable any</code> (or, using
     abbreviation: <code class="computeroutput">mo l f r a</code>).
+    </p>
+<p>The GDB equivalent memcheck front end command <code class="varname">memcheck
+        leak_check</code> auto-completes the user input by providing the full
+      list of keywords still relevant according to what is already typed. For
+      example, if the "summary" keyword has been provided, the following TABs to
+      auto-complete other items will not propose anymore "full" and "xtleak".
+      Note that KIND and HEUR values are not part of auto-completed elements.
     </p>
 </li>
 <li class="listitem">
@@ -1822,6 +1978,11 @@ Address 0x8049E28 len 1 defined
     Each location pointing at addr (or pointing inside addr if interior pointers
     are being searched for) will be described.
     </p>
+<p>The GDB equivalent memcheck front end command <code class="varname">memcheck
+      who_points_at ADDR [LEN]</code> accept any address expression for its
+      first ADDR argument. The second optional argument is any integer
+      expression. Note that these 2 arguments must be separated by a space.
+    </p>
 <p>In the below example, the pointers to the 'tree block A' (see example
     in command <code class="varname">block_list</code>) is shown before the tree was leaked.
     The descriptions are detailed as the option <code class="option">--read-var-info=yes</code> 
@@ -1922,6 +2083,9 @@ arguments.</p>
     entries for which there was an increase or decrease in leaked
     bytes or leaked number of blocks since the previous leak search. It
     has no return value.</p></li>
+<li class="listitem"><p><code class="varname">VALGRIND_DO_NEW_LEAK_CHECK</code>: same as
+   <code class="varname"> VALGRIND_DO_LEAK_CHECK</code> but only shows the new
+    entries since the previous leak search.  It has no return value.</p></li>
 <li class="listitem"><p><code class="varname">VALGRIND_DO_QUICK_LEAK_CHECK</code>: like
     <code class="varname">VALGRIND_DO_LEAK_CHECK</code>, except it produces only a leak
     summary (like <code class="option">--leak-check=summary</code>).
@@ -2490,7 +2654,7 @@ may see false positives reported in your reduction function.</p>
 <td rowspan="2" width="40%" align="left">
 <a accesskey="p" href="manual-core-adv.html">&lt;&lt; 3. Using and understanding the Valgrind core: Advanced Topics</a> </td>
 <td width="20%" align="center"><a accesskey="u" href="manual.html">Up</a></td>
-<td rowspan="2" width="40%" align="right"> <a accesskey="n" href="cg-manual.html">5. Cachegrind: a cache and branch-prediction profiler &gt;&gt;</a>
+<td rowspan="2" width="40%" align="right"> <a accesskey="n" href="cg-manual.html">5. Cachegrind: a high-precision tracing profiler &gt;&gt;</a>
 </td>
 </tr>
 <tr><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td></tr>

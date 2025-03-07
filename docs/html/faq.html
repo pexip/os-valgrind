@@ -80,6 +80,10 @@
 <dd>4.6. <a href="faq.html#faq.overruns">Why doesn't Memcheck find the array overruns in this
     program?</a>
 </dd>
+<dd>4.7. <a href="faq.html#faq.mismatches">Why does Memcheck report many
+      "Mismatched free() / delete / delete []" errors when
+      my code is correct?</a>
+</dd>
 </dl>
 <dl>
 <dt>5.  <a href="faq.html#faq.misc">Miscellaneous</a>
@@ -341,7 +345,9 @@ collect2: ld returned 1 exit status
     have the wrong function name in them.  What's happening?</a><br>4.4. <a href="faq.html#faq.crashes">My program crashes normally, but doesn't under Valgrind, or vice
     versa.  What's happening?</a><br>4.5. <a href="faq.html#faq.hiddenbug"> Memcheck doesn't report any errors and I know my program has
     errors.</a><br>4.6. <a href="faq.html#faq.overruns">Why doesn't Memcheck find the array overruns in this
-    program?</a><br>
+    program?</a><br>4.7. <a href="faq.html#faq.mismatches">Why does Memcheck report many
+      "Mismatched free() / delete / delete []" errors when
+      my code is correct?</a><br>
 </td></tr>
 <tr><td colspan="2"> </td></tr>
 <tr class="question">
@@ -594,6 +600,55 @@ int main(void)
 <td align="left" valign="top"><p>Unfortunately, Memcheck doesn't do bounds checking on global
     or stack arrays.  We'd like to, but it's just not possible to do in
     a reasonable way that fits with how Memcheck works.  Sorry.</p></td>
+</tr>
+<tr><td colspan="2"> </td></tr>
+<tr class="question">
+<td align="left" valign="top">
+<a name="faq.mismatches"></a><a name="q-mismatches"></a><b>4.7.</b>
+</td>
+<td align="left" valign="top"><b>Why does Memcheck report many
+      "Mismatched free() / delete / delete []" errors when
+      my code is correct?</b></td>
+</tr>
+<tr class="answer">
+<td align="left" valign="top"><a name="a-mismatches"></a></td>
+<td align="left" valign="top">
+<p>There are two possible causes of this.</p>
+<p>First, check if you are using an optimized build of Google
+      tcmalloc (part of Google perftools). This library uses a single
+      alias for free/scalar delete/array delete as an unmeasurable
+      micro-optimization. There is simply no way for Memcheck to tell
+      which of these was originally used. There are a few possible
+      workarounds.
+      </p>
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
+<li class="listitem"><p>Build tcmalloc with "CPPFLAGS=-DTCMALLOC_NO_ALIASES"
+            (best).</p></li>
+<li class="listitem"><p>Use a debug build of tcmalloc (debug builds turn off the alias
+            micro-optimization).</p></li>
+<li class="listitem"><p>Do not link with tcmalloc for the builds that you use for
+            Memecheck testing.</p></li>
+</ul></div>
+<p>
+    </p>
+<p>Second, if you are replacing operator new or operator delete
+      make sure that the compiler does not perform optimizations such as
+      inlining on calls to these functions. Such optimizations can
+      prevent Memcheck from correctly identifying the allocator or
+      deallocator that is being used.</p>
+<p>The following two code snippets show how you can do this with
+      GCC and LLVM (clang).</p>
+<pre class="programlisting">
+  // GCC
+  void operator delete(void*) noexcept __attribute__((__externally_visible__));
+</pre>
+<pre class="programlisting">
+  // LLVM (clang)
+  __attribute__((__visibility__("default"))) void operator delete(void*) noexcept;
+</pre>
+<p>If all else fails, you might have to use "--show-mismatched-frees=no"
+    </p>
+</td>
 </tr>
 </table>
 <br><table width="100%" summary="Q and A Div" cellpadding="2" cellspacing="2" border="0">

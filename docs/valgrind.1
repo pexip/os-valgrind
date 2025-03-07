@@ -2,12 +2,12 @@
 .\"     Title: VALGRIND
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/24/2022
+.\"      Date: 11/01/2024
 .\"    Manual: valgrind
-.\"    Source: Release 3.20.0
+.\"    Source: Release 3.24.0
 .\"  Language: English
 .\"
-.TH "VALGRIND" "1" "10/24/2022" "Release 3\&.20\&.0" "valgrind"
+.TH "VALGRIND" "1" "11/01/2024" "Release 3\&.24\&.0" "valgrind"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -433,9 +433,9 @@ Such marker lines facilitate searching for errors and/or extracting errors in an
 Note that empty markers are accepted\&. So, only using a begin (or an end) marker is possible\&.
 .RE
 .PP
-\fB\-\-show\-error\-list=no|yes [default: no]\fR
+\fB\-\-show\-error\-list=no|yes|all [default: no]\fR
 .RS 4
-If this option is enabled, for tools that report errors, valgrind will show the list of detected errors and the list of used suppressions at exit\&.
+If this option is yes, for tools that report errors, valgrind will show the list of detected errors and the list of used suppressions at exit\&. The value all indicates to also show the list of suppressed errors\&.
 .sp
 Note that at verbosity 2 and above, valgrind automatically shows the list of detected errors and the list of used suppressions at exit, unless
 \fB\-\-show\-error\-list=no\fR
@@ -632,9 +632,9 @@ When using
 .PP
 \fB\-\-dsymutil=no|yes [yes] \fR
 .RS 4
-This option is only relevant when running Valgrind on Mac OS X\&.
+This option is only relevant when running Valgrind on macOS\&.
 .sp
-Mac OS X uses a deferred debug information (debuginfo) linking scheme\&. When object files containing debuginfo are linked into a
+macOS uses a deferred debug information (debuginfo) linking scheme\&. When object files containing debuginfo are linked into a
 \&.dylib
 or an executable, the debuginfo is not copied into the final file\&. Instead, the debuginfo must be linked manually by running
 dsymutil, a system\-provided utility, on the executable or
@@ -730,6 +730,27 @@ As discussed further in the description of
 .RS 4
 By default, Valgrind can handle to up to 500 threads\&. Occasionally, that number is too small\&. Use this option to provide a different limit\&. E\&.g\&.
 \-\-max\-threads=3000\&.
+.RE
+.PP
+\fB\-\-realloc\-zero\-bytes\-frees=yes|no [default: yes for glibc no otherwise] \fR
+.RS 4
+The behaviour of
+realloc()
+is implementation defined (in C17, in C23 it is likely to become undefined)\&. Valgrind tries to work in the same way as the underlying system and C runtime library that it was configured and built on\&. However, if you use a different C runtime library then this default may be wrong\&. If the value is
+\fByes\fR
+then
+\fIrealloc\fR
+will deallocate the memory and return NULL\&. If the value is
+\fBno\fR
+then
+\fIrealloc\fR
+will not deallocate the memory and the size will be handled as though it were one byte\&.
+.sp
+As an example, if you use Valgrind installed via a package on a Linux distro using GNU libc but link your test executable with musl libc or the JEMalloc library then consider using
+\-\-realloc\-zero\-bytes\-frees=no\&.
+.sp
+Address Sanitizer has a similar and even wordier option
+allocator_frees_and_returns_null_on_realloc_zero\&.
 .RE
 .SH "MALLOC()\-RELATED OPTIONS"
 .PP
@@ -839,7 +860,7 @@ takes advantage of this observation, limiting the overhead of checking to code w
 .PP
 \fB\-\-read\-inline\-info=<yes|no> [default: see below] \fR
 .RS 4
-When enabled, Valgrind will read information about inlined function calls from DWARF3 debug info\&. This slows Valgrind startup and makes it use more memory (typically for each inlined piece of code, 6 words and space for the function name), but it results in more descriptive stacktraces\&. Currently, this functionality is enabled by default only for Linux, Android and Solaris targets and only for the tools Memcheck, Massif, Helgrind and DRD\&. Here is an example of some stacktraces with
+When enabled, Valgrind will read information about inlined function calls from DWARF3 debug info\&. This slows Valgrind startup and makes it use more memory (typically for each inlined piece of code, 6 words and space for the function name), but it results in more descriptive stacktraces\&. Currently, this functionality is enabled by default only for Linux, FreeBSD, Android and Solaris targets and only for the tools Memcheck, Massif, Helgrind and DRD\&. Here is an example of some stacktraces with
 \fB\-\-read\-inline\-info=no\fR:
 .sp
 .if n \{\
@@ -952,7 +973,7 @@ To communicate with gdb/vgdb, the Valgrind gdbserver creates 3 files (2 named FI
 .PP
 \fB\-\-run\-libc\-freeres=<yes|no> [default: yes] \fR
 .RS 4
-This option is only relevant when running Valgrind on Linux\&.
+This option is only relevant when running Valgrind on Linux with GNU libc\&.
 .sp
 The GNU C library (\fBlibc\&.so\fR), which is used by all programs, may allocate memory for its own uses\&. Usually it doesn\*(Aqt bother to free that memory when the program ends\(emthere would be no point, since the Linux kernel reclaims all process resources when a process exits anyway, so it would just slow things down\&.
 .sp
@@ -973,7 +994,7 @@ libc\&.so\&.
 .PP
 \fB\-\-run\-cxx\-freeres=<yes|no> [default: yes] \fR
 .RS 4
-This option is only relevant when running Valgrind on Linux or Solaris C++ programs\&.
+This option is only relevant when running Valgrind on Linux, FreeBSD or Solaris C++ programs using libstdc++\&.
 .sp
 The GNU Standard C++ library (\fBlibstdc++\&.so\fR), which is used by all C++ programs compiled with g++, may allocate memory for its own uses\&. Usually it doesn\*(Aqt bother to free that memory when the program ends\(emthere would be no point, since the kernel reclaims all process resources when a process exits anyway, so it would just slow things down\&.
 .sp
@@ -1055,7 +1076,7 @@ will always be printed in front of the inner debug logging lines\&.
 .IP \(bu 2.3
 .\}
 \fBno\-nptl\-pthread\-stackcache: \fR
-This hint is only relevant when running Valgrind on Linux; it is ignored on Solaris and Mac OS X\&.
+This hint is only relevant when running Valgrind on Linux; it is ignored on FreeBSD, Solaris and macOS\&.
 .sp
 The GNU glibc pthread library (\fBlibpthread\&.so\fR), which is used by pthread programs, maintains a cache of pthread stacks\&. When a pthread terminates, the memory used for the pthread stack and some thread local storage related data structure are not always directly released\&. This memory is kept in a cache (up to a certain size), and is re\-used if a new thread is started\&.
 .sp
@@ -1090,6 +1111,14 @@ Note: Valgrind disables the cache using some internal knowledge of the glibc sta
 .\}
 \fBfallback\-llsc: \fR(MIPS and ARM64 only): Enables an alternative implementation of Load\-Linked (LL) and Store\-Conditional (SC) instructions\&. The standard implementation gives more correct behaviour, but can cause indefinite looping on certain processor implementations that are intolerant of extra memory references between LL and SC\&. So far this is known only to happen on Cavium 3 cores\&. You should not need to use this flag, since the relevant cores are detected at startup and the alternative implementation is automatically enabled if necessary\&. There is no equivalent anti\-flag: you cannot force\-disable the alternative implementation, if it is automatically enabled\&. The underlying problem exists because the "standard" implementation of LL and SC is done by copying through LL and SC instructions into the instrumented code\&. However, tools may insert extra instrumentation memory references in between the LL and SC instructions\&. These memory references are not present in the original uninstrumented code, and their presence in the instrumented code can cause the SC instructions to persistently fail, leading to indefinite looping in LL\-SC blocks\&. The alternative implementation gives correct behaviour of LL and SC instructions between threads in a process, up to and including the ABA scenario\&. It also gives correct behaviour between a Valgrinded thread and a non\-Valgrinded thread running in a different process, that communicate via shared memory, but only up to and including correct CAS behaviour \-\- in this case the ABA scenario may not be correctly handled\&.
 .RE
+.RE
+.PP
+\fB\-\-scheduling\-quantum=<number> [default: 100000] \fR
+.RS 4
+The
+\fB\-\-scheduling\-quantum\fR
+option controls the maximum number of basic blocks executed by a thread before releasing the lock used by Valgrind to serialise thread execution\&. Smaller values give finer interleaving but increases the scheduling overhead\&. Finer interleaving can be useful to reproduce race conditions with helgrind or DRD\&. For more details about the Valgrind thread serialisation scheme and its impact on performance and thread scheduling, see
+Scheduling and Multi-Thread Performance\&.
 .RE
 .PP
 \fB\-\-fair\-sched=<no|yes|try> [default: no] \fR
@@ -1336,18 +1365,6 @@ Replacements in a statically linked library are done by using the
 pattern\&. For example, if you link with
 \fIlibtcmalloc\&.a\fR, and only want to intercept the malloc related functions in the executable (and standard libraries) themselves, but not any other shared libraries, you can give the option
 \fB\-\-soname\-synonyms=somalloc=NONE\fR\&. Note that a NONE pattern will match the main executable and any shared library having no soname\&.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-To run a "default" Firefox build for Linux, in which JEMalloc is linked in to the main executable, use
-\fB\-\-soname\-synonyms=somalloc=NONE\fR\&.
 .RE
 .sp
 .RS 4
@@ -1761,7 +1778,7 @@ is specified\&.
 If set to yes, the results for the leak search done at exit will be output in a \*(AqCallgrind Format\*(Aq execution tree file\&. Note that this automatically sets the options
 \fB\-\-leak\-check=full\fR
 and
-\fB\-\-show\-leak\-kinds=all\fR, to allow xtree visualisation tools such as kcachegrind to select what kind to leak to visualise\&. The produced file will contain the following events:
+\fB\-\-show\-leak\-kinds=all\fR, to allow xtree visualisation tools such as kcachegrind to select what kind to leak to visualize\&. The produced file will contain the following events:
 .sp
 .RS 4
 .ie n \{\
@@ -2068,6 +2085,20 @@ This causes a lot of confusing and irrelevant error reports\&.
 disables these checks\&. It is not generally advisable to disable them, though, because you may miss real errors as a result\&.
 .RE
 .PP
+\fB\-\-show\-realloc\-size\-zero=<yes|no> [default: yes] \fR
+.RS 4
+When enabled, Memcheck checks for uses of
+\fIrealloc\fR
+with a size of zero\&. This usage of
+\fIrealloc\fR
+is unsafe since it is not portable\&. On some systems it will behave like
+\fIfree\fR\&. On other systems it will either do nothing or else behave like a call to
+\fIfree\fR
+followed by a call to
+\fImalloc\fR
+with a size of zero\&.
+.RE
+.PP
 \fB\-\-ignore\-ranges=0xPP\-0xQQ[,0xRR\-0xSS] \fR
 .RS 4
 Any ranges listed in this option (and multiple ranges can be specified, separated by commas) will be ignored by Memcheck\*(Aqs addressability checking\&.
@@ -2093,38 +2124,9 @@ does not affect a block of memory when it is used as argument to client requests
 .RE
 .SH "CACHEGRIND OPTIONS"
 .PP
-\fB\-\-I1=<size>,<associativity>,<line size> \fR
-.RS 4
-Specify the size, associativity and line size of the level 1 instruction cache\&.
-.RE
-.PP
-\fB\-\-D1=<size>,<associativity>,<line size> \fR
-.RS 4
-Specify the size, associativity and line size of the level 1 data cache\&.
-.RE
-.PP
-\fB\-\-LL=<size>,<associativity>,<line size> \fR
-.RS 4
-Specify the size, associativity and line size of the last\-level cache\&.
-.RE
-.PP
-\fB\-\-cache\-sim=no|yes [yes] \fR
-.RS 4
-Enables or disables collection of cache access and miss counts\&.
-.RE
-.PP
-\fB\-\-branch\-sim=no|yes [no] \fR
-.RS 4
-Enables or disables collection of branch instruction and misprediction counts\&. By default this is disabled as it slows Cachegrind down by approximately 25%\&. Note that you cannot specify
-\fB\-\-cache\-sim=no\fR
-and
-\fB\-\-branch\-sim=no\fR
-together, as that would leave Cachegrind with no information to collect\&.
-.RE
-.PP
 \fB\-\-cachegrind\-out\-file=<file> \fR
 .RS 4
-Write the profile data to
+Write the Cachegrind output file to
 file
 rather than to the default output file,
 cachegrind\&.out\&.<pid>\&. The
@@ -2133,6 +2135,43 @@ and
 \fB%q\fR
 format specifiers can be used to embed the process ID and/or the contents of an environment variable in the name, as is the case for the core option
 \fB\-\-log\-file\fR\&.
+.RE
+.PP
+\fB\-\-cache\-sim=no|yes [no] \fR
+.RS 4
+Enables or disables collection of cache access and miss counts\&.
+.RE
+.PP
+\fB\-\-branch\-sim=no|yes [no] \fR
+.RS 4
+Enables or disables collection of branch instruction and misprediction counts\&.
+.RE
+.PP
+\fB\-\-instr\-at\-start=no|yes [yes] \fR
+.RS 4
+Enables or disables instrumentation at the start of execution\&. Use this in combination with
+CACHEGRIND_START_INSTRUMENTATION
+and
+CACHEGRIND_STOP_INSTRUMENTATION
+to measure only part of a client program\*(Aqs execution\&.
+.RE
+.PP
+\fB\-\-I1=<size>,<associativity>,<line size> \fR
+.RS 4
+Specify the size, associativity and line size of the level 1 instruction cache\&. Only useful with
+\fB\-\-cache\-sim=yes\fR\&.
+.RE
+.PP
+\fB\-\-D1=<size>,<associativity>,<line size> \fR
+.RS 4
+Specify the size, associativity and line size of the level 1 data cache\&. Only useful with
+\fB\-\-cache\-sim=yes\fR\&.
+.RE
+.PP
+\fB\-\-LL=<size>,<associativity>,<line size> \fR
+.RS 4
+Specify the size, associativity and line size of the last\-level cache\&. Only useful with
+\fB\-\-cache\-sim=yes\fR\&.
 .RE
 .SH "CALLGRIND OPTIONS"
 .PP
@@ -2318,9 +2357,11 @@ When enabled (the default), Helgrind performs lock order consistency checking\&.
 \fB\-\-history\-level=none|approx|full [default: full] \fR
 .RS 4
 \fB\-\-history\-level=full\fR
-(the default) causes Helgrind collects enough information about "old" accesses that it can produce two stack traces in a race report \-\- both the stack trace for the current access, and the trace for the older, conflicting access\&. To limit memory usage, "old" accesses stack traces are limited to a maximum of 8 entries, even if
+(the default) causes Helgrind collects enough information about "old" accesses that it can produce two stack traces in a race report \-\- both the stack trace for the current access, and the trace for the older, conflicting access\&. To limit memory usage, "old" accesses stack traces are limited to a maximum of
+\fI\-\-history\-backtrace\-size\fR
+entries (default 8) or to
 \fB\-\-num\-callers\fR
-value is bigger\&.
+value if this value is smaller\&.
 .sp
 Collecting such information is expensive in both speed and memory, particularly for programs that do many inter\-thread synchronisation events (locks, unlocks, etc)\&. Without such information, it is more difficult to track down the root causes of races\&. Nonetheless, you may not need it in situations where you just want to check for the presence or absence of races, for example, when doing regression testing of a previously race\-free program\&.
 .sp
@@ -2333,6 +2374,15 @@ provides a compromise between these two extremes\&. It causes Helgrind to show a
 \fB\-\-history\-level=full\fR
 does), but it is better than nothing, and it is almost as fast as
 \fB\-\-history\-level=none\fR\&.
+.RE
+.PP
+\fB\-\-history\-backtrace\-size=<number> [default: 8] \fR
+.RS 4
+When
+\fI\-\-history\-level=full\fR
+is selected,
+\fI\-\-history\-backtrace\-size=number\fR
+indicates how many entries to record in "old" accesses stack traces\&.
 .RE
 .PP
 \fB\-\-delta\-stacktrace=no|yes [default: yes on linux amd64/x86] \fR
@@ -2629,6 +2679,11 @@ If heap profiling is enabled, gives the number of administrative bytes per block
 \fB\-\-stacks=<yes|no> [default: no] \fR
 .RS 4
 Specifies whether stack profiling should be done\&. This option slows Massif down greatly, and so is off by default\&. Note that Massif assumes that the main stack has size zero at start\-up\&. This is not true, but doing otherwise accurately is difficult\&. Furthermore, starting at zero better indicates the size of the part of the main stack that a user program actually has control over\&.
+.sp
+If you give at least 4
+\fB\-v\fR
+verbosity arguments, then massif produces a trace for each stack increase and decrease\&. The stack increase trace contains the IP address that increased the stack\&. Note that to get fully precise IP address, you must specify the options
+\fB\-px\-default=unwindregs\-at\-mem\-access \-\-px\-file\-backed=unwindregs\-at\-mem\-access\fR\&.
 .RE
 .PP
 \fB\-\-pages\-as\-heap=<yes|no> [default: no] \fR
@@ -2673,6 +2728,19 @@ Note that C++ names are demangled\&. Note also that overloaded C++ names must be
 .RE
 .\}
 .sp
+Arguments of type
+size_t
+need to be replaced with
+unsigned long
+on 64bit platforms and
+unsigned
+on 32bit platforms\&.
+.sp
+\fB\-\-alloc\-fn\fR
+will work with inline functions\&. Inline function names are not mangled, which means that you only need to provide the function name and not the argument list\&.
+.sp
+\fB\-\-alloc\-fn\fR
+does not support wildcards\&.
 .RE
 .PP
 \fB\-\-ignore\-fn=<name> \fR

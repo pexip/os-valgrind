@@ -151,7 +151,7 @@ check_PROGRAMS = annotate_hb_err$(EXEEXT) annotate_hb_race$(EXEEXT) \
 	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
 	$(am__EXEEXT_8) $(am__EXEEXT_9) $(am__EXEEXT_10) \
 	$(am__EXEEXT_11) $(am__EXEEXT_12) $(am__EXEEXT_13) \
-	$(am__EXEEXT_14) $(am__EXEEXT_15)
+	$(am__EXEEXT_14) $(am__EXEEXT_15) $(am__EXEEXT_16)
 @HAVE_BOOST_1_35_TRUE@am__append_12 = boost_thread
 @HAVE_BUILTIN_ATOMIC_TRUE@am__append_13 = \
 @HAVE_BUILTIN_ATOMIC_TRUE@  annotate_barrier       \
@@ -195,15 +195,16 @@ check_PROGRAMS = annotate_hb_err$(EXEEXT) annotate_hb_race$(EXEEXT) \
 @HAVE_PTHREAD_CREATE_GLIBC_2_0_TRUE@am__append_22 = pth_create_glibc_2_0
 @HAVE_PTHREAD_SPINLOCK_TRUE@am__append_23 = pth_spinlock
 @HAVE_SWAPCONTEXT_TRUE@am__append_24 = swapcontext
-@VGCONF_OS_IS_DARWIN_FALSE@am__append_25 = sem_wait
-@VGCONF_OS_IS_FREEBSD_TRUE@am__append_26 = thread_name_freebsd
-@VGCONF_OS_IS_SOLARIS_TRUE@am__append_27 = -D__EXTENSIONS__
+@HAVE_THRD_CREATE_TRUE@am__append_25 = thrd_create
+@VGCONF_OS_IS_DARWIN_FALSE@am__append_26 = sem_wait
+@VGCONF_OS_IS_FREEBSD_TRUE@am__append_27 = thread_name_freebsd
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_28 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_29 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_30 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_31 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_32 = -D__EXTENSIONS__
 @VGCONF_OS_IS_SOLARIS_TRUE@am__append_33 = -D__EXTENSIONS__
+@VGCONF_OS_IS_SOLARIS_TRUE@am__append_34 = -D__EXTENSIONS__
 subdir = drd/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -244,8 +245,9 @@ CONFIG_CLEAN_VPATH_FILES =
 @HAVE_PTHREAD_CREATE_GLIBC_2_0_TRUE@am__EXEEXT_11 = pth_create_glibc_2_0$(EXEEXT)
 @HAVE_PTHREAD_SPINLOCK_TRUE@am__EXEEXT_12 = pth_spinlock$(EXEEXT)
 @HAVE_SWAPCONTEXT_TRUE@am__EXEEXT_13 = swapcontext$(EXEEXT)
-@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_14 = sem_wait$(EXEEXT)
-@VGCONF_OS_IS_FREEBSD_TRUE@am__EXEEXT_15 =  \
+@HAVE_THRD_CREATE_TRUE@am__EXEEXT_14 = thrd_create$(EXEEXT)
+@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_15 = sem_wait$(EXEEXT)
+@VGCONF_OS_IS_FREEBSD_TRUE@am__EXEEXT_16 =  \
 @VGCONF_OS_IS_FREEBSD_TRUE@	thread_name_freebsd$(EXEEXT)
 annotate_barrier_SOURCES = annotate_barrier.c
 annotate_barrier_OBJECTS = annotate_barrier.$(OBJEXT)
@@ -272,13 +274,17 @@ annotate_publish_hg_OBJECTS = annotate_publish_hg.$(OBJEXT)
 annotate_publish_hg_LDADD = $(LDADD)
 annotate_publish_hg_DEPENDENCIES =
 annotate_rwlock_SOURCES = annotate_rwlock.c
-annotate_rwlock_OBJECTS = annotate_rwlock.$(OBJEXT)
+annotate_rwlock_OBJECTS = annotate_rwlock-annotate_rwlock.$(OBJEXT)
 annotate_rwlock_LDADD = $(LDADD)
 annotate_rwlock_DEPENDENCIES =
+annotate_rwlock_LINK = $(CCLD) $(annotate_rwlock_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 annotate_sem_SOURCES = annotate_sem.c
-annotate_sem_OBJECTS = annotate_sem.$(OBJEXT)
+annotate_sem_OBJECTS = annotate_sem-annotate_sem.$(OBJEXT)
 annotate_sem_LDADD = $(LDADD)
 annotate_sem_DEPENDENCIES =
+annotate_sem_LINK = $(CCLD) $(annotate_sem_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am__annotate_smart_pointer_SOURCES_DIST = annotate_smart_pointer.cpp
 @HAVE_BUILTIN_ATOMIC_TRUE@am_annotate_smart_pointer_OBJECTS =  \
 @HAVE_BUILTIN_ATOMIC_TRUE@	annotate_smart_pointer.$(OBJEXT)
@@ -551,7 +557,7 @@ std_mutex_OBJECTS = $(am_std_mutex_OBJECTS)
 std_mutex_LDADD = $(LDADD)
 std_mutex_DEPENDENCIES =
 std_mutex_LINK = $(CXXLD) $(std_mutex_CXXFLAGS) $(CXXFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(std_mutex_LDFLAGS) $(LDFLAGS) -o $@
 am_std_string_OBJECTS = std_string-std_string.$(OBJEXT)
 std_string_OBJECTS = $(am_std_string_OBJECTS)
 std_string_LDADD = $(LDADD)
@@ -576,6 +582,12 @@ swapcontext_LDADD = $(LDADD)
 swapcontext_DEPENDENCIES =
 swapcontext_LINK = $(CCLD) $(swapcontext_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_thrd_create_OBJECTS = thrd_create.$(OBJEXT)
+thrd_create_OBJECTS = $(am_thrd_create_OBJECTS)
+thrd_create_LDADD = $(LDADD)
+thrd_create_DEPENDENCIES =
+thrd_create_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(thrd_create_LDFLAGS) $(LDFLAGS) -o $@
 thread_name_SOURCES = thread_name.c
 thread_name_OBJECTS = thread_name.$(OBJEXT)
 thread_name_LDADD = $(LDADD)
@@ -614,7 +626,7 @@ unit_vc_OBJECTS = unit_vc-unit_vc.$(OBJEXT)
 unit_vc_DEPENDENCIES =
 unit_vc_LINK = $(CCLD) $(unit_vc_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SCRIPTS = $(dist_noinst_SCRIPTS)
+SCRIPTS = $(dist_noinst_SCRIPTS) $(noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -635,7 +647,8 @@ am__depfiles_remade = ./$(DEPDIR)/annotate_barrier.Po \
 	./$(DEPDIR)/annotate_ignore_rw.Po \
 	./$(DEPDIR)/annotate_ignore_write.Po \
 	./$(DEPDIR)/annotate_publish_hg.Po \
-	./$(DEPDIR)/annotate_rwlock.Po ./$(DEPDIR)/annotate_sem.Po \
+	./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po \
+	./$(DEPDIR)/annotate_sem-annotate_sem.Po \
 	./$(DEPDIR)/annotate_smart_pointer.Po \
 	./$(DEPDIR)/annotate_static-annotate_static.Po \
 	./$(DEPDIR)/annotate_trace_memory.Po ./$(DEPDIR)/atomic_var.Po \
@@ -686,7 +699,8 @@ am__depfiles_remade = ./$(DEPDIR)/annotate_barrier.Po \
 	./$(DEPDIR)/std_thread-std_thread.Po \
 	./$(DEPDIR)/std_thread2-std_thread2.Po \
 	./$(DEPDIR)/swapcontext-swapcontext.Po \
-	./$(DEPDIR)/thread_name.Po ./$(DEPDIR)/thread_name_freebsd.Po \
+	./$(DEPDIR)/thrd_create.Po ./$(DEPDIR)/thread_name.Po \
+	./$(DEPDIR)/thread_name_freebsd.Po \
 	./$(DEPDIR)/threaded-fork.Po \
 	./$(DEPDIR)/timed_mutex-timed_mutex.Po ./$(DEPDIR)/trylock.Po \
 	./$(DEPDIR)/tsan_unittest-tsan_unittest.Po \
@@ -746,9 +760,10 @@ SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	$(sem_wait_SOURCES) $(shared_timed_mutex_SOURCES) sigalrm.c \
 	$(std_atomic_SOURCES) $(std_list_SOURCES) $(std_mutex_SOURCES) \
 	$(std_string_SOURCES) $(std_thread_SOURCES) \
-	$(std_thread2_SOURCES) $(swapcontext_SOURCES) thread_name.c \
-	thread_name_freebsd.c threaded-fork.c $(timed_mutex_SOURCES) \
-	trylock.c $(tsan_unittest_SOURCES) unit_bitmap.c unit_vc.c
+	$(std_thread2_SOURCES) $(swapcontext_SOURCES) \
+	$(thrd_create_SOURCES) thread_name.c thread_name_freebsd.c \
+	threaded-fork.c $(timed_mutex_SOURCES) trylock.c \
+	$(tsan_unittest_SOURCES) unit_bitmap.c unit_vc.c
 DIST_SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	annotate_ignore_rw.c annotate_ignore_write.c \
 	annotate_publish_hg.c annotate_rwlock.c annotate_sem.c \
@@ -774,9 +789,10 @@ DIST_SOURCES = annotate_barrier.c annotate_hb_err.c annotate_hb_race.c \
 	$(sem_wait_SOURCES) $(shared_timed_mutex_SOURCES) sigalrm.c \
 	$(std_atomic_SOURCES) $(std_list_SOURCES) $(std_mutex_SOURCES) \
 	$(std_string_SOURCES) $(std_thread_SOURCES) \
-	$(std_thread2_SOURCES) $(swapcontext_SOURCES) thread_name.c \
-	thread_name_freebsd.c threaded-fork.c $(timed_mutex_SOURCES) \
-	trylock.c $(tsan_unittest_SOURCES) unit_bitmap.c unit_vc.c
+	$(std_thread2_SOURCES) $(swapcontext_SOURCES) \
+	$(thrd_create_SOURCES) thread_name.c thread_name_freebsd.c \
+	threaded-fork.c $(timed_mutex_SOURCES) trylock.c \
+	$(tsan_unittest_SOURCES) unit_bitmap.c unit_vc.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -845,6 +861,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -862,6 +879,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -876,16 +894,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -936,6 +973,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -946,10 +984,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -1104,16 +1144,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -1124,6 +1160,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -1140,7 +1179,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -1200,6 +1239,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -1233,19 +1273,21 @@ AM_CCASFLAGS = $(AM_CPPFLAGS)
 dist_noinst_SCRIPTS = \
 	compare_error_count_with    \
 	filter_annotate_barrier_xml \
-	filter_error_count	    \
-	filter_error_summary	    \
 	filter_lambda               \
-	filter_stderr               \
 	filter_stderr_and_thread_no \
-	filter_stderr_and_thread_no_and_offset \
 	filter_stderr_solaris       \
-	filter_thread_no	    \
 	filter_thread_name_xml      \
-	filter_xml_and_thread_no    \
 	run_openmp_test             \
 	supported_libpthread	    \
 	supported_sem_init
+
+noinst_SCRIPTS = \
+	filter_error_count \
+	filter_error_summary \
+	filter_stderr \
+	filter_stderr_and_thread_no_and_offset \
+	filter_thread_no \
+	filter_xml_and_thread_no
 
 noinst_HEADERS = \
 	tsan_thread_wrappers_pthread.h		    \
@@ -1297,11 +1339,13 @@ EXTRA_DIST = \
 	annotate_ignore_write2.stderr.exp	    \
 	annotate_ignore_write2.stderr.exp-solaris   \
 	annotate_ignore_write2.vgtest		    \
+	annotate_trace_memory.stderr.exp-arm        \
 	annotate_trace_memory.stderr.exp-32bit	    \
 	annotate_trace_memory.stderr.exp-32bit-clang \
 	annotate_trace_memory.stderr.exp-64bit	    \
-	annotate_trace_memory.stderr.exp-mips32	   \
+	annotate_trace_memory.stderr.exp-mips32	    \
 	annotate_trace_memory.vgtest		    \
+	annotate_trace_memory_xml.stderr.exp-arm    \
 	annotate_trace_memory_xml.stderr.exp-32bit  \
 	annotate_trace_memory_xml.stderr.exp-32bit-clang \
 	annotate_trace_memory_xml.stderr.exp-64bit  \
@@ -1316,11 +1360,13 @@ EXTRA_DIST = \
 	bug322621.vgtest			    \
 	bug322621.stderr.exp			    \
 	bar_bad.stderr.exp			    \
+	bar_bad.stderr.exp-no-barrier		    \
 	bar_bad.stderr.exp-nohang		    \
 	bar_bad.stderr.exp-solaris		    \
 	bar_bad.stderr.exp-freebsd		    \
 	bar_bad.vgtest				    \
 	bar_bad_xml.stderr.exp			    \
+	bar_bad_xml.stderr.exp-no-barrier	    \
 	bar_bad_xml.stderr.exp-nohang		    \
 	bar_bad_xml.stderr.exp-solaris		    \
 	bar_bad_xml.stderr.exp-freebsd		    \
@@ -1381,6 +1427,8 @@ EXTRA_DIST = \
 	hold_lock_1.vgtest                          \
 	hold_lock_2.stderr.exp                      \
 	hold_lock_2.vgtest                          \
+	getaddrinfo.stderr.exp                      \
+	getaddrinfo.vgtest                          \
 	linuxthreads_det.stderr.exp                 \
 	linuxthreads_det.stderr.exp-linuxthreads    \
 	linuxthreads_det.stdout.exp                 \
@@ -1492,6 +1540,9 @@ EXTRA_DIST = \
 	sem_as_mutex3.stderr.exp-mips32-be          \
 	sem_as_mutex3.stderr.exp-mips32-le          \
 	sem_as_mutex3.vgtest                        \
+	sem_clockwait_np.stderr.exp                 \
+	sem_clockwait_np.stdout.exp                 \
+	sem_clockwait_np.vgtest                     \
 	sem_open.stderr.exp                         \
 	sem_open.stderr.exp-mips32-be               \
 	sem_open.stderr.exp-mips32-le               \
@@ -1576,6 +1627,7 @@ EXTRA_DIST = \
 	tc18_semabuse.vgtest                        \
 	tc19_shadowmem.stderr.exp-32bit             \
 	tc19_shadowmem.stderr.exp-32bit-BE          \
+	tc19_shadowmem.stderr.exp-32on64            \
 	tc19_shadowmem.stderr.exp-64bit             \
 	tc19_shadowmem.vgtest                       \
 	tc21_pthonce.stderr.exp                     \
@@ -1592,6 +1644,8 @@ EXTRA_DIST = \
 	tc23_bogus_condwait.vgtest                  \
 	tc24_nonzero_sem.stderr.exp                 \
 	tc24_nonzero_sem.vgtest                     \
+	thrd_create.stderr.exp			    \
+	thrd_create.vgtest			    \
 	thread_name.stderr.exp			    \
 	thread_name.vgtest			    \
 	thread_name_xml.stderr.exp		    \
@@ -1614,6 +1668,8 @@ EXTRA_DIST = \
 	unit_vc.vgtest
 
 LDADD = -lpthread
+annotate_sem_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
+annotate_rwlock_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 bug322621_SOURCES = bug322621.cpp
 condvar_SOURCES = condvar.cpp
 condvar_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x
@@ -1625,10 +1681,10 @@ dlopen_lib_so_LDFLAGS = -shared -fPIC
 monitor_example_SOURCES = monitor_example.cpp
 new_delete_SOURCES = new_delete.cpp
 new_delete_CXXFLAGS = $(AM_CXXFLAGS) @FLAG_W_NO_MISMATCHED_NEW_DELETE@
-free_is_write_CFLAGS = $(AM_CFLAGS) $(am__append_27)
-pth_barrier_CFLAGS = $(AM_CFLAGS) $(am__append_28)
-pth_create_chain_CFLAGS = $(AM_CFLAGS) $(am__append_29)
-pth_detached_CFLAGS = $(AM_CFLAGS) $(am__append_30)
+free_is_write_CFLAGS = $(AM_CFLAGS) $(am__append_28)
+pth_barrier_CFLAGS = $(AM_CFLAGS) $(am__append_29)
+pth_create_chain_CFLAGS = $(AM_CFLAGS) $(am__append_30)
+pth_detached_CFLAGS = $(AM_CFLAGS) $(am__append_31)
 tsan_unittest_SOURCES = tsan_unittest.cpp
 tsan_unittest_CXXFLAGS = $(AM_CXXFLAGS) \
 			-DTHREAD_WRAPPERS='"tsan_thread_wrappers_pthread.h"'
@@ -1656,19 +1712,21 @@ local_static_SOURCES = local_static.cpp
 @HAVE_OPENMP_TRUE@omp_printf_CFLAGS = $(AM_CFLAGS) -fopenmp
 @HAVE_OPENMP_TRUE@omp_printf_LDFLAGS = -fopenmp
 @HAVE_OPENMP_TRUE@omp_printf_LDADD = $(LDADD) -lm
-matinv_CFLAGS = $(AM_CFLAGS) $(am__append_31)
+matinv_CFLAGS = $(AM_CFLAGS) $(am__append_32)
 @HAVE_PTHREAD_BARRIER_TRUE@matinv_LDADD = $(LDADD) -lm
-rwlock_test_CFLAGS = $(AM_CFLAGS) $(am__append_32)
+rwlock_test_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@ \
+	$(am__append_33)
 shared_timed_mutex_SOURCES = shared_timed_mutex.cpp
 shared_timed_mutex_CXXFLAGS = $(AM_CXXFLAGS) -std=c++1y
 std_atomic_SOURCES = std_atomic.cpp
-std_atomic_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
+std_atomic_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x @FLAG_W_NO_SIGN_COMPARE@
 std_list_SOURCES = std_list.cpp
-std_list_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
+std_list_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x @FLAG_W_NO_SIGN_COMPARE@
 std_mutex_SOURCES = std_mutex.cpp
-std_mutex_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
+std_mutex_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x @FLAG_W_NO_SIGN_COMPARE@
+std_mutex_LDFLAGS = -pthread
 std_string_SOURCES = std_string.cpp
-std_string_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x -Wno-sign-compare
+std_string_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x @FLAG_W_NO_SIGN_COMPARE@
 
 # Note: -Wl,--no-as-needed is a workaround for
 # https://bugs.launchpad.net/ubuntu/+source/gcc-defaults/+bug/1228201
@@ -1680,9 +1738,11 @@ std_thread2_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x
 @VGCONF_OS_IS_SOLARIS_FALSE@std_thread2_LDFLAGS = -Wl,--no-as-needed
 sem_wait_SOURCES = sem_wait.cpp
 swapcontext_SOURCES = swapcontext.c
-swapcontext_CFLAGS = $(AM_CFLAGS) -g $(am__append_33)
+swapcontext_CFLAGS = $(AM_CFLAGS) -g $(am__append_34)
 timed_mutex_SOURCES = timed_mutex.cpp
 timed_mutex_CXXFLAGS = $(AM_CXXFLAGS) -std=c++0x
+thrd_create_SOURCES = thrd_create.c
+@VGCONF_OS_IS_FREEBSD_TRUE@thrd_create_LDFLAGS = -lstdthreads
 all: all-am
 
 .SUFFIXES:
@@ -1759,11 +1819,11 @@ annotate_publish_hg$(EXEEXT): $(annotate_publish_hg_OBJECTS) $(annotate_publish_
 
 annotate_rwlock$(EXEEXT): $(annotate_rwlock_OBJECTS) $(annotate_rwlock_DEPENDENCIES) $(EXTRA_annotate_rwlock_DEPENDENCIES) 
 	@rm -f annotate_rwlock$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(annotate_rwlock_OBJECTS) $(annotate_rwlock_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(annotate_rwlock_LINK) $(annotate_rwlock_OBJECTS) $(annotate_rwlock_LDADD) $(LIBS)
 
 annotate_sem$(EXEEXT): $(annotate_sem_OBJECTS) $(annotate_sem_DEPENDENCIES) $(EXTRA_annotate_sem_DEPENDENCIES) 
 	@rm -f annotate_sem$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(annotate_sem_OBJECTS) $(annotate_sem_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(annotate_sem_LINK) $(annotate_sem_OBJECTS) $(annotate_sem_LDADD) $(LIBS)
 
 annotate_smart_pointer$(EXEEXT): $(annotate_smart_pointer_OBJECTS) $(annotate_smart_pointer_DEPENDENCIES) $(EXTRA_annotate_smart_pointer_DEPENDENCIES) 
 	@rm -f annotate_smart_pointer$(EXEEXT)
@@ -2013,6 +2073,10 @@ swapcontext$(EXEEXT): $(swapcontext_OBJECTS) $(swapcontext_DEPENDENCIES) $(EXTRA
 	@rm -f swapcontext$(EXEEXT)
 	$(AM_V_CCLD)$(swapcontext_LINK) $(swapcontext_OBJECTS) $(swapcontext_LDADD) $(LIBS)
 
+thrd_create$(EXEEXT): $(thrd_create_OBJECTS) $(thrd_create_DEPENDENCIES) $(EXTRA_thrd_create_DEPENDENCIES) 
+	@rm -f thrd_create$(EXEEXT)
+	$(AM_V_CCLD)$(thrd_create_LINK) $(thrd_create_OBJECTS) $(thrd_create_LDADD) $(LIBS)
+
 thread_name$(EXEEXT): $(thread_name_OBJECTS) $(thread_name_DEPENDENCIES) $(EXTRA_thread_name_DEPENDENCIES) 
 	@rm -f thread_name$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(thread_name_OBJECTS) $(thread_name_LDADD) $(LIBS)
@@ -2057,8 +2121,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_ignore_rw.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_ignore_write.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_publish_hg.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_rwlock.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_sem.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_sem-annotate_sem.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_smart_pointer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_static-annotate_static.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_trace_memory.Po@am__quote@ # am--include-marker
@@ -2121,6 +2185,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/std_thread-std_thread.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/std_thread2-std_thread2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/swapcontext-swapcontext.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thrd_create.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread_name.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread_name_freebsd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threaded-fork.Po@am__quote@ # am--include-marker
@@ -2151,6 +2216,34 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+annotate_rwlock-annotate_rwlock.o: annotate_rwlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -MT annotate_rwlock-annotate_rwlock.o -MD -MP -MF $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo -c -o annotate_rwlock-annotate_rwlock.o `test -f 'annotate_rwlock.c' || echo '$(srcdir)/'`annotate_rwlock.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo $(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='annotate_rwlock.c' object='annotate_rwlock-annotate_rwlock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -c -o annotate_rwlock-annotate_rwlock.o `test -f 'annotate_rwlock.c' || echo '$(srcdir)/'`annotate_rwlock.c
+
+annotate_rwlock-annotate_rwlock.obj: annotate_rwlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -MT annotate_rwlock-annotate_rwlock.obj -MD -MP -MF $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo -c -o annotate_rwlock-annotate_rwlock.obj `if test -f 'annotate_rwlock.c'; then $(CYGPATH_W) 'annotate_rwlock.c'; else $(CYGPATH_W) '$(srcdir)/annotate_rwlock.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo $(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='annotate_rwlock.c' object='annotate_rwlock-annotate_rwlock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -c -o annotate_rwlock-annotate_rwlock.obj `if test -f 'annotate_rwlock.c'; then $(CYGPATH_W) 'annotate_rwlock.c'; else $(CYGPATH_W) '$(srcdir)/annotate_rwlock.c'; fi`
+
+annotate_sem-annotate_sem.o: annotate_sem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_sem_CFLAGS) $(CFLAGS) -MT annotate_sem-annotate_sem.o -MD -MP -MF $(DEPDIR)/annotate_sem-annotate_sem.Tpo -c -o annotate_sem-annotate_sem.o `test -f 'annotate_sem.c' || echo '$(srcdir)/'`annotate_sem.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/annotate_sem-annotate_sem.Tpo $(DEPDIR)/annotate_sem-annotate_sem.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='annotate_sem.c' object='annotate_sem-annotate_sem.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_sem_CFLAGS) $(CFLAGS) -c -o annotate_sem-annotate_sem.o `test -f 'annotate_sem.c' || echo '$(srcdir)/'`annotate_sem.c
+
+annotate_sem-annotate_sem.obj: annotate_sem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_sem_CFLAGS) $(CFLAGS) -MT annotate_sem-annotate_sem.obj -MD -MP -MF $(DEPDIR)/annotate_sem-annotate_sem.Tpo -c -o annotate_sem-annotate_sem.obj `if test -f 'annotate_sem.c'; then $(CYGPATH_W) 'annotate_sem.c'; else $(CYGPATH_W) '$(srcdir)/annotate_sem.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/annotate_sem-annotate_sem.Tpo $(DEPDIR)/annotate_sem-annotate_sem.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='annotate_sem.c' object='annotate_sem-annotate_sem.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_sem_CFLAGS) $(CFLAGS) -c -o annotate_sem-annotate_sem.obj `if test -f 'annotate_sem.c'; then $(CYGPATH_W) 'annotate_sem.c'; else $(CYGPATH_W) '$(srcdir)/annotate_sem.c'; fi`
 
 dlopen_lib_so-dlopen_lib.o: dlopen_lib.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dlopen_lib_so_CFLAGS) $(CFLAGS) -MT dlopen_lib_so-dlopen_lib.o -MD -MP -MF $(DEPDIR)/dlopen_lib_so-dlopen_lib.Tpo -c -o dlopen_lib_so-dlopen_lib.o `test -f 'dlopen_lib.c' || echo '$(srcdir)/'`dlopen_lib.c
@@ -2663,8 +2756,8 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/annotate_ignore_rw.Po
 	-rm -f ./$(DEPDIR)/annotate_ignore_write.Po
 	-rm -f ./$(DEPDIR)/annotate_publish_hg.Po
-	-rm -f ./$(DEPDIR)/annotate_rwlock.Po
-	-rm -f ./$(DEPDIR)/annotate_sem.Po
+	-rm -f ./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
+	-rm -f ./$(DEPDIR)/annotate_sem-annotate_sem.Po
 	-rm -f ./$(DEPDIR)/annotate_smart_pointer.Po
 	-rm -f ./$(DEPDIR)/annotate_static-annotate_static.Po
 	-rm -f ./$(DEPDIR)/annotate_trace_memory.Po
@@ -2727,6 +2820,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/std_thread-std_thread.Po
 	-rm -f ./$(DEPDIR)/std_thread2-std_thread2.Po
 	-rm -f ./$(DEPDIR)/swapcontext-swapcontext.Po
+	-rm -f ./$(DEPDIR)/thrd_create.Po
 	-rm -f ./$(DEPDIR)/thread_name.Po
 	-rm -f ./$(DEPDIR)/thread_name_freebsd.Po
 	-rm -f ./$(DEPDIR)/threaded-fork.Po
@@ -2786,8 +2880,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/annotate_ignore_rw.Po
 	-rm -f ./$(DEPDIR)/annotate_ignore_write.Po
 	-rm -f ./$(DEPDIR)/annotate_publish_hg.Po
-	-rm -f ./$(DEPDIR)/annotate_rwlock.Po
-	-rm -f ./$(DEPDIR)/annotate_sem.Po
+	-rm -f ./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
+	-rm -f ./$(DEPDIR)/annotate_sem-annotate_sem.Po
 	-rm -f ./$(DEPDIR)/annotate_smart_pointer.Po
 	-rm -f ./$(DEPDIR)/annotate_static-annotate_static.Po
 	-rm -f ./$(DEPDIR)/annotate_trace_memory.Po
@@ -2850,6 +2944,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/std_thread-std_thread.Po
 	-rm -f ./$(DEPDIR)/std_thread2-std_thread2.Po
 	-rm -f ./$(DEPDIR)/swapcontext-swapcontext.Po
+	-rm -f ./$(DEPDIR)/thrd_create.Po
 	-rm -f ./$(DEPDIR)/thread_name.Po
 	-rm -f ./$(DEPDIR)/thread_name_freebsd.Po
 	-rm -f ./$(DEPDIR)/threaded-fork.Po

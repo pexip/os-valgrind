@@ -7,4 +7,4 @@
          YYYYMMDD is the commit date
          Trailing X is present if there are any (non untracked) modified files.
 */
-#define VGGIT "5147d671e4-20221024"
+#define VGGIT "fcdaa47426-20241101"

@@ -127,7 +127,8 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
 check_PROGRAMS = bug133694$(EXEEXT) int3-x86$(EXEEXT) scalar$(EXEEXT) \
 	scalar_exit_group$(EXEEXT) scalar_fork$(EXEEXT) \
-	scalar_supp$(EXEEXT) scalar_vfork$(EXEEXT)
+	scalar_supp$(EXEEXT) scalar_vfork$(EXEEXT) $(am__EXEEXT_1)
+@HAVE_OPENAT2_TRUE@am__append_12 = scalar_openat2
 subdir = memcheck/tests/x86-linux
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -139,6 +140,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@HAVE_OPENAT2_TRUE@am__EXEEXT_1 = scalar_openat2$(EXEEXT)
 bug133694_SOURCES = bug133694.c
 bug133694_OBJECTS = bug133694.$(OBJEXT)
 bug133694_LDADD = $(LDADD)
@@ -146,14 +148,24 @@ int3_x86_SOURCES = int3-x86.c
 int3_x86_OBJECTS = int3-x86.$(OBJEXT)
 int3_x86_LDADD = $(LDADD)
 scalar_SOURCES = scalar.c
-scalar_OBJECTS = scalar.$(OBJEXT)
+scalar_OBJECTS = scalar-scalar.$(OBJEXT)
 scalar_LDADD = $(LDADD)
+scalar_LINK = $(CCLD) $(scalar_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 scalar_exit_group_SOURCES = scalar_exit_group.c
-scalar_exit_group_OBJECTS = scalar_exit_group.$(OBJEXT)
+scalar_exit_group_OBJECTS =  \
+	scalar_exit_group-scalar_exit_group.$(OBJEXT)
 scalar_exit_group_LDADD = $(LDADD)
+scalar_exit_group_LINK = $(CCLD) $(scalar_exit_group_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 scalar_fork_SOURCES = scalar_fork.c
 scalar_fork_OBJECTS = scalar_fork.$(OBJEXT)
 scalar_fork_LDADD = $(LDADD)
+scalar_openat2_SOURCES = scalar_openat2.c
+scalar_openat2_OBJECTS = scalar_openat2-scalar_openat2.$(OBJEXT)
+scalar_openat2_LDADD = $(LDADD)
+scalar_openat2_LINK = $(CCLD) $(scalar_openat2_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 scalar_supp_SOURCES = scalar_supp.c
 scalar_supp_OBJECTS = scalar_supp-scalar_supp.$(OBJEXT)
 scalar_supp_LDADD = $(LDADD)
@@ -179,8 +191,10 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/bug133694.Po ./$(DEPDIR)/int3-x86.Po \
-	./$(DEPDIR)/scalar.Po ./$(DEPDIR)/scalar_exit_group.Po \
+	./$(DEPDIR)/scalar-scalar.Po \
+	./$(DEPDIR)/scalar_exit_group-scalar_exit_group.Po \
 	./$(DEPDIR)/scalar_fork.Po \
+	./$(DEPDIR)/scalar_openat2-scalar_openat2.Po \
 	./$(DEPDIR)/scalar_supp-scalar_supp.Po \
 	./$(DEPDIR)/scalar_vfork.Po
 am__mv = mv -f
@@ -201,9 +215,9 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = bug133694.c int3-x86.c scalar.c scalar_exit_group.c \
-	scalar_fork.c scalar_supp.c scalar_vfork.c
+	scalar_fork.c scalar_openat2.c scalar_supp.c scalar_vfork.c
 DIST_SOURCES = bug133694.c int3-x86.c scalar.c scalar_exit_group.c \
-	scalar_fork.c scalar_supp.c scalar_vfork.c
+	scalar_fork.c scalar_openat2.c scalar_supp.c scalar_vfork.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -266,6 +280,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -283,6 +298,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -297,16 +313,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -357,6 +392,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -367,10 +403,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -525,16 +563,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -545,6 +579,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -561,7 +598,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -621,6 +658,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -663,9 +701,13 @@ EXTRA_DIST = \
 	scalar_exit_group.vgtest \
 	scalar_supp.stderr.exp \
 	scalar_supp.vgtest scalar_supp.supp \
-	scalar_vfork.stderr.exp scalar_vfork.vgtest
+	scalar_vfork.stderr.exp scalar_vfork.vgtest \
+	scalar_openat2.vgtest scalar_openat2.stderr.exp
 
-scalar_supp_CFLAGS = $(AM_CFLAGS) -Wno-uninitialized
+scalar_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
+scalar_exit_group_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
+@HAVE_OPENAT2_TRUE@scalar_openat2_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
+scalar_supp_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
 all: all-am
 
 .SUFFIXES:
@@ -714,15 +756,19 @@ int3-x86$(EXEEXT): $(int3_x86_OBJECTS) $(int3_x86_DEPENDENCIES) $(EXTRA_int3_x86
 
 scalar$(EXEEXT): $(scalar_OBJECTS) $(scalar_DEPENDENCIES) $(EXTRA_scalar_DEPENDENCIES) 
 	@rm -f scalar$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(scalar_OBJECTS) $(scalar_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(scalar_LINK) $(scalar_OBJECTS) $(scalar_LDADD) $(LIBS)
 
 scalar_exit_group$(EXEEXT): $(scalar_exit_group_OBJECTS) $(scalar_exit_group_DEPENDENCIES) $(EXTRA_scalar_exit_group_DEPENDENCIES) 
 	@rm -f scalar_exit_group$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(scalar_exit_group_OBJECTS) $(scalar_exit_group_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(scalar_exit_group_LINK) $(scalar_exit_group_OBJECTS) $(scalar_exit_group_LDADD) $(LIBS)
 
 scalar_fork$(EXEEXT): $(scalar_fork_OBJECTS) $(scalar_fork_DEPENDENCIES) $(EXTRA_scalar_fork_DEPENDENCIES) 
 	@rm -f scalar_fork$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(scalar_fork_OBJECTS) $(scalar_fork_LDADD) $(LIBS)
+
+scalar_openat2$(EXEEXT): $(scalar_openat2_OBJECTS) $(scalar_openat2_DEPENDENCIES) $(EXTRA_scalar_openat2_DEPENDENCIES) 
+	@rm -f scalar_openat2$(EXEEXT)
+	$(AM_V_CCLD)$(scalar_openat2_LINK) $(scalar_openat2_OBJECTS) $(scalar_openat2_LDADD) $(LIBS)
 
 scalar_supp$(EXEEXT): $(scalar_supp_OBJECTS) $(scalar_supp_DEPENDENCIES) $(EXTRA_scalar_supp_DEPENDENCIES) 
 	@rm -f scalar_supp$(EXEEXT)
@@ -740,9 +786,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug133694.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/int3-x86.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_exit_group.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar-scalar.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_exit_group-scalar_exit_group.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_fork.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_openat2-scalar_openat2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_supp-scalar_supp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_vfork.Po@am__quote@ # am--include-marker
 
@@ -767,6 +814,48 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+scalar-scalar.o: scalar.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -MT scalar-scalar.o -MD -MP -MF $(DEPDIR)/scalar-scalar.Tpo -c -o scalar-scalar.o `test -f 'scalar.c' || echo '$(srcdir)/'`scalar.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar-scalar.Tpo $(DEPDIR)/scalar-scalar.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar.c' object='scalar-scalar.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -c -o scalar-scalar.o `test -f 'scalar.c' || echo '$(srcdir)/'`scalar.c
+
+scalar-scalar.obj: scalar.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -MT scalar-scalar.obj -MD -MP -MF $(DEPDIR)/scalar-scalar.Tpo -c -o scalar-scalar.obj `if test -f 'scalar.c'; then $(CYGPATH_W) 'scalar.c'; else $(CYGPATH_W) '$(srcdir)/scalar.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar-scalar.Tpo $(DEPDIR)/scalar-scalar.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar.c' object='scalar-scalar.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -c -o scalar-scalar.obj `if test -f 'scalar.c'; then $(CYGPATH_W) 'scalar.c'; else $(CYGPATH_W) '$(srcdir)/scalar.c'; fi`
+
+scalar_exit_group-scalar_exit_group.o: scalar_exit_group.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_exit_group_CFLAGS) $(CFLAGS) -MT scalar_exit_group-scalar_exit_group.o -MD -MP -MF $(DEPDIR)/scalar_exit_group-scalar_exit_group.Tpo -c -o scalar_exit_group-scalar_exit_group.o `test -f 'scalar_exit_group.c' || echo '$(srcdir)/'`scalar_exit_group.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_exit_group-scalar_exit_group.Tpo $(DEPDIR)/scalar_exit_group-scalar_exit_group.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_exit_group.c' object='scalar_exit_group-scalar_exit_group.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_exit_group_CFLAGS) $(CFLAGS) -c -o scalar_exit_group-scalar_exit_group.o `test -f 'scalar_exit_group.c' || echo '$(srcdir)/'`scalar_exit_group.c
+
+scalar_exit_group-scalar_exit_group.obj: scalar_exit_group.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_exit_group_CFLAGS) $(CFLAGS) -MT scalar_exit_group-scalar_exit_group.obj -MD -MP -MF $(DEPDIR)/scalar_exit_group-scalar_exit_group.Tpo -c -o scalar_exit_group-scalar_exit_group.obj `if test -f 'scalar_exit_group.c'; then $(CYGPATH_W) 'scalar_exit_group.c'; else $(CYGPATH_W) '$(srcdir)/scalar_exit_group.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_exit_group-scalar_exit_group.Tpo $(DEPDIR)/scalar_exit_group-scalar_exit_group.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_exit_group.c' object='scalar_exit_group-scalar_exit_group.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_exit_group_CFLAGS) $(CFLAGS) -c -o scalar_exit_group-scalar_exit_group.obj `if test -f 'scalar_exit_group.c'; then $(CYGPATH_W) 'scalar_exit_group.c'; else $(CYGPATH_W) '$(srcdir)/scalar_exit_group.c'; fi`
+
+scalar_openat2-scalar_openat2.o: scalar_openat2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_openat2_CFLAGS) $(CFLAGS) -MT scalar_openat2-scalar_openat2.o -MD -MP -MF $(DEPDIR)/scalar_openat2-scalar_openat2.Tpo -c -o scalar_openat2-scalar_openat2.o `test -f 'scalar_openat2.c' || echo '$(srcdir)/'`scalar_openat2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_openat2-scalar_openat2.Tpo $(DEPDIR)/scalar_openat2-scalar_openat2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_openat2.c' object='scalar_openat2-scalar_openat2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_openat2_CFLAGS) $(CFLAGS) -c -o scalar_openat2-scalar_openat2.o `test -f 'scalar_openat2.c' || echo '$(srcdir)/'`scalar_openat2.c
+
+scalar_openat2-scalar_openat2.obj: scalar_openat2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_openat2_CFLAGS) $(CFLAGS) -MT scalar_openat2-scalar_openat2.obj -MD -MP -MF $(DEPDIR)/scalar_openat2-scalar_openat2.Tpo -c -o scalar_openat2-scalar_openat2.obj `if test -f 'scalar_openat2.c'; then $(CYGPATH_W) 'scalar_openat2.c'; else $(CYGPATH_W) '$(srcdir)/scalar_openat2.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_openat2-scalar_openat2.Tpo $(DEPDIR)/scalar_openat2-scalar_openat2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_openat2.c' object='scalar_openat2-scalar_openat2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_openat2_CFLAGS) $(CFLAGS) -c -o scalar_openat2-scalar_openat2.obj `if test -f 'scalar_openat2.c'; then $(CYGPATH_W) 'scalar_openat2.c'; else $(CYGPATH_W) '$(srcdir)/scalar_openat2.c'; fi`
 
 scalar_supp-scalar_supp.o: scalar_supp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_supp_CFLAGS) $(CFLAGS) -MT scalar_supp-scalar_supp.o -MD -MP -MF $(DEPDIR)/scalar_supp-scalar_supp.Tpo -c -o scalar_supp-scalar_supp.o `test -f 'scalar_supp.c' || echo '$(srcdir)/'`scalar_supp.c
@@ -909,9 +998,10 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/bug133694.Po
 	-rm -f ./$(DEPDIR)/int3-x86.Po
-	-rm -f ./$(DEPDIR)/scalar.Po
-	-rm -f ./$(DEPDIR)/scalar_exit_group.Po
+	-rm -f ./$(DEPDIR)/scalar-scalar.Po
+	-rm -f ./$(DEPDIR)/scalar_exit_group-scalar_exit_group.Po
 	-rm -f ./$(DEPDIR)/scalar_fork.Po
+	-rm -f ./$(DEPDIR)/scalar_openat2-scalar_openat2.Po
 	-rm -f ./$(DEPDIR)/scalar_supp-scalar_supp.Po
 	-rm -f ./$(DEPDIR)/scalar_vfork.Po
 	-rm -f Makefile
@@ -961,9 +1051,10 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/bug133694.Po
 	-rm -f ./$(DEPDIR)/int3-x86.Po
-	-rm -f ./$(DEPDIR)/scalar.Po
-	-rm -f ./$(DEPDIR)/scalar_exit_group.Po
+	-rm -f ./$(DEPDIR)/scalar-scalar.Po
+	-rm -f ./$(DEPDIR)/scalar_exit_group-scalar_exit_group.Po
 	-rm -f ./$(DEPDIR)/scalar_fork.Po
+	-rm -f ./$(DEPDIR)/scalar_openat2-scalar_openat2.Po
 	-rm -f ./$(DEPDIR)/scalar_supp-scalar_supp.Po
 	-rm -f ./$(DEPDIR)/scalar_vfork.Po
 	-rm -f Makefile

@@ -125,7 +125,8 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	-Wno-uninitialized -Wno-unused-value # \
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
-check_PROGRAMS = annotate_hbefore$(EXEEXT) cond_init_destroy$(EXEEXT) \
+check_PROGRAMS = annotate_hbefore$(EXEEXT) bug327548$(EXEEXT) \
+	bug484480$(EXEEXT) cond_init_destroy$(EXEEXT) \
 	cond_timedwait_invalid$(EXEEXT) cond_timedwait_test$(EXEEXT) \
 	free_is_write$(EXEEXT) hg01_all_ok$(EXEEXT) \
 	hg02_deadlock$(EXEEXT) hg03_inherit$(EXEEXT) \
@@ -145,7 +146,9 @@ check_PROGRAMS = annotate_hbefore$(EXEEXT) cond_init_destroy$(EXEEXT) \
 	tc18_semabuse$(EXEEXT) tc19_shadowmem$(EXEEXT) \
 	tc21_pthonce$(EXEEXT) tc23_bogus_condwait$(EXEEXT) \
 	tc24_nonzero_sem$(EXEEXT) tls_threads$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4)
+	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
+	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
+	$(am__EXEEXT_8)
 
 # DDD: it seg faults, and then the Valgrind exit path hangs
 # JRS 29 July 09: it craps out in the stack unwinder, in
@@ -171,6 +174,10 @@ check_PROGRAMS = annotate_hbefore$(EXEEXT) cond_init_destroy$(EXEEXT) \
 @HAVE_PTHREAD_BARRIER_TRUE@am__append_13 = bar_bad bar_trivial bug322621
 @HAVE_PTHREAD_MUTEX_TIMEDLOCK_TRUE@am__append_14 = tc20_verifywrap
 @HAVE_BUILTIN_ATOMIC_TRUE@am__append_15 = annotate_rwlock
+@HAVE_GETADDRINFO_TRUE@am__append_16 = getaddrinfo
+@HAVE_SEM_CLOCKWAIT_NP_TRUE@am__append_17 = sem_clockwait_np
+@HAVE_SEM_TIMEDWAIT_TRUE@am__append_18 = sem_timedwait
+@HAVE_CXX17_TRUE@am__append_19 = bug392331
 subdir = helgrind/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -189,6 +196,10 @@ CONFIG_CLEAN_VPATH_FILES =
 @HAVE_PTHREAD_MUTEX_TIMEDLOCK_TRUE@am__EXEEXT_3 =  \
 @HAVE_PTHREAD_MUTEX_TIMEDLOCK_TRUE@	tc20_verifywrap$(EXEEXT)
 @HAVE_BUILTIN_ATOMIC_TRUE@am__EXEEXT_4 = annotate_rwlock$(EXEEXT)
+@HAVE_GETADDRINFO_TRUE@am__EXEEXT_5 = getaddrinfo$(EXEEXT)
+@HAVE_SEM_CLOCKWAIT_NP_TRUE@am__EXEEXT_6 = sem_clockwait_np$(EXEEXT)
+@HAVE_SEM_TIMEDWAIT_TRUE@am__EXEEXT_7 = sem_timedwait$(EXEEXT)
+@HAVE_CXX17_TRUE@am__EXEEXT_8 = bug392331$(EXEEXT)
 annotate_hbefore_SOURCES = annotate_hbefore.c
 annotate_hbefore_OBJECTS =  \
 	annotate_hbefore-annotate_hbefore.$(OBJEXT)
@@ -197,9 +208,11 @@ annotate_hbefore_DEPENDENCIES =
 annotate_hbefore_LINK = $(CCLD) $(annotate_hbefore_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 annotate_rwlock_SOURCES = annotate_rwlock.c
-annotate_rwlock_OBJECTS = annotate_rwlock.$(OBJEXT)
+annotate_rwlock_OBJECTS = annotate_rwlock-annotate_rwlock.$(OBJEXT)
 annotate_rwlock_LDADD = $(LDADD)
 annotate_rwlock_DEPENDENCIES =
+annotate_rwlock_LINK = $(CCLD) $(annotate_rwlock_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 bar_bad_SOURCES = bar_bad.c
 bar_bad_OBJECTS = bar_bad.$(OBJEXT)
 bar_bad_LDADD = $(LDADD)
@@ -212,6 +225,21 @@ am_bug322621_OBJECTS = bug322621.$(OBJEXT)
 bug322621_OBJECTS = $(am_bug322621_OBJECTS)
 bug322621_LDADD = $(LDADD)
 bug322621_DEPENDENCIES =
+bug327548_SOURCES = bug327548.c
+bug327548_OBJECTS = bug327548.$(OBJEXT)
+bug327548_LDADD = $(LDADD)
+bug327548_DEPENDENCIES =
+am__bug392331_SOURCES_DIST = bug392331.cpp
+@HAVE_CXX17_TRUE@am_bug392331_OBJECTS = bug392331-bug392331.$(OBJEXT)
+bug392331_OBJECTS = $(am_bug392331_OBJECTS)
+bug392331_LDADD = $(LDADD)
+bug392331_DEPENDENCIES =
+bug392331_LINK = $(CXXLD) $(bug392331_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+bug484480_SOURCES = bug484480.c
+bug484480_OBJECTS = bug484480.$(OBJEXT)
+bug484480_LDADD = $(LDADD)
+bug484480_DEPENDENCIES =
 cond_init_destroy_SOURCES = cond_init_destroy.c
 cond_init_destroy_OBJECTS = cond_init_destroy.$(OBJEXT)
 cond_init_destroy_LDADD = $(LDADD)
@@ -228,6 +256,10 @@ free_is_write_SOURCES = free_is_write.c
 free_is_write_OBJECTS = free_is_write.$(OBJEXT)
 free_is_write_LDADD = $(LDADD)
 free_is_write_DEPENDENCIES =
+getaddrinfo_SOURCES = getaddrinfo.c
+getaddrinfo_OBJECTS = getaddrinfo.$(OBJEXT)
+getaddrinfo_LDADD = $(LDADD)
+getaddrinfo_DEPENDENCIES =
 hg01_all_ok_SOURCES = hg01_all_ok.c
 hg01_all_ok_OBJECTS = hg01_all_ok.$(OBJEXT)
 hg01_all_ok_LDADD = $(LDADD)
@@ -272,6 +304,14 @@ pth_mempcpy_false_races_SOURCES = pth_mempcpy_false_races.c
 pth_mempcpy_false_races_OBJECTS = pth_mempcpy_false_races.$(OBJEXT)
 pth_mempcpy_false_races_LDADD = $(LDADD)
 pth_mempcpy_false_races_DEPENDENCIES =
+sem_clockwait_np_SOURCES = sem_clockwait_np.c
+sem_clockwait_np_OBJECTS = sem_clockwait_np.$(OBJEXT)
+sem_clockwait_np_LDADD = $(LDADD)
+sem_clockwait_np_DEPENDENCIES =
+sem_timedwait_SOURCES = sem_timedwait.c
+sem_timedwait_OBJECTS = sem_timedwait.$(OBJEXT)
+sem_timedwait_LDADD = $(LDADD)
+sem_timedwait_DEPENDENCIES =
 shmem_abits_SOURCES = shmem_abits.c
 shmem_abits_OBJECTS = shmem_abits.$(OBJEXT)
 shmem_abits_LDADD = $(LDADD)
@@ -388,7 +428,7 @@ tls_threads_SOURCES = tls_threads.c
 tls_threads_OBJECTS = tls_threads.$(OBJEXT)
 tls_threads_LDADD = $(LDADD)
 tls_threads_DEPENDENCIES =
-SCRIPTS = $(dist_noinst_SCRIPTS)
+SCRIPTS = $(dist_noinst_SCRIPTS) $(noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -406,20 +446,23 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade =  \
 	./$(DEPDIR)/annotate_hbefore-annotate_hbefore.Po \
-	./$(DEPDIR)/annotate_rwlock.Po ./$(DEPDIR)/bar_bad.Po \
-	./$(DEPDIR)/bar_trivial.Po ./$(DEPDIR)/bug322621.Po \
+	./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po \
+	./$(DEPDIR)/bar_bad.Po ./$(DEPDIR)/bar_trivial.Po \
+	./$(DEPDIR)/bug322621.Po ./$(DEPDIR)/bug327548.Po \
+	./$(DEPDIR)/bug392331-bug392331.Po ./$(DEPDIR)/bug484480.Po \
 	./$(DEPDIR)/cond_init_destroy.Po \
 	./$(DEPDIR)/cond_timedwait_invalid.Po \
 	./$(DEPDIR)/cond_timedwait_test.Po \
-	./$(DEPDIR)/free_is_write.Po ./$(DEPDIR)/hg01_all_ok.Po \
-	./$(DEPDIR)/hg02_deadlock.Po ./$(DEPDIR)/hg03_inherit.Po \
-	./$(DEPDIR)/hg04_race.Po ./$(DEPDIR)/hg05_race2.Po \
-	./$(DEPDIR)/hg06_readshared.Po \
+	./$(DEPDIR)/free_is_write.Po ./$(DEPDIR)/getaddrinfo.Po \
+	./$(DEPDIR)/hg01_all_ok.Po ./$(DEPDIR)/hg02_deadlock.Po \
+	./$(DEPDIR)/hg03_inherit.Po ./$(DEPDIR)/hg04_race.Po \
+	./$(DEPDIR)/hg05_race2.Po ./$(DEPDIR)/hg06_readshared.Po \
 	./$(DEPDIR)/locked_vs_unlocked1.Po \
 	./$(DEPDIR)/locked_vs_unlocked2.Po \
 	./$(DEPDIR)/locked_vs_unlocked3.Po \
 	./$(DEPDIR)/pth_destroy_cond.Po \
 	./$(DEPDIR)/pth_mempcpy_false_races.Po \
+	./$(DEPDIR)/sem_clockwait_np.Po ./$(DEPDIR)/sem_timedwait.Po \
 	./$(DEPDIR)/shmem_abits.Po ./$(DEPDIR)/stackteardown.Po \
 	./$(DEPDIR)/t2t.Po ./$(DEPDIR)/tc01_simple_race.Po \
 	./$(DEPDIR)/tc02_simple_tls.Po ./$(DEPDIR)/tc03_re_excl.Po \
@@ -467,35 +510,40 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = annotate_hbefore.c annotate_rwlock.c bar_bad.c bar_trivial.c \
-	$(bug322621_SOURCES) cond_init_destroy.c \
-	cond_timedwait_invalid.c cond_timedwait_test.c free_is_write.c \
+	$(bug322621_SOURCES) bug327548.c $(bug392331_SOURCES) \
+	bug484480.c cond_init_destroy.c cond_timedwait_invalid.c \
+	cond_timedwait_test.c free_is_write.c getaddrinfo.c \
 	hg01_all_ok.c hg02_deadlock.c hg03_inherit.c hg04_race.c \
 	hg05_race2.c hg06_readshared.c locked_vs_unlocked1.c \
 	locked_vs_unlocked2.c locked_vs_unlocked3.c pth_destroy_cond.c \
-	pth_mempcpy_false_races.c shmem_abits.c stackteardown.c t2t.c \
-	tc01_simple_race.c tc02_simple_tls.c tc03_re_excl.c \
-	tc04_free_lock.c tc05_simple_race.c tc06_two_races.c \
-	tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c tc10_rec_lock.c \
-	tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
-	tc14_laog_dinphils.c tc15_laog_lockdel.c tc16_byterace.c \
-	tc17_sembar.c tc18_semabuse.c tc19_shadowmem.c \
-	tc20_verifywrap.c tc21_pthonce.c tc22_exit_w_lock.c \
-	tc23_bogus_condwait.c tc24_nonzero_sem.c tls_threads.c
+	pth_mempcpy_false_races.c sem_clockwait_np.c sem_timedwait.c \
+	shmem_abits.c stackteardown.c t2t.c tc01_simple_race.c \
+	tc02_simple_tls.c tc03_re_excl.c tc04_free_lock.c \
+	tc05_simple_race.c tc06_two_races.c tc07_hbl1.c tc08_hbl2.c \
+	tc09_bad_unlock.c tc10_rec_lock.c tc11_XCHG.c \
+	tc12_rwl_trivial.c tc13_laog1.c tc14_laog_dinphils.c \
+	tc15_laog_lockdel.c tc16_byterace.c tc17_sembar.c \
+	tc18_semabuse.c tc19_shadowmem.c tc20_verifywrap.c \
+	tc21_pthonce.c tc22_exit_w_lock.c tc23_bogus_condwait.c \
+	tc24_nonzero_sem.c tls_threads.c
 DIST_SOURCES = annotate_hbefore.c annotate_rwlock.c bar_bad.c \
-	bar_trivial.c $(bug322621_SOURCES) cond_init_destroy.c \
+	bar_trivial.c $(bug322621_SOURCES) bug327548.c \
+	$(am__bug392331_SOURCES_DIST) bug484480.c cond_init_destroy.c \
 	cond_timedwait_invalid.c cond_timedwait_test.c free_is_write.c \
-	hg01_all_ok.c hg02_deadlock.c hg03_inherit.c hg04_race.c \
-	hg05_race2.c hg06_readshared.c locked_vs_unlocked1.c \
-	locked_vs_unlocked2.c locked_vs_unlocked3.c pth_destroy_cond.c \
-	pth_mempcpy_false_races.c shmem_abits.c stackteardown.c t2t.c \
-	tc01_simple_race.c tc02_simple_tls.c tc03_re_excl.c \
-	tc04_free_lock.c tc05_simple_race.c tc06_two_races.c \
-	tc07_hbl1.c tc08_hbl2.c tc09_bad_unlock.c tc10_rec_lock.c \
-	tc11_XCHG.c tc12_rwl_trivial.c tc13_laog1.c \
-	tc14_laog_dinphils.c tc15_laog_lockdel.c tc16_byterace.c \
-	tc17_sembar.c tc18_semabuse.c tc19_shadowmem.c \
-	tc20_verifywrap.c tc21_pthonce.c tc22_exit_w_lock.c \
-	tc23_bogus_condwait.c tc24_nonzero_sem.c tls_threads.c
+	getaddrinfo.c hg01_all_ok.c hg02_deadlock.c hg03_inherit.c \
+	hg04_race.c hg05_race2.c hg06_readshared.c \
+	locked_vs_unlocked1.c locked_vs_unlocked2.c \
+	locked_vs_unlocked3.c pth_destroy_cond.c \
+	pth_mempcpy_false_races.c sem_clockwait_np.c sem_timedwait.c \
+	shmem_abits.c stackteardown.c t2t.c tc01_simple_race.c \
+	tc02_simple_tls.c tc03_re_excl.c tc04_free_lock.c \
+	tc05_simple_race.c tc06_two_races.c tc07_hbl1.c tc08_hbl2.c \
+	tc09_bad_unlock.c tc10_rec_lock.c tc11_XCHG.c \
+	tc12_rwl_trivial.c tc13_laog1.c tc14_laog_dinphils.c \
+	tc15_laog_lockdel.c tc16_byterace.c tc17_sembar.c \
+	tc18_semabuse.c tc19_shadowmem.c tc20_verifywrap.c \
+	tc21_pthonce.c tc22_exit_w_lock.c tc23_bogus_condwait.c \
+	tc24_nonzero_sem.c tls_threads.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -559,6 +607,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -576,6 +625,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -590,16 +640,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -650,6 +719,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -660,10 +730,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -818,16 +890,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -838,6 +906,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -854,7 +925,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -914,6 +985,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -942,12 +1014,16 @@ AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 # automake;  see comments in Makefile.all.am for more detail.
 AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
-dist_noinst_SCRIPTS = filter_stderr   \
+dist_noinst_SCRIPTS = \
 		      filter_stderr_solaris \
 		      filter_helgrind \
 		      filter_xml \
 		      filter_freebsd.awk \
-		      filter_stderr_freebsd
+		      filter_stderr_freebsd \
+		      filter_bug392331
+
+noinst_SCRIPTS = \
+	filter_stderr
 
 EXTRA_DIST = \
 	annotate_hbefore.vgtest annotate_hbefore.stdout.exp \
@@ -957,6 +1033,11 @@ EXTRA_DIST = \
 	annotate_smart_pointer.vgtest annotate_smart_pointer.stdout.exp \
 		annotate_smart_pointer.stderr.exp \
 	bug322621.vgtest bug322621.stderr.exp \
+	bug327548.vgtest bug327548.stderr.exp \
+	bug392331.vgtest bug392331.stdout.exp bug392331.stderr.exp \
+	bug392331_supp.vgtest bug392331_supp.stdout.exp bug392331_supp.stderr.exp \
+	bug392331.supp \
+	bug484480.vgtest bug484480.stderr.exp bug484480.stdout.exp \
 	cond_init_destroy.vgtest cond_init_destroy.stderr.exp \
 	cond_timedwait_invalid.vgtest cond_timedwait_invalid.stdout.exp \
 		cond_timedwait_invalid.stderr.exp \
@@ -968,10 +1049,12 @@ EXTRA_DIST = \
 	bar_trivial.vgtest bar_trivial.stdout.exp bar_trivial.stderr.exp \
 	free_is_write.vgtest free_is_write.stdout.exp \
 		free_is_write.stderr.exp \
+	getaddrinfo.vgtest getaddrinfo.stderr.exp \
 	hg01_all_ok.vgtest hg01_all_ok.stdout.exp hg01_all_ok.stderr.exp \
 	hg02_deadlock.vgtest hg02_deadlock.stdout.exp hg02_deadlock.stderr.exp \
 	hg03_inherit.vgtest hg03_inherit.stdout.exp hg03_inherit.stderr.exp \
 	hg04_race.vgtest hg04_race.stdout.exp hg04_race.stderr.exp \
+	hg04_race_h9.vgtest hg04_race_h9.stdout.exp hg04_race_h9.stderr.exp \
 	hg05_race2.vgtest hg05_race2.stdout.exp hg05_race2.stderr.exp \
 	hg06_readshared.vgtest hg06_readshared.stdout.exp \
 		hg06_readshared.stderr.exp \
@@ -993,8 +1076,7 @@ EXTRA_DIST = \
 	pth_barrier2.vgtest pth_barrier2.stdout.exp pth_barrier2.stderr.exp \
 	pth_barrier3.vgtest pth_barrier3.stdout.exp pth_barrier3.stderr.exp \
 	pth_destroy_cond.vgtest \
-		pth_destroy_cond.stdout.exp \
-		pth_destroy_cond.stderr.exp pth_destroy_cond.stderr.exp2 \
+		pth_destroy_cond.stdout.exp pth_destroy_cond.stderr.exp \
 	pth_cond_destroy_busy.vgtest pth_cond_destroy_busy.stderr.exp \
 		pth_cond_destroy_busy.stderr.exp-ppc64 \
 		pth_cond_destroy_busy.stderr.exp-solaris \
@@ -1003,6 +1085,10 @@ EXTRA_DIST = \
 	pth_spinlock.vgtest pth_spinlock.stdout.exp pth_spinlock.stderr.exp \
 	rwlock_race.vgtest rwlock_race.stdout.exp rwlock_race.stderr.exp \
 	rwlock_test.vgtest rwlock_test.stdout.exp rwlock_test.stderr.exp \
+	sem_clockwait_np.vgtest sem_clockwait_np.stdout.exp \
+		sem_clockwait_np.stderr.exp \
+	sem_timedwait.vgtest sem_timedwait.stdout.exp sem_timedwait.stderr.exp \
+	shared_timed_mutex.vgtest shared_timed_mutex.stderr.exp \
 	shmem_abits.vgtest shmem_abits.stdout.exp shmem_abits.stderr.exp \
 	stackteardown.vgtest stackteardown.stdout.exp stackteardown.stderr.exp \
 	t2t_laog.vgtest t2t_laog.stdout.exp t2t_laog.stderr.exp \
@@ -1014,6 +1100,7 @@ EXTRA_DIST = \
 		tc03_re_excl.stderr.exp \
 	tc04_free_lock.vgtest tc04_free_lock.stdout.exp \
 		tc04_free_lock.stderr.exp \
+		tc04_free_lock.stderr.exp-freebsd15 \
 	tc05_simple_race.vgtest tc05_simple_race.stdout.exp \
 		tc05_simple_race.stderr.exp \
 	tc06_two_races.vgtest tc06_two_races.stdout.exp \
@@ -1026,6 +1113,7 @@ EXTRA_DIST = \
 	tc09_bad_unlock.vgtest tc09_bad_unlock.stdout.exp \
 		tc09_bad_unlock.stderr.exp tc09_bad_unlock.stderr.exp-solaris \
 		tc09_bad_unlock.stderr.exp-freebsd \
+		tc09_bad_unlock.stderr.exp-freebsd15 \
 	tc10_rec_lock.vgtest tc10_rec_lock.stdout.exp tc10_rec_lock.stderr.exp \
 	tc11_XCHG.vgtest tc11_XCHG.stdout.exp tc11_XCHG.stderr.exp \
 	tc12_rwl_trivial.vgtest tc12_rwl_trivial.stdout.exp \
@@ -1064,6 +1152,7 @@ EXTRA_DIST = \
 		tc22_exit_w_lock.stderr.exp \
 		tc22_exit_w_lock.stderr.exp-kfail-x86 \
 		tc22_exit_w_lock.stderr.exp-solaris \
+		tc22_exit_w_lock.stderr.exp-freebsd15 \
 	tc23_bogus_condwait.vgtest tc23_bogus_condwait.stdout.exp \
 		tc23_bogus_condwait.stderr.exp \
 		tc23_bogus_condwait.stderr.exp-mips32 \
@@ -1071,7 +1160,9 @@ EXTRA_DIST = \
 	tc24_nonzero_sem.vgtest tc24_nonzero_sem.stdout.exp \
 		tc24_nonzero_sem.stderr.exp \
 	tls_threads.vgtest tls_threads.stdout.exp \
-		tls_threads.stderr.exp
+		tls_threads.stderr.exp \
+	tls_threads2.vgtest tls_threads2.stderr.exp \
+	trylock.vgtest trylock.stderr.exp
 
 
 # Wrapper headers used by some check programs.
@@ -1084,8 +1175,11 @@ noinst_HEADERS = safe-pthread.h safe-semaphore.h
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@tc07_hbl1_CFLAGS = $(AM_CFLAGS) -mcpu=cortex-a8
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_FALSE@tc08_hbl2_CFLAGS = $(AM_CFLAGS)
 @VGCONF_PLATFORMS_INCLUDE_ARM_LINUX_TRUE@tc08_hbl2_CFLAGS = $(AM_CFLAGS) -mcpu=cortex-a8
+@HAVE_BUILTIN_ATOMIC_TRUE@annotate_rwlock_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 LDADD = -lpthread
 bug322621_SOURCES = bug322621.cpp
+@HAVE_CXX17_TRUE@bug392331_SOURCES = bug392331.cpp
+@HAVE_CXX17_TRUE@bug392331_CXXFLAGS = $(AM_CXXFLAGS) -std=c++17
 all: all-am
 
 .SUFFIXES:
@@ -1132,7 +1226,7 @@ annotate_hbefore$(EXEEXT): $(annotate_hbefore_OBJECTS) $(annotate_hbefore_DEPEND
 
 annotate_rwlock$(EXEEXT): $(annotate_rwlock_OBJECTS) $(annotate_rwlock_DEPENDENCIES) $(EXTRA_annotate_rwlock_DEPENDENCIES) 
 	@rm -f annotate_rwlock$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(annotate_rwlock_OBJECTS) $(annotate_rwlock_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(annotate_rwlock_LINK) $(annotate_rwlock_OBJECTS) $(annotate_rwlock_LDADD) $(LIBS)
 
 bar_bad$(EXEEXT): $(bar_bad_OBJECTS) $(bar_bad_DEPENDENCIES) $(EXTRA_bar_bad_DEPENDENCIES) 
 	@rm -f bar_bad$(EXEEXT)
@@ -1145,6 +1239,18 @@ bar_trivial$(EXEEXT): $(bar_trivial_OBJECTS) $(bar_trivial_DEPENDENCIES) $(EXTRA
 bug322621$(EXEEXT): $(bug322621_OBJECTS) $(bug322621_DEPENDENCIES) $(EXTRA_bug322621_DEPENDENCIES) 
 	@rm -f bug322621$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(bug322621_OBJECTS) $(bug322621_LDADD) $(LIBS)
+
+bug327548$(EXEEXT): $(bug327548_OBJECTS) $(bug327548_DEPENDENCIES) $(EXTRA_bug327548_DEPENDENCIES) 
+	@rm -f bug327548$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bug327548_OBJECTS) $(bug327548_LDADD) $(LIBS)
+
+bug392331$(EXEEXT): $(bug392331_OBJECTS) $(bug392331_DEPENDENCIES) $(EXTRA_bug392331_DEPENDENCIES) 
+	@rm -f bug392331$(EXEEXT)
+	$(AM_V_CXXLD)$(bug392331_LINK) $(bug392331_OBJECTS) $(bug392331_LDADD) $(LIBS)
+
+bug484480$(EXEEXT): $(bug484480_OBJECTS) $(bug484480_DEPENDENCIES) $(EXTRA_bug484480_DEPENDENCIES) 
+	@rm -f bug484480$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bug484480_OBJECTS) $(bug484480_LDADD) $(LIBS)
 
 cond_init_destroy$(EXEEXT): $(cond_init_destroy_OBJECTS) $(cond_init_destroy_DEPENDENCIES) $(EXTRA_cond_init_destroy_DEPENDENCIES) 
 	@rm -f cond_init_destroy$(EXEEXT)
@@ -1161,6 +1267,10 @@ cond_timedwait_test$(EXEEXT): $(cond_timedwait_test_OBJECTS) $(cond_timedwait_te
 free_is_write$(EXEEXT): $(free_is_write_OBJECTS) $(free_is_write_DEPENDENCIES) $(EXTRA_free_is_write_DEPENDENCIES) 
 	@rm -f free_is_write$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(free_is_write_OBJECTS) $(free_is_write_LDADD) $(LIBS)
+
+getaddrinfo$(EXEEXT): $(getaddrinfo_OBJECTS) $(getaddrinfo_DEPENDENCIES) $(EXTRA_getaddrinfo_DEPENDENCIES) 
+	@rm -f getaddrinfo$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(getaddrinfo_OBJECTS) $(getaddrinfo_LDADD) $(LIBS)
 
 hg01_all_ok$(EXEEXT): $(hg01_all_ok_OBJECTS) $(hg01_all_ok_DEPENDENCIES) $(EXTRA_hg01_all_ok_DEPENDENCIES) 
 	@rm -f hg01_all_ok$(EXEEXT)
@@ -1205,6 +1315,14 @@ pth_destroy_cond$(EXEEXT): $(pth_destroy_cond_OBJECTS) $(pth_destroy_cond_DEPEND
 pth_mempcpy_false_races$(EXEEXT): $(pth_mempcpy_false_races_OBJECTS) $(pth_mempcpy_false_races_DEPENDENCIES) $(EXTRA_pth_mempcpy_false_races_DEPENDENCIES) 
 	@rm -f pth_mempcpy_false_races$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pth_mempcpy_false_races_OBJECTS) $(pth_mempcpy_false_races_LDADD) $(LIBS)
+
+sem_clockwait_np$(EXEEXT): $(sem_clockwait_np_OBJECTS) $(sem_clockwait_np_DEPENDENCIES) $(EXTRA_sem_clockwait_np_DEPENDENCIES) 
+	@rm -f sem_clockwait_np$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(sem_clockwait_np_OBJECTS) $(sem_clockwait_np_LDADD) $(LIBS)
+
+sem_timedwait$(EXEEXT): $(sem_timedwait_OBJECTS) $(sem_timedwait_DEPENDENCIES) $(EXTRA_sem_timedwait_DEPENDENCIES) 
+	@rm -f sem_timedwait$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(sem_timedwait_OBJECTS) $(sem_timedwait_LDADD) $(LIBS)
 
 shmem_abits$(EXEEXT): $(shmem_abits_OBJECTS) $(shmem_abits_DEPENDENCIES) $(EXTRA_shmem_abits_DEPENDENCIES) 
 	@rm -f shmem_abits$(EXEEXT)
@@ -1325,14 +1443,18 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_hbefore-annotate_hbefore.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_rwlock.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bar_bad.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bar_trivial.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug322621.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug327548.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug392331-bug392331.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug484480.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_init_destroy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_timedwait_invalid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_timedwait_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/free_is_write.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getaddrinfo.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hg01_all_ok.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hg02_deadlock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hg03_inherit.Po@am__quote@ # am--include-marker
@@ -1344,6 +1466,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locked_vs_unlocked3.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_destroy_cond.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mempcpy_false_races.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem_clockwait_np.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem_timedwait.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shmem_abits.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stackteardown.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t2t.Po@am__quote@ # am--include-marker
@@ -1409,6 +1533,20 @@ annotate_hbefore-annotate_hbefore.obj: annotate_hbefore.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_hbefore_CFLAGS) $(CFLAGS) -c -o annotate_hbefore-annotate_hbefore.obj `if test -f 'annotate_hbefore.c'; then $(CYGPATH_W) 'annotate_hbefore.c'; else $(CYGPATH_W) '$(srcdir)/annotate_hbefore.c'; fi`
 
+annotate_rwlock-annotate_rwlock.o: annotate_rwlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -MT annotate_rwlock-annotate_rwlock.o -MD -MP -MF $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo -c -o annotate_rwlock-annotate_rwlock.o `test -f 'annotate_rwlock.c' || echo '$(srcdir)/'`annotate_rwlock.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo $(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='annotate_rwlock.c' object='annotate_rwlock-annotate_rwlock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -c -o annotate_rwlock-annotate_rwlock.o `test -f 'annotate_rwlock.c' || echo '$(srcdir)/'`annotate_rwlock.c
+
+annotate_rwlock-annotate_rwlock.obj: annotate_rwlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -MT annotate_rwlock-annotate_rwlock.obj -MD -MP -MF $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo -c -o annotate_rwlock-annotate_rwlock.obj `if test -f 'annotate_rwlock.c'; then $(CYGPATH_W) 'annotate_rwlock.c'; else $(CYGPATH_W) '$(srcdir)/annotate_rwlock.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/annotate_rwlock-annotate_rwlock.Tpo $(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='annotate_rwlock.c' object='annotate_rwlock-annotate_rwlock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(annotate_rwlock_CFLAGS) $(CFLAGS) -c -o annotate_rwlock-annotate_rwlock.obj `if test -f 'annotate_rwlock.c'; then $(CYGPATH_W) 'annotate_rwlock.c'; else $(CYGPATH_W) '$(srcdir)/annotate_rwlock.c'; fi`
+
 tc07_hbl1-tc07_hbl1.o: tc07_hbl1.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tc07_hbl1_CFLAGS) $(CFLAGS) -MT tc07_hbl1-tc07_hbl1.o -MD -MP -MF $(DEPDIR)/tc07_hbl1-tc07_hbl1.Tpo -c -o tc07_hbl1-tc07_hbl1.o `test -f 'tc07_hbl1.c' || echo '$(srcdir)/'`tc07_hbl1.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tc07_hbl1-tc07_hbl1.Tpo $(DEPDIR)/tc07_hbl1-tc07_hbl1.Po
@@ -1452,6 +1590,20 @@ tc08_hbl2-tc08_hbl2.obj: tc08_hbl2.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+bug392331-bug392331.o: bug392331.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug392331_CXXFLAGS) $(CXXFLAGS) -MT bug392331-bug392331.o -MD -MP -MF $(DEPDIR)/bug392331-bug392331.Tpo -c -o bug392331-bug392331.o `test -f 'bug392331.cpp' || echo '$(srcdir)/'`bug392331.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug392331-bug392331.Tpo $(DEPDIR)/bug392331-bug392331.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug392331.cpp' object='bug392331-bug392331.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug392331_CXXFLAGS) $(CXXFLAGS) -c -o bug392331-bug392331.o `test -f 'bug392331.cpp' || echo '$(srcdir)/'`bug392331.cpp
+
+bug392331-bug392331.obj: bug392331.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug392331_CXXFLAGS) $(CXXFLAGS) -MT bug392331-bug392331.obj -MD -MP -MF $(DEPDIR)/bug392331-bug392331.Tpo -c -o bug392331-bug392331.obj `if test -f 'bug392331.cpp'; then $(CYGPATH_W) 'bug392331.cpp'; else $(CYGPATH_W) '$(srcdir)/bug392331.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug392331-bug392331.Tpo $(DEPDIR)/bug392331-bug392331.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug392331.cpp' object='bug392331-bug392331.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug392331_CXXFLAGS) $(CXXFLAGS) -c -o bug392331-bug392331.obj `if test -f 'bug392331.cpp'; then $(CYGPATH_W) 'bug392331.cpp'; else $(CYGPATH_W) '$(srcdir)/bug392331.cpp'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1579,14 +1731,18 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/annotate_hbefore-annotate_hbefore.Po
-	-rm -f ./$(DEPDIR)/annotate_rwlock.Po
+	-rm -f ./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
 	-rm -f ./$(DEPDIR)/bar_bad.Po
 	-rm -f ./$(DEPDIR)/bar_trivial.Po
 	-rm -f ./$(DEPDIR)/bug322621.Po
+	-rm -f ./$(DEPDIR)/bug327548.Po
+	-rm -f ./$(DEPDIR)/bug392331-bug392331.Po
+	-rm -f ./$(DEPDIR)/bug484480.Po
 	-rm -f ./$(DEPDIR)/cond_init_destroy.Po
 	-rm -f ./$(DEPDIR)/cond_timedwait_invalid.Po
 	-rm -f ./$(DEPDIR)/cond_timedwait_test.Po
 	-rm -f ./$(DEPDIR)/free_is_write.Po
+	-rm -f ./$(DEPDIR)/getaddrinfo.Po
 	-rm -f ./$(DEPDIR)/hg01_all_ok.Po
 	-rm -f ./$(DEPDIR)/hg02_deadlock.Po
 	-rm -f ./$(DEPDIR)/hg03_inherit.Po
@@ -1598,6 +1754,8 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/locked_vs_unlocked3.Po
 	-rm -f ./$(DEPDIR)/pth_destroy_cond.Po
 	-rm -f ./$(DEPDIR)/pth_mempcpy_false_races.Po
+	-rm -f ./$(DEPDIR)/sem_clockwait_np.Po
+	-rm -f ./$(DEPDIR)/sem_timedwait.Po
 	-rm -f ./$(DEPDIR)/shmem_abits.Po
 	-rm -f ./$(DEPDIR)/stackteardown.Po
 	-rm -f ./$(DEPDIR)/t2t.Po
@@ -1672,14 +1830,18 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/annotate_hbefore-annotate_hbefore.Po
-	-rm -f ./$(DEPDIR)/annotate_rwlock.Po
+	-rm -f ./$(DEPDIR)/annotate_rwlock-annotate_rwlock.Po
 	-rm -f ./$(DEPDIR)/bar_bad.Po
 	-rm -f ./$(DEPDIR)/bar_trivial.Po
 	-rm -f ./$(DEPDIR)/bug322621.Po
+	-rm -f ./$(DEPDIR)/bug327548.Po
+	-rm -f ./$(DEPDIR)/bug392331-bug392331.Po
+	-rm -f ./$(DEPDIR)/bug484480.Po
 	-rm -f ./$(DEPDIR)/cond_init_destroy.Po
 	-rm -f ./$(DEPDIR)/cond_timedwait_invalid.Po
 	-rm -f ./$(DEPDIR)/cond_timedwait_test.Po
 	-rm -f ./$(DEPDIR)/free_is_write.Po
+	-rm -f ./$(DEPDIR)/getaddrinfo.Po
 	-rm -f ./$(DEPDIR)/hg01_all_ok.Po
 	-rm -f ./$(DEPDIR)/hg02_deadlock.Po
 	-rm -f ./$(DEPDIR)/hg03_inherit.Po
@@ -1691,6 +1853,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/locked_vs_unlocked3.Po
 	-rm -f ./$(DEPDIR)/pth_destroy_cond.Po
 	-rm -f ./$(DEPDIR)/pth_mempcpy_false_races.Po
+	-rm -f ./$(DEPDIR)/sem_clockwait_np.Po
+	-rm -f ./$(DEPDIR)/sem_timedwait.Po
 	-rm -f ./$(DEPDIR)/shmem_abits.Po
 	-rm -f ./$(DEPDIR)/stackteardown.Po
 	-rm -f ./$(DEPDIR)/t2t.Po
