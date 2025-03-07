@@ -193,6 +193,7 @@ am__objects_1 = priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-main_globals.$(OBJEX
 	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_simd128.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_simd256.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_maddf.$(OBJEXT) \
+	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc2.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc3.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_x86_defs.$(OBJEXT) \
@@ -232,15 +233,15 @@ am__libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_SOURCES_DIST =  \
 	priv/guest_nanomips_toIR.c priv/host_generic_regs.c \
 	priv/host_generic_simd64.c priv/host_generic_simd128.c \
 	priv/host_generic_simd256.c priv/host_generic_maddf.c \
-	priv/host_generic_reg_alloc2.c priv/host_generic_reg_alloc3.c \
-	priv/host_x86_defs.c priv/host_x86_isel.c \
-	priv/host_amd64_defs.c priv/host_amd64_isel.c \
-	priv/host_ppc_defs.c priv/host_ppc_isel.c priv/host_arm_defs.c \
-	priv/host_arm_isel.c priv/host_arm64_defs.c \
-	priv/host_arm64_isel.c priv/host_s390_defs.c \
-	priv/host_s390_isel.c priv/s390_disasm.c priv/host_mips_defs.c \
-	priv/host_nanomips_defs.c priv/host_mips_isel.c \
-	priv/host_nanomips_isel.c
+	priv/host_amd64_maddf.c priv/host_generic_reg_alloc2.c \
+	priv/host_generic_reg_alloc3.c priv/host_x86_defs.c \
+	priv/host_x86_isel.c priv/host_amd64_defs.c \
+	priv/host_amd64_isel.c priv/host_ppc_defs.c \
+	priv/host_ppc_isel.c priv/host_arm_defs.c priv/host_arm_isel.c \
+	priv/host_arm64_defs.c priv/host_arm64_isel.c \
+	priv/host_s390_defs.c priv/host_s390_isel.c priv/s390_disasm.c \
+	priv/host_mips_defs.c priv/host_nanomips_defs.c \
+	priv/host_mips_isel.c priv/host_nanomips_isel.c
 am__objects_2 = priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-main_globals.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-main_main.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-main_util.$(OBJEXT) \
@@ -272,6 +273,7 @@ am__objects_2 = priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-main_globals.$(OBJEX
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_simd128.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_simd256.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_maddf.$(OBJEXT) \
+	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc3.$(OBJEXT) \
 	priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_x86_defs.$(OBJEXT) \
@@ -347,6 +349,7 @@ am__depfiles_remade = priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-gues
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-guest_x86_toIR.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_defs.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_isel.Po \
+	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_defs.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_isel.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm_defs.Po \
@@ -397,6 +400,7 @@ am__depfiles_remade = priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-gues
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-guest_x86_toIR.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_defs.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_isel.Po \
+	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_defs.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_isel.Po \
 	priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm_defs.Po \
@@ -517,6 +521,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -534,6 +539,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -548,16 +554,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -608,6 +633,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = ${LTO_RANLIB}
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -618,10 +644,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -776,16 +804,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -796,6 +820,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -812,7 +839,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -872,6 +899,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -932,6 +960,7 @@ noinst_HEADERS = \
 	priv/host_generic_simd128.h \
 	priv/host_generic_simd256.h \
 	priv/host_generic_maddf.h \
+	priv/host_amd64_maddf.h \
 	priv/host_x86_defs.h \
 	priv/host_amd64_defs.h \
 	priv/host_ppc_defs.h \
@@ -991,6 +1020,7 @@ LIBVEX_SOURCES_COMMON = \
 	priv/host_generic_simd128.c \
 	priv/host_generic_simd256.c \
 	priv/host_generic_maddf.c \
+	priv/host_amd64_maddf.c \
 	priv/host_generic_reg_alloc2.c \
 	priv/host_generic_reg_alloc3.c \
 	priv/host_x86_defs.c \
@@ -1185,6 +1215,8 @@ priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_simd256.$(OBJEXT):  \
 	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
 priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_maddf.$(OBJEXT):  \
 	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
+priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.$(OBJEXT):  \
+	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
 priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc2.$(OBJEXT):  \
 	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
 priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc3.$(OBJEXT):  \
@@ -1290,6 +1322,8 @@ priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_simd256.$(OBJEXT):  \
 	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
 priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_maddf.$(OBJEXT):  \
 	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
+priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.$(OBJEXT):  \
+	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
 priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.$(OBJEXT):  \
 	priv/$(am__dirstamp) priv/$(DEPDIR)/$(am__dirstamp)
 priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc3.$(OBJEXT):  \
@@ -1376,6 +1410,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-guest_x86_toIR.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_defs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_isel.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_defs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_isel.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm_defs.Po@am__quote@ # am--include-marker
@@ -1426,6 +1461,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-guest_x86_toIR.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_defs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_isel.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_defs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_isel.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm_defs.Po@am__quote@ # am--include-marker
@@ -1913,6 +1949,20 @@ priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_maddf.obj: priv/host_ge
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='priv/host_generic_maddf.c' object='priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_maddf.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -c -o priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_maddf.obj `if test -f 'priv/host_generic_maddf.c'; then $(CYGPATH_W) 'priv/host_generic_maddf.c'; else $(CYGPATH_W) '$(srcdir)/priv/host_generic_maddf.c'; fi`
+
+priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.o: priv/host_amd64_maddf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -MT priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.o -MD -MP -MF priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Tpo -c -o priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.o `test -f 'priv/host_amd64_maddf.c' || echo '$(srcdir)/'`priv/host_amd64_maddf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Tpo priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='priv/host_amd64_maddf.c' object='priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -c -o priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.o `test -f 'priv/host_amd64_maddf.c' || echo '$(srcdir)/'`priv/host_amd64_maddf.c
+
+priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.obj: priv/host_amd64_maddf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -MT priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.obj -MD -MP -MF priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Tpo -c -o priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.obj `if test -f 'priv/host_amd64_maddf.c'; then $(CYGPATH_W) 'priv/host_amd64_maddf.c'; else $(CYGPATH_W) '$(srcdir)/priv/host_amd64_maddf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Tpo priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='priv/host_amd64_maddf.c' object='priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -c -o priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.obj `if test -f 'priv/host_amd64_maddf.c'; then $(CYGPATH_W) 'priv/host_amd64_maddf.c'; else $(CYGPATH_W) '$(srcdir)/priv/host_amd64_maddf.c'; fi`
 
 priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc2.o: priv/host_generic_reg_alloc2.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -MT priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc2.o -MD -MP -MF priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc2.Tpo -c -o priv/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_generic_reg_alloc2.o `test -f 'priv/host_generic_reg_alloc2.c' || echo '$(srcdir)/'`priv/host_generic_reg_alloc2.c
@@ -2614,6 +2664,20 @@ priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_maddf.obj: priv/host_ge
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -c -o priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_maddf.obj `if test -f 'priv/host_generic_maddf.c'; then $(CYGPATH_W) 'priv/host_generic_maddf.c'; else $(CYGPATH_W) '$(srcdir)/priv/host_generic_maddf.c'; fi`
 
+priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.o: priv/host_amd64_maddf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -MT priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.o -MD -MP -MF priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Tpo -c -o priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.o `test -f 'priv/host_amd64_maddf.c' || echo '$(srcdir)/'`priv/host_amd64_maddf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Tpo priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='priv/host_amd64_maddf.c' object='priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -c -o priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.o `test -f 'priv/host_amd64_maddf.c' || echo '$(srcdir)/'`priv/host_amd64_maddf.c
+
+priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.obj: priv/host_amd64_maddf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -MT priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.obj -MD -MP -MF priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Tpo -c -o priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.obj `if test -f 'priv/host_amd64_maddf.c'; then $(CYGPATH_W) 'priv/host_amd64_maddf.c'; else $(CYGPATH_W) '$(srcdir)/priv/host_amd64_maddf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Tpo priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='priv/host_amd64_maddf.c' object='priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -c -o priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.obj `if test -f 'priv/host_amd64_maddf.c'; then $(CYGPATH_W) 'priv/host_amd64_maddf.c'; else $(CYGPATH_W) '$(srcdir)/priv/host_amd64_maddf.c'; fi`
+
 priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.o: priv/host_generic_reg_alloc2.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CPPFLAGS) $(CPPFLAGS) $(libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a_CFLAGS) $(CFLAGS) -MT priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.o -MD -MP -MF priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.Tpo -c -o priv/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.o `test -f 'priv/host_generic_reg_alloc2.c' || echo '$(srcdir)/'`priv/host_generic_reg_alloc2.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.Tpo priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_generic_reg_alloc2.Po
@@ -3083,6 +3147,7 @@ distclean: distclean-am
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-guest_x86_toIR.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_isel.Po
+	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_isel.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm_defs.Po
@@ -3133,6 +3198,7 @@ distclean: distclean-am
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-guest_x86_toIR.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_isel.Po
+	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_isel.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm_defs.Po
@@ -3230,6 +3296,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-guest_x86_toIR.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_isel.Po
+	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_amd64_maddf.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm64_isel.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_PRI@_@VGCONF_OS@_a-host_arm_defs.Po
@@ -3280,6 +3347,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-guest_x86_toIR.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_isel.Po
+	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_amd64_maddf.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_defs.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm64_isel.Po
 	-rm -f priv/$(DEPDIR)/libvex_@VGCONF_ARCH_SEC@_@VGCONF_OS@_a-host_arm_defs.Po

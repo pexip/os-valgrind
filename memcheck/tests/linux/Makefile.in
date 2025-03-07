@@ -124,7 +124,7 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@	-Wno-uninitialized -Wno-unused-value # \
 @COMPILER_IS_CLANG_TRUE@	clang 3.0.0
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
-check_PROGRAMS = brk$(EXEEXT) capget$(EXEEXT) \
+check_PROGRAMS = aligned_alloc$(EXEEXT) brk$(EXEEXT) capget$(EXEEXT) \
 	check_preadv2_pwritev2$(EXEEXT) debuginfod-check$(EXEEXT) \
 	dlclose_leak$(EXEEXT) dlclose_leak_so.so$(EXEEXT) \
 	ioctl-tiocsig$(EXEEXT) getregset$(EXEEXT) lsframe1$(EXEEXT) \
@@ -133,14 +133,17 @@ check_PROGRAMS = brk$(EXEEXT) capget$(EXEEXT) \
 	syslog-syscall$(EXEEXT) sys-statx$(EXEEXT) \
 	timerfd-syscall$(EXEEXT) proc-auxv$(EXEEXT) \
 	sys-execveat$(EXEEXT) check_execveat$(EXEEXT) enomem$(EXEEXT) \
-	$(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
-	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6)
-@HAVE_AT_FDCWD_TRUE@am__append_12 = sys-openat
-@HAVE_MEMFD_CREATE_TRUE@am__append_13 = memfd_create
-@HAVE_COPY_FILE_RANGE_TRUE@am__append_14 = sys-copy_file_range
-@HAVE_PREADV_PWRITEV_TRUE@am__append_15 = sys-preadv_pwritev
-@HAVE_PREADV2_PWRITEV2_TRUE@am__append_16 = sys-preadv2_pwritev2
-@HAVE_SETCONTEXT_TRUE@am__append_17 = stack_changes
+	memalign$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
+	$(am__EXEEXT_6) $(am__EXEEXT_7) $(am__EXEEXT_8)
+@HAVE_OPENSSL_TRUE@am__append_12 = bug480706
+@HAVE_AT_FDCWD_TRUE@am__append_13 = sys-openat
+@HAVE_MEMFD_CREATE_TRUE@am__append_14 = memfd_create
+@HAVE_COPY_FILE_RANGE_TRUE@am__append_15 = sys-copy_file_range
+@HAVE_PREADV_PWRITEV_TRUE@am__append_16 = sys-preadv_pwritev
+@HAVE_PREADV2_PWRITEV2_TRUE@am__append_17 = sys-preadv2_pwritev2
+@HAVE_SETCONTEXT_TRUE@am__append_18 = stack_changes
+@HAVE_STRLCAT_TRUE@am__append_19 = strlcat_strlcpy
 subdir = memcheck/tests/linux
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -152,17 +155,25 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = debuginfod-check.vgtest
 CONFIG_CLEAN_VPATH_FILES =
-@HAVE_AT_FDCWD_TRUE@am__EXEEXT_1 = sys-openat$(EXEEXT)
-@HAVE_MEMFD_CREATE_TRUE@am__EXEEXT_2 = memfd_create$(EXEEXT)
-@HAVE_COPY_FILE_RANGE_TRUE@am__EXEEXT_3 =  \
+@HAVE_OPENSSL_TRUE@am__EXEEXT_1 = bug480706$(EXEEXT)
+@HAVE_AT_FDCWD_TRUE@am__EXEEXT_2 = sys-openat$(EXEEXT)
+@HAVE_MEMFD_CREATE_TRUE@am__EXEEXT_3 = memfd_create$(EXEEXT)
+@HAVE_COPY_FILE_RANGE_TRUE@am__EXEEXT_4 =  \
 @HAVE_COPY_FILE_RANGE_TRUE@	sys-copy_file_range$(EXEEXT)
-@HAVE_PREADV_PWRITEV_TRUE@am__EXEEXT_4 = sys-preadv_pwritev$(EXEEXT)
-@HAVE_PREADV2_PWRITEV2_TRUE@am__EXEEXT_5 =  \
+@HAVE_PREADV_PWRITEV_TRUE@am__EXEEXT_5 = sys-preadv_pwritev$(EXEEXT)
+@HAVE_PREADV2_PWRITEV2_TRUE@am__EXEEXT_6 =  \
 @HAVE_PREADV2_PWRITEV2_TRUE@	sys-preadv2_pwritev2$(EXEEXT)
-@HAVE_SETCONTEXT_TRUE@am__EXEEXT_6 = stack_changes$(EXEEXT)
+@HAVE_SETCONTEXT_TRUE@am__EXEEXT_7 = stack_changes$(EXEEXT)
+@HAVE_STRLCAT_TRUE@am__EXEEXT_8 = strlcat_strlcpy$(EXEEXT)
+aligned_alloc_SOURCES = aligned_alloc.c
+aligned_alloc_OBJECTS = aligned_alloc.$(OBJEXT)
+aligned_alloc_LDADD = $(LDADD)
 brk_SOURCES = brk.c
 brk_OBJECTS = brk.$(OBJEXT)
 brk_LDADD = $(LDADD)
+bug480706_SOURCES = bug480706.c
+bug480706_OBJECTS = bug480706.$(OBJEXT)
+bug480706_DEPENDENCIES =
 capget_SOURCES = capget.c
 capget_OBJECTS = capget.$(OBJEXT)
 capget_LDADD = $(LDADD)
@@ -186,8 +197,10 @@ dlclose_leak_so_so_LDADD = $(LDADD)
 dlclose_leak_so_so_LINK = $(CCLD) $(dlclose_leak_so_so_CFLAGS) \
 	$(CFLAGS) $(dlclose_leak_so_so_LDFLAGS) $(LDFLAGS) -o $@
 enomem_SOURCES = enomem.c
-enomem_OBJECTS = enomem.$(OBJEXT)
+enomem_OBJECTS = enomem-enomem.$(OBJEXT)
 enomem_LDADD = $(LDADD)
+enomem_LINK = $(CCLD) $(enomem_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 getregset_SOURCES = getregset.c
 getregset_OBJECTS = getregset.$(OBJEXT)
 getregset_LDADD = $(LDADD)
@@ -200,6 +213,9 @@ lsframe1_LDADD = $(LDADD)
 lsframe2_SOURCES = lsframe2.c
 lsframe2_OBJECTS = lsframe2.$(OBJEXT)
 lsframe2_LDADD = $(LDADD)
+memalign_SOURCES = memalign.c
+memalign_OBJECTS = memalign.$(OBJEXT)
+memalign_LDADD = $(LDADD)
 memfd_create_SOURCES = memfd_create.c
 memfd_create_OBJECTS = memfd_create.$(OBJEXT)
 memfd_create_LDADD = $(LDADD)
@@ -218,6 +234,11 @@ stack_changes_LDADD = $(LDADD)
 stack_switch_SOURCES = stack_switch.c
 stack_switch_OBJECTS = stack_switch.$(OBJEXT)
 stack_switch_DEPENDENCIES =
+strlcat_strlcpy_SOURCES = strlcat_strlcpy.c
+strlcat_strlcpy_OBJECTS = strlcat_strlcpy-strlcat_strlcpy.$(OBJEXT)
+strlcat_strlcpy_LDADD = $(LDADD)
+strlcat_strlcpy_LINK = $(CCLD) $(strlcat_strlcpy_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 sys_copy_file_range_SOURCES = sys-copy_file_range.c
 sys_copy_file_range_OBJECTS = sys-copy_file_range.$(OBJEXT)
 sys_copy_file_range_LDADD = $(LDADD)
@@ -228,11 +249,17 @@ sys_openat_SOURCES = sys-openat.c
 sys_openat_OBJECTS = sys-openat.$(OBJEXT)
 sys_openat_LDADD = $(LDADD)
 sys_preadv2_pwritev2_SOURCES = sys-preadv2_pwritev2.c
-sys_preadv2_pwritev2_OBJECTS = sys-preadv2_pwritev2.$(OBJEXT)
+sys_preadv2_pwritev2_OBJECTS =  \
+	sys_preadv2_pwritev2-sys-preadv2_pwritev2.$(OBJEXT)
 sys_preadv2_pwritev2_LDADD = $(LDADD)
+sys_preadv2_pwritev2_LINK = $(CCLD) $(sys_preadv2_pwritev2_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 sys_preadv_pwritev_SOURCES = sys-preadv_pwritev.c
-sys_preadv_pwritev_OBJECTS = sys-preadv_pwritev.$(OBJEXT)
+sys_preadv_pwritev_OBJECTS =  \
+	sys_preadv_pwritev-sys-preadv_pwritev.$(OBJEXT)
 sys_preadv_pwritev_LDADD = $(LDADD)
+sys_preadv_pwritev_LINK = $(CCLD) $(sys_preadv_pwritev_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 sys_statx_SOURCES = sys-statx.c
 sys_statx_OBJECTS = sys-statx.$(OBJEXT)
 sys_statx_LDADD = $(LDADD)
@@ -261,20 +288,23 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/brk.Po ./$(DEPDIR)/capget.Po \
+am__depfiles_remade = ./$(DEPDIR)/aligned_alloc.Po ./$(DEPDIR)/brk.Po \
+	./$(DEPDIR)/bug480706.Po ./$(DEPDIR)/capget.Po \
 	./$(DEPDIR)/check_execveat.Po \
 	./$(DEPDIR)/check_preadv2_pwritev2.Po \
 	./$(DEPDIR)/debuginfod-check.Po ./$(DEPDIR)/dlclose_leak.Po \
 	./$(DEPDIR)/dlclose_leak_so_so-dlclose_leak_so.Po \
-	./$(DEPDIR)/enomem.Po ./$(DEPDIR)/getregset.Po \
+	./$(DEPDIR)/enomem-enomem.Po ./$(DEPDIR)/getregset.Po \
 	./$(DEPDIR)/ioctl-tiocsig.Po ./$(DEPDIR)/lsframe1.Po \
-	./$(DEPDIR)/lsframe2.Po ./$(DEPDIR)/memfd_create.Po \
-	./$(DEPDIR)/proc-auxv.Po ./$(DEPDIR)/rfcomm.Po \
-	./$(DEPDIR)/sigqueue.Po ./$(DEPDIR)/stack_changes.Po \
-	./$(DEPDIR)/stack_switch.Po ./$(DEPDIR)/sys-copy_file_range.Po \
-	./$(DEPDIR)/sys-execveat.Po ./$(DEPDIR)/sys-openat.Po \
-	./$(DEPDIR)/sys-preadv2_pwritev2.Po \
-	./$(DEPDIR)/sys-preadv_pwritev.Po ./$(DEPDIR)/sys-statx.Po \
+	./$(DEPDIR)/lsframe2.Po ./$(DEPDIR)/memalign.Po \
+	./$(DEPDIR)/memfd_create.Po ./$(DEPDIR)/proc-auxv.Po \
+	./$(DEPDIR)/rfcomm.Po ./$(DEPDIR)/sigqueue.Po \
+	./$(DEPDIR)/stack_changes.Po ./$(DEPDIR)/stack_switch.Po \
+	./$(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Po \
+	./$(DEPDIR)/sys-copy_file_range.Po ./$(DEPDIR)/sys-execveat.Po \
+	./$(DEPDIR)/sys-openat.Po ./$(DEPDIR)/sys-statx.Po \
+	./$(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Po \
+	./$(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Po \
 	./$(DEPDIR)/syscalls-2007.Po ./$(DEPDIR)/syslog-syscall.Po \
 	./$(DEPDIR)/timerfd-syscall.Po
 am__mv = mv -f
@@ -294,22 +324,24 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = brk.c capget.c check_execveat.c check_preadv2_pwritev2.c \
-	debuginfod-check.c $(dlclose_leak_SOURCES) \
-	$(dlclose_leak_so_so_SOURCES) enomem.c getregset.c \
-	ioctl-tiocsig.c lsframe1.c lsframe2.c memfd_create.c \
-	proc-auxv.c rfcomm.c sigqueue.c stack_changes.c stack_switch.c \
-	sys-copy_file_range.c sys-execveat.c sys-openat.c \
-	sys-preadv2_pwritev2.c sys-preadv_pwritev.c sys-statx.c \
-	syscalls-2007.c syslog-syscall.c timerfd-syscall.c
-DIST_SOURCES = brk.c capget.c check_execveat.c \
+SOURCES = aligned_alloc.c brk.c bug480706.c capget.c check_execveat.c \
 	check_preadv2_pwritev2.c debuginfod-check.c \
 	$(dlclose_leak_SOURCES) $(dlclose_leak_so_so_SOURCES) enomem.c \
-	getregset.c ioctl-tiocsig.c lsframe1.c lsframe2.c \
+	getregset.c ioctl-tiocsig.c lsframe1.c lsframe2.c memalign.c \
 	memfd_create.c proc-auxv.c rfcomm.c sigqueue.c stack_changes.c \
-	stack_switch.c sys-copy_file_range.c sys-execveat.c \
-	sys-openat.c sys-preadv2_pwritev2.c sys-preadv_pwritev.c \
-	sys-statx.c syscalls-2007.c syslog-syscall.c timerfd-syscall.c
+	stack_switch.c strlcat_strlcpy.c sys-copy_file_range.c \
+	sys-execveat.c sys-openat.c sys-preadv2_pwritev2.c \
+	sys-preadv_pwritev.c sys-statx.c syscalls-2007.c \
+	syslog-syscall.c timerfd-syscall.c
+DIST_SOURCES = aligned_alloc.c brk.c bug480706.c capget.c \
+	check_execveat.c check_preadv2_pwritev2.c debuginfod-check.c \
+	$(dlclose_leak_SOURCES) $(dlclose_leak_so_so_SOURCES) enomem.c \
+	getregset.c ioctl-tiocsig.c lsframe1.c lsframe2.c memalign.c \
+	memfd_create.c proc-auxv.c rfcomm.c sigqueue.c stack_changes.c \
+	stack_switch.c strlcat_strlcpy.c sys-copy_file_range.c \
+	sys-execveat.c sys-openat.c sys-preadv2_pwritev2.c \
+	sys-preadv_pwritev.c sys-statx.c syscalls-2007.c \
+	syslog-syscall.c timerfd-syscall.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -373,6 +405,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -390,6 +423,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -404,16 +438,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -464,6 +517,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -474,10 +528,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -632,16 +688,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -652,6 +704,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -668,7 +723,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -728,6 +783,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -758,8 +814,13 @@ AM_CCASFLAGS = $(AM_CPPFLAGS)
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
 dist_noinst_SCRIPTS = filter_stderr
 EXTRA_DIST = \
+	aligned_alloc.vgtest aligned_alloc.stderr.exp \
+		aligned_alloc.stderr.exp-musl \
+		aligned_alloc.stderr.exp-glibc238 \
 	brk.stderr.exp brk.vgtest \
+	bug480706.stderr.exp bug480706.vgtest \
 	capget.vgtest capget.stderr.exp capget.stderr.exp2 capget.stderr.exp3 \
+	capget.stderr.exp4 \
 	debuginfod-check.stderr.exp debuginfod-check.vgtest.in \
 	debuginfod-check.pl \
 	dlclose_leak-no-keep.stderr.exp dlclose_leak-no-keep.stdout.exp \
@@ -770,6 +831,7 @@ EXTRA_DIST = \
 	lsframe1.vgtest lsframe1.stdout.exp lsframe1.stderr.exp \
 	lsframe2.vgtest lsframe2.stdout.exp lsframe2.stderr.exp \
 	memfd_create.vgtest memfd_create.stderr.exp \
+		memfd_create.stderr.exp-fcntl64 \
 	rfcomm.vgtest rfcomm.stderr.exp \
 	sigqueue.vgtest sigqueue.stderr.exp \
 	stack_changes.stderr.exp stack_changes.stdout.exp \
@@ -784,13 +846,17 @@ EXTRA_DIST = \
 	with-space.stderr.exp with-space.stdout.exp with-space.vgtest \
 	proc-auxv.vgtest proc-auxv.stderr.exp getregset.vgtest \
 	getregset.stderr.exp getregset.stdout.exp \
+	strlcat_strlcpy.vgtest strlcat_strlcpy.stderr.exp \
 	sys-preadv_pwritev.vgtest sys-preadv_pwritev.stderr.exp \
 	sys-preadv2_pwritev2.vgtest sys-preadv2_pwritev2.stderr.exp \
 	sys-execveat.vgtest sys-execveat.stderr.exp sys-execveat.stdout.exp \
-	enomem.vgtest enomem.stderr.exp enomem.stdout.exp
+	enomem.vgtest enomem.stderr.exp enomem.stdout.exp \
+	memalign.vgtest memalign.stderr.exp \
+		memalign.stderr.exp-musl
 
 stack_switch_LDADD = -lpthread
 timerfd_syscall_LDADD = -lrt
+@HAVE_OPENSSL_TRUE@bug480706_LDADD = -lcrypto
 
 # Build shared object for dlclose_leak
 dlclose_leak_so_so_SOURCES = dlclose_leak_so.c
@@ -806,6 +872,14 @@ dlclose_leak_DEPENDENCIES = dlclose_leak_so.so
 dlclose_leak_LDADD = -ldl
 dlclose_leak_LDFLAGS = $(AM_FLAG_M3264_PRI) \
                                 -Wl,-rpath,$(top_builddir)/memcheck/tests/linux
+
+enomem_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_USE_AFTER_FREE@
+@HAVE_STRLCAT_TRUE@strlcat_strlcpy_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_STRINGOP_OVERFLOW@
+sys_preadv_pwritev_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_STRINGOP_OVERFLOW@ @FLAG_W_NO_STRINGOP_OVERREAD@ \
+                                @FLAG_W_NO_NONNULL@
+
+sys_preadv2_pwritev2_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@ @FLAG_W_NO_STRINGOP_OVERREAD@ \
+                                @FLAG_W_NO_STRINGOP_OVERFLOW@
 
 all: all-am
 
@@ -847,9 +921,17 @@ debuginfod-check.vgtest: $(top_builddir)/config.status $(srcdir)/debuginfod-chec
 clean-checkPROGRAMS:
 	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
 
+aligned_alloc$(EXEEXT): $(aligned_alloc_OBJECTS) $(aligned_alloc_DEPENDENCIES) $(EXTRA_aligned_alloc_DEPENDENCIES) 
+	@rm -f aligned_alloc$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(aligned_alloc_OBJECTS) $(aligned_alloc_LDADD) $(LIBS)
+
 brk$(EXEEXT): $(brk_OBJECTS) $(brk_DEPENDENCIES) $(EXTRA_brk_DEPENDENCIES) 
 	@rm -f brk$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(brk_OBJECTS) $(brk_LDADD) $(LIBS)
+
+bug480706$(EXEEXT): $(bug480706_OBJECTS) $(bug480706_DEPENDENCIES) $(EXTRA_bug480706_DEPENDENCIES) 
+	@rm -f bug480706$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bug480706_OBJECTS) $(bug480706_LDADD) $(LIBS)
 
 capget$(EXEEXT): $(capget_OBJECTS) $(capget_DEPENDENCIES) $(EXTRA_capget_DEPENDENCIES) 
 	@rm -f capget$(EXEEXT)
@@ -877,7 +959,7 @@ dlclose_leak_so.so$(EXEEXT): $(dlclose_leak_so_so_OBJECTS) $(dlclose_leak_so_so_
 
 enomem$(EXEEXT): $(enomem_OBJECTS) $(enomem_DEPENDENCIES) $(EXTRA_enomem_DEPENDENCIES) 
 	@rm -f enomem$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(enomem_OBJECTS) $(enomem_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(enomem_LINK) $(enomem_OBJECTS) $(enomem_LDADD) $(LIBS)
 
 getregset$(EXEEXT): $(getregset_OBJECTS) $(getregset_DEPENDENCIES) $(EXTRA_getregset_DEPENDENCIES) 
 	@rm -f getregset$(EXEEXT)
@@ -894,6 +976,10 @@ lsframe1$(EXEEXT): $(lsframe1_OBJECTS) $(lsframe1_DEPENDENCIES) $(EXTRA_lsframe1
 lsframe2$(EXEEXT): $(lsframe2_OBJECTS) $(lsframe2_DEPENDENCIES) $(EXTRA_lsframe2_DEPENDENCIES) 
 	@rm -f lsframe2$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(lsframe2_OBJECTS) $(lsframe2_LDADD) $(LIBS)
+
+memalign$(EXEEXT): $(memalign_OBJECTS) $(memalign_DEPENDENCIES) $(EXTRA_memalign_DEPENDENCIES) 
+	@rm -f memalign$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(memalign_OBJECTS) $(memalign_LDADD) $(LIBS)
 
 memfd_create$(EXEEXT): $(memfd_create_OBJECTS) $(memfd_create_DEPENDENCIES) $(EXTRA_memfd_create_DEPENDENCIES) 
 	@rm -f memfd_create$(EXEEXT)
@@ -919,6 +1005,10 @@ stack_switch$(EXEEXT): $(stack_switch_OBJECTS) $(stack_switch_DEPENDENCIES) $(EX
 	@rm -f stack_switch$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(stack_switch_OBJECTS) $(stack_switch_LDADD) $(LIBS)
 
+strlcat_strlcpy$(EXEEXT): $(strlcat_strlcpy_OBJECTS) $(strlcat_strlcpy_DEPENDENCIES) $(EXTRA_strlcat_strlcpy_DEPENDENCIES) 
+	@rm -f strlcat_strlcpy$(EXEEXT)
+	$(AM_V_CCLD)$(strlcat_strlcpy_LINK) $(strlcat_strlcpy_OBJECTS) $(strlcat_strlcpy_LDADD) $(LIBS)
+
 sys-copy_file_range$(EXEEXT): $(sys_copy_file_range_OBJECTS) $(sys_copy_file_range_DEPENDENCIES) $(EXTRA_sys_copy_file_range_DEPENDENCIES) 
 	@rm -f sys-copy_file_range$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(sys_copy_file_range_OBJECTS) $(sys_copy_file_range_LDADD) $(LIBS)
@@ -933,11 +1023,11 @@ sys-openat$(EXEEXT): $(sys_openat_OBJECTS) $(sys_openat_DEPENDENCIES) $(EXTRA_sy
 
 sys-preadv2_pwritev2$(EXEEXT): $(sys_preadv2_pwritev2_OBJECTS) $(sys_preadv2_pwritev2_DEPENDENCIES) $(EXTRA_sys_preadv2_pwritev2_DEPENDENCIES) 
 	@rm -f sys-preadv2_pwritev2$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(sys_preadv2_pwritev2_OBJECTS) $(sys_preadv2_pwritev2_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(sys_preadv2_pwritev2_LINK) $(sys_preadv2_pwritev2_OBJECTS) $(sys_preadv2_pwritev2_LDADD) $(LIBS)
 
 sys-preadv_pwritev$(EXEEXT): $(sys_preadv_pwritev_OBJECTS) $(sys_preadv_pwritev_DEPENDENCIES) $(EXTRA_sys_preadv_pwritev_DEPENDENCIES) 
 	@rm -f sys-preadv_pwritev$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(sys_preadv_pwritev_OBJECTS) $(sys_preadv_pwritev_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(sys_preadv_pwritev_LINK) $(sys_preadv_pwritev_OBJECTS) $(sys_preadv_pwritev_LDADD) $(LIBS)
 
 sys-statx$(EXEEXT): $(sys_statx_OBJECTS) $(sys_statx_DEPENDENCIES) $(EXTRA_sys_statx_DEPENDENCIES) 
 	@rm -f sys-statx$(EXEEXT)
@@ -961,30 +1051,34 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aligned_alloc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/brk.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug480706.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/capget.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/check_execveat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/check_preadv2_pwritev2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debuginfod-check.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlclose_leak.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dlclose_leak_so_so-dlclose_leak_so.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/enomem.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/enomem-enomem.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getregset.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ioctl-tiocsig.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsframe1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lsframe2.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memalign.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memfd_create.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/proc-auxv.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rfcomm.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigqueue.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack_changes.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack_switch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys-copy_file_range.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys-execveat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys-openat.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys-preadv2_pwritev2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys-preadv_pwritev.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys-statx.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syscalls-2007.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syslog-syscall.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timerfd-syscall.Po@am__quote@ # am--include-marker
@@ -1024,6 +1118,62 @@ dlclose_leak_so_so-dlclose_leak_so.obj: dlclose_leak_so.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dlclose_leak_so.c' object='dlclose_leak_so_so-dlclose_leak_so.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dlclose_leak_so_so_CFLAGS) $(CFLAGS) -c -o dlclose_leak_so_so-dlclose_leak_so.obj `if test -f 'dlclose_leak_so.c'; then $(CYGPATH_W) 'dlclose_leak_so.c'; else $(CYGPATH_W) '$(srcdir)/dlclose_leak_so.c'; fi`
+
+enomem-enomem.o: enomem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(enomem_CFLAGS) $(CFLAGS) -MT enomem-enomem.o -MD -MP -MF $(DEPDIR)/enomem-enomem.Tpo -c -o enomem-enomem.o `test -f 'enomem.c' || echo '$(srcdir)/'`enomem.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/enomem-enomem.Tpo $(DEPDIR)/enomem-enomem.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='enomem.c' object='enomem-enomem.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(enomem_CFLAGS) $(CFLAGS) -c -o enomem-enomem.o `test -f 'enomem.c' || echo '$(srcdir)/'`enomem.c
+
+enomem-enomem.obj: enomem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(enomem_CFLAGS) $(CFLAGS) -MT enomem-enomem.obj -MD -MP -MF $(DEPDIR)/enomem-enomem.Tpo -c -o enomem-enomem.obj `if test -f 'enomem.c'; then $(CYGPATH_W) 'enomem.c'; else $(CYGPATH_W) '$(srcdir)/enomem.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/enomem-enomem.Tpo $(DEPDIR)/enomem-enomem.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='enomem.c' object='enomem-enomem.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(enomem_CFLAGS) $(CFLAGS) -c -o enomem-enomem.obj `if test -f 'enomem.c'; then $(CYGPATH_W) 'enomem.c'; else $(CYGPATH_W) '$(srcdir)/enomem.c'; fi`
+
+strlcat_strlcpy-strlcat_strlcpy.o: strlcat_strlcpy.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(strlcat_strlcpy_CFLAGS) $(CFLAGS) -MT strlcat_strlcpy-strlcat_strlcpy.o -MD -MP -MF $(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Tpo -c -o strlcat_strlcpy-strlcat_strlcpy.o `test -f 'strlcat_strlcpy.c' || echo '$(srcdir)/'`strlcat_strlcpy.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Tpo $(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strlcat_strlcpy.c' object='strlcat_strlcpy-strlcat_strlcpy.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(strlcat_strlcpy_CFLAGS) $(CFLAGS) -c -o strlcat_strlcpy-strlcat_strlcpy.o `test -f 'strlcat_strlcpy.c' || echo '$(srcdir)/'`strlcat_strlcpy.c
+
+strlcat_strlcpy-strlcat_strlcpy.obj: strlcat_strlcpy.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(strlcat_strlcpy_CFLAGS) $(CFLAGS) -MT strlcat_strlcpy-strlcat_strlcpy.obj -MD -MP -MF $(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Tpo -c -o strlcat_strlcpy-strlcat_strlcpy.obj `if test -f 'strlcat_strlcpy.c'; then $(CYGPATH_W) 'strlcat_strlcpy.c'; else $(CYGPATH_W) '$(srcdir)/strlcat_strlcpy.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Tpo $(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strlcat_strlcpy.c' object='strlcat_strlcpy-strlcat_strlcpy.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(strlcat_strlcpy_CFLAGS) $(CFLAGS) -c -o strlcat_strlcpy-strlcat_strlcpy.obj `if test -f 'strlcat_strlcpy.c'; then $(CYGPATH_W) 'strlcat_strlcpy.c'; else $(CYGPATH_W) '$(srcdir)/strlcat_strlcpy.c'; fi`
+
+sys_preadv2_pwritev2-sys-preadv2_pwritev2.o: sys-preadv2_pwritev2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv2_pwritev2_CFLAGS) $(CFLAGS) -MT sys_preadv2_pwritev2-sys-preadv2_pwritev2.o -MD -MP -MF $(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Tpo -c -o sys_preadv2_pwritev2-sys-preadv2_pwritev2.o `test -f 'sys-preadv2_pwritev2.c' || echo '$(srcdir)/'`sys-preadv2_pwritev2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Tpo $(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sys-preadv2_pwritev2.c' object='sys_preadv2_pwritev2-sys-preadv2_pwritev2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv2_pwritev2_CFLAGS) $(CFLAGS) -c -o sys_preadv2_pwritev2-sys-preadv2_pwritev2.o `test -f 'sys-preadv2_pwritev2.c' || echo '$(srcdir)/'`sys-preadv2_pwritev2.c
+
+sys_preadv2_pwritev2-sys-preadv2_pwritev2.obj: sys-preadv2_pwritev2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv2_pwritev2_CFLAGS) $(CFLAGS) -MT sys_preadv2_pwritev2-sys-preadv2_pwritev2.obj -MD -MP -MF $(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Tpo -c -o sys_preadv2_pwritev2-sys-preadv2_pwritev2.obj `if test -f 'sys-preadv2_pwritev2.c'; then $(CYGPATH_W) 'sys-preadv2_pwritev2.c'; else $(CYGPATH_W) '$(srcdir)/sys-preadv2_pwritev2.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Tpo $(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sys-preadv2_pwritev2.c' object='sys_preadv2_pwritev2-sys-preadv2_pwritev2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv2_pwritev2_CFLAGS) $(CFLAGS) -c -o sys_preadv2_pwritev2-sys-preadv2_pwritev2.obj `if test -f 'sys-preadv2_pwritev2.c'; then $(CYGPATH_W) 'sys-preadv2_pwritev2.c'; else $(CYGPATH_W) '$(srcdir)/sys-preadv2_pwritev2.c'; fi`
+
+sys_preadv_pwritev-sys-preadv_pwritev.o: sys-preadv_pwritev.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv_pwritev_CFLAGS) $(CFLAGS) -MT sys_preadv_pwritev-sys-preadv_pwritev.o -MD -MP -MF $(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Tpo -c -o sys_preadv_pwritev-sys-preadv_pwritev.o `test -f 'sys-preadv_pwritev.c' || echo '$(srcdir)/'`sys-preadv_pwritev.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Tpo $(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sys-preadv_pwritev.c' object='sys_preadv_pwritev-sys-preadv_pwritev.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv_pwritev_CFLAGS) $(CFLAGS) -c -o sys_preadv_pwritev-sys-preadv_pwritev.o `test -f 'sys-preadv_pwritev.c' || echo '$(srcdir)/'`sys-preadv_pwritev.c
+
+sys_preadv_pwritev-sys-preadv_pwritev.obj: sys-preadv_pwritev.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv_pwritev_CFLAGS) $(CFLAGS) -MT sys_preadv_pwritev-sys-preadv_pwritev.obj -MD -MP -MF $(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Tpo -c -o sys_preadv_pwritev-sys-preadv_pwritev.obj `if test -f 'sys-preadv_pwritev.c'; then $(CYGPATH_W) 'sys-preadv_pwritev.c'; else $(CYGPATH_W) '$(srcdir)/sys-preadv_pwritev.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Tpo $(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sys-preadv_pwritev.c' object='sys_preadv_pwritev-sys-preadv_pwritev.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys_preadv_pwritev_CFLAGS) $(CFLAGS) -c -o sys_preadv_pwritev-sys-preadv_pwritev.obj `if test -f 'sys-preadv_pwritev.c'; then $(CYGPATH_W) 'sys-preadv_pwritev.c'; else $(CYGPATH_W) '$(srcdir)/sys-preadv_pwritev.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1150,30 +1300,34 @@ clean: clean-am
 clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/brk.Po
+		-rm -f ./$(DEPDIR)/aligned_alloc.Po
+	-rm -f ./$(DEPDIR)/brk.Po
+	-rm -f ./$(DEPDIR)/bug480706.Po
 	-rm -f ./$(DEPDIR)/capget.Po
 	-rm -f ./$(DEPDIR)/check_execveat.Po
 	-rm -f ./$(DEPDIR)/check_preadv2_pwritev2.Po
 	-rm -f ./$(DEPDIR)/debuginfod-check.Po
 	-rm -f ./$(DEPDIR)/dlclose_leak.Po
 	-rm -f ./$(DEPDIR)/dlclose_leak_so_so-dlclose_leak_so.Po
-	-rm -f ./$(DEPDIR)/enomem.Po
+	-rm -f ./$(DEPDIR)/enomem-enomem.Po
 	-rm -f ./$(DEPDIR)/getregset.Po
 	-rm -f ./$(DEPDIR)/ioctl-tiocsig.Po
 	-rm -f ./$(DEPDIR)/lsframe1.Po
 	-rm -f ./$(DEPDIR)/lsframe2.Po
+	-rm -f ./$(DEPDIR)/memalign.Po
 	-rm -f ./$(DEPDIR)/memfd_create.Po
 	-rm -f ./$(DEPDIR)/proc-auxv.Po
 	-rm -f ./$(DEPDIR)/rfcomm.Po
 	-rm -f ./$(DEPDIR)/sigqueue.Po
 	-rm -f ./$(DEPDIR)/stack_changes.Po
 	-rm -f ./$(DEPDIR)/stack_switch.Po
+	-rm -f ./$(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Po
 	-rm -f ./$(DEPDIR)/sys-copy_file_range.Po
 	-rm -f ./$(DEPDIR)/sys-execveat.Po
 	-rm -f ./$(DEPDIR)/sys-openat.Po
-	-rm -f ./$(DEPDIR)/sys-preadv2_pwritev2.Po
-	-rm -f ./$(DEPDIR)/sys-preadv_pwritev.Po
 	-rm -f ./$(DEPDIR)/sys-statx.Po
+	-rm -f ./$(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Po
+	-rm -f ./$(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Po
 	-rm -f ./$(DEPDIR)/syscalls-2007.Po
 	-rm -f ./$(DEPDIR)/syslog-syscall.Po
 	-rm -f ./$(DEPDIR)/timerfd-syscall.Po
@@ -1222,30 +1376,34 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/brk.Po
+		-rm -f ./$(DEPDIR)/aligned_alloc.Po
+	-rm -f ./$(DEPDIR)/brk.Po
+	-rm -f ./$(DEPDIR)/bug480706.Po
 	-rm -f ./$(DEPDIR)/capget.Po
 	-rm -f ./$(DEPDIR)/check_execveat.Po
 	-rm -f ./$(DEPDIR)/check_preadv2_pwritev2.Po
 	-rm -f ./$(DEPDIR)/debuginfod-check.Po
 	-rm -f ./$(DEPDIR)/dlclose_leak.Po
 	-rm -f ./$(DEPDIR)/dlclose_leak_so_so-dlclose_leak_so.Po
-	-rm -f ./$(DEPDIR)/enomem.Po
+	-rm -f ./$(DEPDIR)/enomem-enomem.Po
 	-rm -f ./$(DEPDIR)/getregset.Po
 	-rm -f ./$(DEPDIR)/ioctl-tiocsig.Po
 	-rm -f ./$(DEPDIR)/lsframe1.Po
 	-rm -f ./$(DEPDIR)/lsframe2.Po
+	-rm -f ./$(DEPDIR)/memalign.Po
 	-rm -f ./$(DEPDIR)/memfd_create.Po
 	-rm -f ./$(DEPDIR)/proc-auxv.Po
 	-rm -f ./$(DEPDIR)/rfcomm.Po
 	-rm -f ./$(DEPDIR)/sigqueue.Po
 	-rm -f ./$(DEPDIR)/stack_changes.Po
 	-rm -f ./$(DEPDIR)/stack_switch.Po
+	-rm -f ./$(DEPDIR)/strlcat_strlcpy-strlcat_strlcpy.Po
 	-rm -f ./$(DEPDIR)/sys-copy_file_range.Po
 	-rm -f ./$(DEPDIR)/sys-execveat.Po
 	-rm -f ./$(DEPDIR)/sys-openat.Po
-	-rm -f ./$(DEPDIR)/sys-preadv2_pwritev2.Po
-	-rm -f ./$(DEPDIR)/sys-preadv_pwritev.Po
 	-rm -f ./$(DEPDIR)/sys-statx.Po
+	-rm -f ./$(DEPDIR)/sys_preadv2_pwritev2-sys-preadv2_pwritev2.Po
+	-rm -f ./$(DEPDIR)/sys_preadv_pwritev-sys-preadv_pwritev.Po
 	-rm -f ./$(DEPDIR)/syscalls-2007.Po
 	-rm -f ./$(DEPDIR)/syslog-syscall.Po
 	-rm -f ./$(DEPDIR)/timerfd-syscall.Po

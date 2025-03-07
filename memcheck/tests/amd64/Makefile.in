@@ -126,10 +126,11 @@ host_triplet = @host@
 @COMPILER_IS_CLANG_TRUE@am__append_11 = -Wno-unused-private-field    # drd/tests/tsan_unittest.cpp
 check_PROGRAMS = bt_everything$(EXEEXT) bug132146$(EXEEXT) \
 	bug279698$(EXEEXT) fxsave-amd64$(EXEEXT) insn-bsfl$(EXEEXT) \
-	insn-pmovmskb$(EXEEXT) sh-mem-vec128$(EXEEXT) \
-	sse_memory$(EXEEXT) xor-undef-amd64$(EXEEXT) $(am__EXEEXT_1) \
-	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4)
-@BUILD_AVX_TESTS_TRUE@am__append_12 = sh-mem-vec256 xsave-avx
+	insn-pmovmskb$(EXEEXT) pcmpgt$(EXEEXT) rh2257546_128$(EXEEXT) \
+	sh-mem-vec128$(EXEEXT) sse_memory$(EXEEXT) \
+	xor-undef-amd64$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) $(am__EXEEXT_4)
+@BUILD_AVX_TESTS_TRUE@am__append_12 = rh2257546_256 sh-mem-vec256 xsave-avx
 @HAVE_ASM_CONSTRAINT_P_TRUE@am__append_13 = insn-pcmpistri
 # clang 3.5.0 barfs about -mfancy-math-387
 @COMPILER_IS_CLANG_FALSE@am__append_14 = \
@@ -139,6 +140,7 @@ check_PROGRAMS = bt_everything$(EXEEXT) bug132146$(EXEEXT) \
 # initially this was a "not clang" test
 # but the problem is macOS, not clang
 @VGCONF_OS_IS_DARWIN_FALSE@am__append_15 = \
+@VGCONF_OS_IS_DARWIN_FALSE@	bug492210 \
 @VGCONF_OS_IS_DARWIN_FALSE@	shr_edx
 
 subdir = memcheck/tests/amd64
@@ -152,11 +154,13 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@BUILD_AVX_TESTS_TRUE@am__EXEEXT_1 = sh-mem-vec256$(EXEEXT) \
+@BUILD_AVX_TESTS_TRUE@am__EXEEXT_1 = rh2257546_256$(EXEEXT) \
+@BUILD_AVX_TESTS_TRUE@	sh-mem-vec256$(EXEEXT) \
 @BUILD_AVX_TESTS_TRUE@	xsave-avx$(EXEEXT)
 @HAVE_ASM_CONSTRAINT_P_TRUE@am__EXEEXT_2 = insn-pcmpistri$(EXEEXT)
 @COMPILER_IS_CLANG_FALSE@am__EXEEXT_3 = more_x87_fp$(EXEEXT)
-@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_4 = shr_edx$(EXEEXT)
+@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_4 = bug492210$(EXEEXT) \
+@VGCONF_OS_IS_DARWIN_FALSE@	shr_edx$(EXEEXT)
 bt_everything_SOURCES = bt_everything.c
 bt_everything_OBJECTS = bt_everything.$(OBJEXT)
 bt_everything_LDADD = $(LDADD)
@@ -166,6 +170,11 @@ bug132146_LDADD = $(LDADD)
 bug279698_SOURCES = bug279698.c
 bug279698_OBJECTS = bug279698.$(OBJEXT)
 bug279698_LDADD = $(LDADD)
+bug492210_SOURCES = bug492210.c
+bug492210_OBJECTS = bug492210-bug492210.$(OBJEXT)
+bug492210_LDADD = $(LDADD)
+bug492210_LINK = $(CCLD) $(bug492210_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 fxsave_amd64_SOURCES = fxsave-amd64.c
 fxsave_amd64_OBJECTS = fxsave_amd64-fxsave-amd64.$(OBJEXT)
 fxsave_amd64_LDADD = $(LDADD)
@@ -187,6 +196,15 @@ more_x87_fp_OBJECTS = more_x87_fp-more_x87_fp.$(OBJEXT)
 more_x87_fp_DEPENDENCIES =
 more_x87_fp_LINK = $(CCLD) $(more_x87_fp_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pcmpgt_OBJECTS = pcmpgt.$(OBJEXT)
+pcmpgt_OBJECTS = $(am_pcmpgt_OBJECTS)
+pcmpgt_LDADD = $(LDADD)
+rh2257546_128_SOURCES = rh2257546_128.c
+rh2257546_128_OBJECTS = rh2257546_128.$(OBJEXT)
+rh2257546_128_LDADD = $(LDADD)
+rh2257546_256_SOURCES = rh2257546_256.c
+rh2257546_256_OBJECTS = rh2257546_256.$(OBJEXT)
+rh2257546_256_LDADD = $(LDADD)
 sh_mem_vec128_SOURCES = sh-mem-vec128.c
 sh_mem_vec128_OBJECTS = sh-mem-vec128.$(OBJEXT)
 sh_mem_vec128_LDADD = $(LDADD)
@@ -225,10 +243,12 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/bt_everything.Po \
 	./$(DEPDIR)/bug132146.Po ./$(DEPDIR)/bug279698.Po \
+	./$(DEPDIR)/bug492210-bug492210.Po \
 	./$(DEPDIR)/fxsave_amd64-fxsave-amd64.Po \
 	./$(DEPDIR)/insn-bsfl.Po ./$(DEPDIR)/insn-pmovmskb.Po \
 	./$(DEPDIR)/insn_pcmpistri-insn-pcmpistri.Po \
-	./$(DEPDIR)/more_x87_fp-more_x87_fp.Po \
+	./$(DEPDIR)/more_x87_fp-more_x87_fp.Po ./$(DEPDIR)/pcmpgt.Po \
+	./$(DEPDIR)/rh2257546_128.Po ./$(DEPDIR)/rh2257546_256.Po \
 	./$(DEPDIR)/sh-mem-vec128.Po ./$(DEPDIR)/sh-mem-vec256.Po \
 	./$(DEPDIR)/shr_edx-shr_edx.Po ./$(DEPDIR)/sse_memory.Po \
 	./$(DEPDIR)/xor-undef-amd64.Po ./$(DEPDIR)/xsave-avx.Po
@@ -249,14 +269,29 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = bt_everything.c bug132146.c bug279698.c fxsave-amd64.c \
-	insn-bsfl.c insn-pcmpistri.c insn-pmovmskb.c more_x87_fp.c \
-	sh-mem-vec128.c sh-mem-vec256.c shr_edx.c sse_memory.c \
-	xor-undef-amd64.c xsave-avx.c
-DIST_SOURCES = bt_everything.c bug132146.c bug279698.c fxsave-amd64.c \
-	insn-bsfl.c insn-pcmpistri.c insn-pmovmskb.c more_x87_fp.c \
-	sh-mem-vec128.c sh-mem-vec256.c shr_edx.c sse_memory.c \
-	xor-undef-amd64.c xsave-avx.c
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
+SOURCES = bt_everything.c bug132146.c bug279698.c bug492210.c \
+	fxsave-amd64.c insn-bsfl.c insn-pcmpistri.c insn-pmovmskb.c \
+	more_x87_fp.c $(pcmpgt_SOURCES) rh2257546_128.c \
+	rh2257546_256.c sh-mem-vec128.c sh-mem-vec256.c shr_edx.c \
+	sse_memory.c xor-undef-amd64.c xsave-avx.c
+DIST_SOURCES = bt_everything.c bug132146.c bug279698.c bug492210.c \
+	fxsave-amd64.c insn-bsfl.c insn-pcmpistri.c insn-pmovmskb.c \
+	more_x87_fp.c $(pcmpgt_SOURCES) rh2257546_128.c \
+	rh2257546_256.c sh-mem-vec128.c sh-mem-vec256.c shr_edx.c \
+	sse_memory.c xor-undef-amd64.c xsave-avx.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -318,6 +353,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -335,6 +371,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -349,16 +386,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -409,6 +465,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -419,10 +476,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -577,16 +636,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -597,6 +652,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -613,7 +671,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -673,6 +731,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -710,12 +769,19 @@ EXTRA_DIST = \
 		bt_everything.vgtest \
 	bug132146.vgtest bug132146.stderr.exp bug132146.stdout.exp \
 	bug279698.vgtest bug279698.stderr.exp bug279698.stdout.exp \
+	bug492210_1.vgtest bug492210_1.stderr.exp \
+	bug492210_2.vgtest bug492210_2.stderr.exp \
 	fxsave-amd64.vgtest fxsave-amd64.stdout.exp fxsave-amd64.stderr.exp \
 	insn-bsfl.vgtest insn-bsfl.stdout.exp insn-bsfl.stderr.exp \
 	insn-pcmpistri.vgtest insn-pcmpistri.stdout.exp insn-pcmpistri.stderr.exp \
 	insn-pmovmskb.vgtest insn-pmovmskb.stdout.exp insn-pmovmskb.stderr.exp \
 		insn-pmovmskb.stderr.exp-clang \
 	more_x87_fp.stderr.exp more_x87_fp.stdout.exp more_x87_fp.vgtest \
+	pcmpgt.stderr.exp pcmpgt.vgtest \
+	rh2257546_128.vgtest \
+		rh2257546_128.stderr.exp rh2257546_128.stdout.exp \
+	rh2257546_256.vgtest \
+		rh2257546_256.stderr.exp rh2257546_256.stdout.exp \
 	sh-mem-vec128-plo-no.vgtest \
 		sh-mem-vec128-plo-no.stderr.exp \
 		sh-mem-vec128-plo-no.stdout.exp \
@@ -734,17 +800,19 @@ EXTRA_DIST = \
 	xor-undef-amd64.stderr.exp-freebsd xor-undef-amd64.vgtest \
 	xsave-avx.vgtest xsave-avx.stdout.exp xsave-avx.stderr.exp
 
+bug492210_CFLAGS = ${AM_CFLAGS} @FLAG_NO_PIE@ @FLAG_W_NO_UNINITIALIZED@
 fxsave_amd64_CFLAGS = $(AM_CFLAGS) @FLAG_NO_PIE@
 insn_pcmpistri_CFLAGS = $(AM_CFLAGS)
 more_x87_fp_CFLAGS = $(AM_CFLAGS) -O -ffast-math -mfpmath=387 \
 				-mfancy-math-387
 
 more_x87_fp_LDADD = -lm
-shr_edx_CFLAGS = $(AM_CFLAGS) @FLAG_NO_PIE@
+pcmpgt_SOURCES = pcmpgt.cpp
+shr_edx_CFLAGS = $(AM_CFLAGS) @FLAG_NO_PIE@ @FLAG_W_NO_UNINITIALIZED@
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .cpp .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.tool-tests.am $(top_srcdir)/Makefile.all.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -791,6 +859,10 @@ bug279698$(EXEEXT): $(bug279698_OBJECTS) $(bug279698_DEPENDENCIES) $(EXTRA_bug27
 	@rm -f bug279698$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bug279698_OBJECTS) $(bug279698_LDADD) $(LIBS)
 
+bug492210$(EXEEXT): $(bug492210_OBJECTS) $(bug492210_DEPENDENCIES) $(EXTRA_bug492210_DEPENDENCIES) 
+	@rm -f bug492210$(EXEEXT)
+	$(AM_V_CCLD)$(bug492210_LINK) $(bug492210_OBJECTS) $(bug492210_LDADD) $(LIBS)
+
 fxsave-amd64$(EXEEXT): $(fxsave_amd64_OBJECTS) $(fxsave_amd64_DEPENDENCIES) $(EXTRA_fxsave_amd64_DEPENDENCIES) 
 	@rm -f fxsave-amd64$(EXEEXT)
 	$(AM_V_CCLD)$(fxsave_amd64_LINK) $(fxsave_amd64_OBJECTS) $(fxsave_amd64_LDADD) $(LIBS)
@@ -810,6 +882,18 @@ insn-pmovmskb$(EXEEXT): $(insn_pmovmskb_OBJECTS) $(insn_pmovmskb_DEPENDENCIES) $
 more_x87_fp$(EXEEXT): $(more_x87_fp_OBJECTS) $(more_x87_fp_DEPENDENCIES) $(EXTRA_more_x87_fp_DEPENDENCIES) 
 	@rm -f more_x87_fp$(EXEEXT)
 	$(AM_V_CCLD)$(more_x87_fp_LINK) $(more_x87_fp_OBJECTS) $(more_x87_fp_LDADD) $(LIBS)
+
+pcmpgt$(EXEEXT): $(pcmpgt_OBJECTS) $(pcmpgt_DEPENDENCIES) $(EXTRA_pcmpgt_DEPENDENCIES) 
+	@rm -f pcmpgt$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(pcmpgt_OBJECTS) $(pcmpgt_LDADD) $(LIBS)
+
+rh2257546_128$(EXEEXT): $(rh2257546_128_OBJECTS) $(rh2257546_128_DEPENDENCIES) $(EXTRA_rh2257546_128_DEPENDENCIES) 
+	@rm -f rh2257546_128$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(rh2257546_128_OBJECTS) $(rh2257546_128_LDADD) $(LIBS)
+
+rh2257546_256$(EXEEXT): $(rh2257546_256_OBJECTS) $(rh2257546_256_DEPENDENCIES) $(EXTRA_rh2257546_256_DEPENDENCIES) 
+	@rm -f rh2257546_256$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(rh2257546_256_OBJECTS) $(rh2257546_256_LDADD) $(LIBS)
 
 sh-mem-vec128$(EXEEXT): $(sh_mem_vec128_OBJECTS) $(sh_mem_vec128_DEPENDENCIES) $(EXTRA_sh_mem_vec128_DEPENDENCIES) 
 	@rm -f sh-mem-vec128$(EXEEXT)
@@ -844,11 +928,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bt_everything.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug132146.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug279698.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug492210-bug492210.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fxsave_amd64-fxsave-amd64.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn-bsfl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn-pmovmskb.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_pcmpistri-insn-pcmpistri.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/more_x87_fp-more_x87_fp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcmpgt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rh2257546_128.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rh2257546_256.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sh-mem-vec128.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sh-mem-vec256.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shr_edx-shr_edx.Po@am__quote@ # am--include-marker
@@ -877,6 +965,20 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+bug492210-bug492210.o: bug492210.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug492210_CFLAGS) $(CFLAGS) -MT bug492210-bug492210.o -MD -MP -MF $(DEPDIR)/bug492210-bug492210.Tpo -c -o bug492210-bug492210.o `test -f 'bug492210.c' || echo '$(srcdir)/'`bug492210.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug492210-bug492210.Tpo $(DEPDIR)/bug492210-bug492210.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bug492210.c' object='bug492210-bug492210.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug492210_CFLAGS) $(CFLAGS) -c -o bug492210-bug492210.o `test -f 'bug492210.c' || echo '$(srcdir)/'`bug492210.c
+
+bug492210-bug492210.obj: bug492210.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug492210_CFLAGS) $(CFLAGS) -MT bug492210-bug492210.obj -MD -MP -MF $(DEPDIR)/bug492210-bug492210.Tpo -c -o bug492210-bug492210.obj `if test -f 'bug492210.c'; then $(CYGPATH_W) 'bug492210.c'; else $(CYGPATH_W) '$(srcdir)/bug492210.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug492210-bug492210.Tpo $(DEPDIR)/bug492210-bug492210.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bug492210.c' object='bug492210-bug492210.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug492210_CFLAGS) $(CFLAGS) -c -o bug492210-bug492210.obj `if test -f 'bug492210.c'; then $(CYGPATH_W) 'bug492210.c'; else $(CYGPATH_W) '$(srcdir)/bug492210.c'; fi`
 
 fxsave_amd64-fxsave-amd64.o: fxsave-amd64.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(fxsave_amd64_CFLAGS) $(CFLAGS) -MT fxsave_amd64-fxsave-amd64.o -MD -MP -MF $(DEPDIR)/fxsave_amd64-fxsave-amd64.Tpo -c -o fxsave_amd64-fxsave-amd64.o `test -f 'fxsave-amd64.c' || echo '$(srcdir)/'`fxsave-amd64.c
@@ -933,6 +1035,22 @@ shr_edx-shr_edx.obj: shr_edx.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='shr_edx.c' object='shr_edx-shr_edx.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(shr_edx_CFLAGS) $(CFLAGS) -c -o shr_edx-shr_edx.obj `if test -f 'shr_edx.c'; then $(CYGPATH_W) 'shr_edx.c'; else $(CYGPATH_W) '$(srcdir)/shr_edx.c'; fi`
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1062,11 +1180,15 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/bt_everything.Po
 	-rm -f ./$(DEPDIR)/bug132146.Po
 	-rm -f ./$(DEPDIR)/bug279698.Po
+	-rm -f ./$(DEPDIR)/bug492210-bug492210.Po
 	-rm -f ./$(DEPDIR)/fxsave_amd64-fxsave-amd64.Po
 	-rm -f ./$(DEPDIR)/insn-bsfl.Po
 	-rm -f ./$(DEPDIR)/insn-pmovmskb.Po
 	-rm -f ./$(DEPDIR)/insn_pcmpistri-insn-pcmpistri.Po
 	-rm -f ./$(DEPDIR)/more_x87_fp-more_x87_fp.Po
+	-rm -f ./$(DEPDIR)/pcmpgt.Po
+	-rm -f ./$(DEPDIR)/rh2257546_128.Po
+	-rm -f ./$(DEPDIR)/rh2257546_256.Po
 	-rm -f ./$(DEPDIR)/sh-mem-vec128.Po
 	-rm -f ./$(DEPDIR)/sh-mem-vec256.Po
 	-rm -f ./$(DEPDIR)/shr_edx-shr_edx.Po
@@ -1121,11 +1243,15 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/bt_everything.Po
 	-rm -f ./$(DEPDIR)/bug132146.Po
 	-rm -f ./$(DEPDIR)/bug279698.Po
+	-rm -f ./$(DEPDIR)/bug492210-bug492210.Po
 	-rm -f ./$(DEPDIR)/fxsave_amd64-fxsave-amd64.Po
 	-rm -f ./$(DEPDIR)/insn-bsfl.Po
 	-rm -f ./$(DEPDIR)/insn-pmovmskb.Po
 	-rm -f ./$(DEPDIR)/insn_pcmpistri-insn-pcmpistri.Po
 	-rm -f ./$(DEPDIR)/more_x87_fp-more_x87_fp.Po
+	-rm -f ./$(DEPDIR)/pcmpgt.Po
+	-rm -f ./$(DEPDIR)/rh2257546_128.Po
+	-rm -f ./$(DEPDIR)/rh2257546_256.Po
 	-rm -f ./$(DEPDIR)/sh-mem-vec128.Po
 	-rm -f ./$(DEPDIR)/sh-mem-vec256.Po
 	-rm -f ./$(DEPDIR)/shr_edx-shr_edx.Po

@@ -13,6 +13,7 @@
 #define OFFSET_x86_FS 294
 #define OFFSET_x86_GS 296
 #define OFFSET_x86_SS 298
+#define OFFSET_x86_SETC 344
 #define OFFSET_amd64_RAX 16
 #define OFFSET_amd64_RBX 40
 #define OFFSET_amd64_RCX 24
@@ -30,6 +31,7 @@
 #define OFFSET_amd64_R14 128
 #define OFFSET_amd64_R15 136
 #define OFFSET_amd64_RIP 184
+#define OFFSET_amd64_SETC 868
 #define OFFSET_ppc32_GPR0 16
 #define OFFSET_ppc32_GPR1 20
 #define OFFSET_ppc32_GPR2 24
@@ -77,6 +79,7 @@
 #define OFFSET_arm64_X8 80
 #define OFFSET_arm64_XSP 264
 #define OFFSET_arm64_PC 272
+#define OFFSET_arm64_SETC 936
 #define OFFSET_s390x_r2 592
 #define OFFSET_s390x_r3 600
 #define OFFSET_s390x_r4 608

@@ -21,8 +21,7 @@
 <div class="titlepage"><div><div><h1 class="title">
 <a name="dist.readme"></a>4. README</h1></div></div></div>
 <div class="literallayout"><p><br>
-      <br>
-Release notes for Valgrind<br>
+      Release notes for Valgrind<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
 If you are building a binary package of Valgrind for distribution,<br>
 please read README_PACKAGERS.  It contains some important information.<br>
@@ -42,13 +41,11 @@ Valgrind tools that can automatically detect many memory management<br>
 and threading bugs, and profile your programs in detail. You can also<br>
 use Valgrind to build new tools.<br>
 <br>
-The Valgrind distribution currently includes six production-quality<br>
+The Valgrind distribution currently includes seven production-quality<br>
 tools: a memory error detector, two thread error detectors, a cache<br>
 and branch-prediction profiler, a call-graph generating cache and<br>
-branch-prediction profiler, and a heap profiler. It also includes<br>
-three experimental tools: a heap/stack/global array overrun detector,<br>
-a different kind of heap profiler, and a SimPoint basic block vector<br>
-generator.<br>
+branch-prediction profiler, and two heap profilers. It also includes<br>
+one experimental tool: a SimPoint basic block vector generator.<br>
 <br>
 Valgrind is closely tied to details of the CPU, operating system and to<br>
 a lesser extent, compiler and basic C libraries. This makes it difficult<br>
@@ -61,7 +58,7 @@ platforms: <br>
 - PPC64/Linux<br>
 - ARM/Linux<br>
 - ARM64/Linux<br>
-- x86/macOS<br>
+- X86/macOS<br>
 - AMD64/macOS<br>
 - S390X/Linux<br>
 - MIPS32/Linux<br>
@@ -71,6 +68,7 @@ platforms: <br>
 - AMD64/Solaris<br>
 - X86/FreeBSD<br>
 - AMD64/FreeBSD<br>
+- ARM64/FreeBSD<br>
 <br>
 Note that AMD64 is just another name for x86_64, and Valgrind runs fine<br>
 on Intel processors.  Also note that the core of macOS is called<br>

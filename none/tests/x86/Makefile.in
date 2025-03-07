@@ -137,29 +137,30 @@ check_PROGRAMS = aad_aam$(EXEEXT) allexec$(EXEEXT) badseg$(EXEEXT) \
 	bug137714-x86$(EXEEXT) bug152818-x86$(EXEEXT) \
 	cet_nops$(EXEEXT) cmpxchg8b$(EXEEXT) cpuid$(EXEEXT) \
 	cse_fail$(EXEEXT) fcmovnu$(EXEEXT) fpu_lazy_eflags$(EXEEXT) \
-	fxtract$(EXEEXT) getseg$(EXEEXT) incdec_alt$(EXEEXT) \
-	$(am__EXEEXT_4) int$(EXEEXT) jcxz$(EXEEXT) lahf$(EXEEXT) \
-	looper$(EXEEXT) movx$(EXEEXT) sbbmisc$(EXEEXT) \
+	fxtract$(EXEEXT) getseg$(EXEEXT) gnu_binutils_nop$(EXEEXT) \
+	incdec_alt$(EXEEXT) $(am__EXEEXT_4) int$(EXEEXT) jcxz$(EXEEXT) \
+	lahf$(EXEEXT) looper$(EXEEXT) movx$(EXEEXT) sbbmisc$(EXEEXT) \
 	shift_ndep$(EXEEXT) smc1$(EXEEXT) x86locked$(EXEEXT) \
 	x87trigOOR$(EXEEXT) yield$(EXEEXT) xadd$(EXEEXT) \
 	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
-	$(am__EXEEXT_8) $(am__EXEEXT_9)
+	$(am__EXEEXT_8) $(am__EXEEXT_9) $(am__EXEEXT_10)
 @BUILD_SSSE3_TESTS_TRUE@am__append_15 = ssse3_misaligned
-@BUILD_LZCNT_TESTS_TRUE@am__append_16 = lzcnt32
-@BUILD_MOVBE_TESTS_TRUE@am__append_17 = movbe
+@BUILD_SSE42_TESTS_TRUE@am__append_16 = sse4-x86
+@BUILD_LZCNT_TESTS_TRUE@am__append_17 = lzcnt32
+@BUILD_MOVBE_TESTS_TRUE@am__append_18 = movbe
 # Sun Studio assembler fails to assemble the bound instruction
 # clang errors out complaining that %eax as the 1st operand in the bound
 # insn is an invalid operand.
-@COMPILER_IS_CLANG_FALSE@@SOLARIS_SUN_STUDIO_AS_FALSE@@VGCONF_OS_IS_DARWIN_FALSE@am__append_18 = faultstatus
+@COMPILER_IS_CLANG_FALSE@@SOLARIS_SUN_STUDIO_AS_FALSE@@VGCONF_OS_IS_DARWIN_FALSE@am__append_19 = faultstatus
 # Sun Studio assembler fails to assemble pushw %fs, popw %fs
-@SOLARIS_SUN_STUDIO_AS_FALSE@am__append_19 = pushpopseg
+@SOLARIS_SUN_STUDIO_AS_FALSE@am__append_20 = pushpopseg
 
 # Some of the tests (bug125959_x86, bug152818_x86, insn_*) need
 # -mdynamic-no-pic.  I tried setting *_CFLAGS separately for all of them,
 # but it caused problems with the generation of insn_*.c.  So just use this
 # crude approach of setting -mdynamic-no-pic for all tests in this
 # directory.
-@VGCONF_OS_IS_DARWIN_TRUE@am__append_20 = -mdynamic-no-pic
+@VGCONF_OS_IS_DARWIN_TRUE@am__append_21 = -mdynamic-no-pic
 subdir = none/tests/x86
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -179,10 +180,11 @@ am__EXEEXT_4 = insn_basic$(EXEEXT) insn_cmov$(EXEEXT) \
 	insn_sse2$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
 	$(am__EXEEXT_3)
 @BUILD_SSSE3_TESTS_TRUE@am__EXEEXT_5 = ssse3_misaligned$(EXEEXT)
-@BUILD_LZCNT_TESTS_TRUE@am__EXEEXT_6 = lzcnt32$(EXEEXT)
-@BUILD_MOVBE_TESTS_TRUE@am__EXEEXT_7 = movbe$(EXEEXT)
-@COMPILER_IS_CLANG_FALSE@@SOLARIS_SUN_STUDIO_AS_FALSE@@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_8 = faultstatus$(EXEEXT)
-@SOLARIS_SUN_STUDIO_AS_FALSE@am__EXEEXT_9 = pushpopseg$(EXEEXT)
+@BUILD_SSE42_TESTS_TRUE@am__EXEEXT_6 = sse4-x86$(EXEEXT)
+@BUILD_LZCNT_TESTS_TRUE@am__EXEEXT_7 = lzcnt32$(EXEEXT)
+@BUILD_MOVBE_TESTS_TRUE@am__EXEEXT_8 = movbe$(EXEEXT)
+@COMPILER_IS_CLANG_FALSE@@SOLARIS_SUN_STUDIO_AS_FALSE@@VGCONF_OS_IS_DARWIN_FALSE@am__EXEEXT_9 = faultstatus$(EXEEXT)
+@SOLARIS_SUN_STUDIO_AS_FALSE@am__EXEEXT_10 = pushpopseg$(EXEEXT)
 aad_aam_SOURCES = aad_aam.c
 aad_aam_OBJECTS = aad_aam.$(OBJEXT)
 aad_aam_LDADD = $(LDADD)
@@ -252,6 +254,9 @@ fxtract_LINK = $(CCLD) $(fxtract_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 getseg_SOURCES = getseg.c
 getseg_OBJECTS = getseg.$(OBJEXT)
 getseg_LDADD = $(LDADD)
+gnu_binutils_nop_SOURCES = gnu_binutils_nop.c
+gnu_binutils_nop_OBJECTS = gnu_binutils_nop.$(OBJEXT)
+gnu_binutils_nop_LDADD = $(LDADD)
 incdec_alt_SOURCES = incdec_alt.c
 incdec_alt_OBJECTS = incdec_alt.$(OBJEXT)
 incdec_alt_LDADD = $(LDADD)
@@ -315,6 +320,9 @@ shift_ndep_LDADD = $(LDADD)
 smc1_SOURCES = smc1.c
 smc1_OBJECTS = smc1.$(OBJEXT)
 smc1_LDADD = $(LDADD)
+sse4_x86_SOURCES = sse4-x86.c
+sse4_x86_OBJECTS = sse4-x86.$(OBJEXT)
+sse4_x86_LDADD = $(LDADD)
 ssse3_misaligned_SOURCES = ssse3_misaligned.c
 ssse3_misaligned_OBJECTS = ssse3_misaligned.$(OBJEXT)
 ssse3_misaligned_LDADD = $(LDADD)
@@ -360,16 +368,17 @@ am__depfiles_remade = ./$(DEPDIR)/aad_aam.Po \
 	./$(DEPDIR)/faultstatus.Po ./$(DEPDIR)/fcmovnu.Po \
 	./$(DEPDIR)/fpu_lazy_eflags-fpu_lazy_eflags.Po \
 	./$(DEPDIR)/fxtract-fxtract.Po ./$(DEPDIR)/getseg.Po \
-	./$(DEPDIR)/incdec_alt.Po ./$(DEPDIR)/insn_basic.Po \
-	./$(DEPDIR)/insn_cmov.Po ./$(DEPDIR)/insn_fpu.Po \
-	./$(DEPDIR)/insn_mmx.Po ./$(DEPDIR)/insn_mmxext.Po \
-	./$(DEPDIR)/insn_sse.Po ./$(DEPDIR)/insn_sse2.Po \
-	./$(DEPDIR)/insn_sse3.Po ./$(DEPDIR)/insn_ssse3.Po \
-	./$(DEPDIR)/int.Po ./$(DEPDIR)/jcxz.Po ./$(DEPDIR)/lahf.Po \
-	./$(DEPDIR)/looper.Po ./$(DEPDIR)/lzcnt32.Po \
-	./$(DEPDIR)/movbe.Po ./$(DEPDIR)/movx.Po \
-	./$(DEPDIR)/pushpopseg.Po ./$(DEPDIR)/sbbmisc.Po \
-	./$(DEPDIR)/shift_ndep.Po ./$(DEPDIR)/smc1.Po \
+	./$(DEPDIR)/gnu_binutils_nop.Po ./$(DEPDIR)/incdec_alt.Po \
+	./$(DEPDIR)/insn_basic.Po ./$(DEPDIR)/insn_cmov.Po \
+	./$(DEPDIR)/insn_fpu.Po ./$(DEPDIR)/insn_mmx.Po \
+	./$(DEPDIR)/insn_mmxext.Po ./$(DEPDIR)/insn_sse.Po \
+	./$(DEPDIR)/insn_sse2.Po ./$(DEPDIR)/insn_sse3.Po \
+	./$(DEPDIR)/insn_ssse3.Po ./$(DEPDIR)/int.Po \
+	./$(DEPDIR)/jcxz.Po ./$(DEPDIR)/lahf.Po ./$(DEPDIR)/looper.Po \
+	./$(DEPDIR)/lzcnt32.Po ./$(DEPDIR)/movbe.Po \
+	./$(DEPDIR)/movx.Po ./$(DEPDIR)/pushpopseg.Po \
+	./$(DEPDIR)/sbbmisc.Po ./$(DEPDIR)/shift_ndep.Po \
+	./$(DEPDIR)/smc1.Po ./$(DEPDIR)/sse4-x86.Po \
 	./$(DEPDIR)/ssse3_misaligned.Po \
 	./$(DEPDIR)/x86locked-x86locked.Po ./$(DEPDIR)/x87trigOOR.Po \
 	./$(DEPDIR)/xadd.Po ./$(DEPDIR)/yield.Po
@@ -400,24 +409,28 @@ SOURCES = aad_aam.c allexec.c badseg.c bswapw.c bt_everything.c \
 	bt_literal.c bug125959-x86.c bug126147-x86.c bug132813-x86.c \
 	bug135421-x86.c bug137714-x86.c bug152818-x86.c cet_nops.c \
 	cmpxchg8b.c $(cpuid_SOURCES) cse_fail.c faultstatus.c \
-	fcmovnu.c fpu_lazy_eflags.c fxtract.c getseg.c incdec_alt.c \
-	$(insn_basic_SOURCES) $(insn_cmov_SOURCES) $(insn_fpu_SOURCES) \
-	$(insn_mmx_SOURCES) $(insn_mmxext_SOURCES) $(insn_sse_SOURCES) \
+	fcmovnu.c fpu_lazy_eflags.c fxtract.c getseg.c \
+	gnu_binutils_nop.c incdec_alt.c $(insn_basic_SOURCES) \
+	$(insn_cmov_SOURCES) $(insn_fpu_SOURCES) $(insn_mmx_SOURCES) \
+	$(insn_mmxext_SOURCES) $(insn_sse_SOURCES) \
 	$(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
 	$(insn_ssse3_SOURCES) int.c jcxz.c lahf.c looper.c lzcnt32.c \
 	movbe.c movx.c pushpopseg.c sbbmisc.c shift_ndep.c smc1.c \
-	ssse3_misaligned.c x86locked.c x87trigOOR.c xadd.c yield.c
+	sse4-x86.c ssse3_misaligned.c x86locked.c x87trigOOR.c xadd.c \
+	yield.c
 DIST_SOURCES = aad_aam.c allexec.c badseg.c bswapw.c bt_everything.c \
 	bt_literal.c bug125959-x86.c bug126147-x86.c bug132813-x86.c \
 	bug135421-x86.c bug137714-x86.c bug152818-x86.c cet_nops.c \
 	cmpxchg8b.c $(cpuid_SOURCES) cse_fail.c faultstatus.c \
-	fcmovnu.c fpu_lazy_eflags.c fxtract.c getseg.c incdec_alt.c \
-	$(insn_basic_SOURCES) $(insn_cmov_SOURCES) $(insn_fpu_SOURCES) \
-	$(insn_mmx_SOURCES) $(insn_mmxext_SOURCES) $(insn_sse_SOURCES) \
+	fcmovnu.c fpu_lazy_eflags.c fxtract.c getseg.c \
+	gnu_binutils_nop.c incdec_alt.c $(insn_basic_SOURCES) \
+	$(insn_cmov_SOURCES) $(insn_fpu_SOURCES) $(insn_mmx_SOURCES) \
+	$(insn_mmxext_SOURCES) $(insn_sse_SOURCES) \
 	$(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
 	$(insn_ssse3_SOURCES) int.c jcxz.c lahf.c looper.c lzcnt32.c \
 	movbe.c movx.c pushpopseg.c sbbmisc.c shift_ndep.c smc1.c \
-	ssse3_misaligned.c x86locked.c x87trigOOR.c xadd.c yield.c
+	sse4-x86.c ssse3_misaligned.c x86locked.c x87trigOOR.c xadd.c \
+	yield.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -479,6 +492,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -496,6 +510,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -510,16 +525,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -570,6 +604,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -580,10 +615,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -738,16 +775,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -758,6 +791,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -774,7 +810,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -834,6 +870,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -854,7 +891,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include \
 # as $(AM_FLAG_M3264_PRI).
 AM_CFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 	@FLAG_FNO_STACK_PROTECTOR@ $(am__append_9) $(am__append_10) \
-	@FLAG_M32@ $(FLAG_MMMX) $(FLAG_MSSE) $(am__append_20)
+	@FLAG_M32@ $(FLAG_MMMX) $(FLAG_MSSE) $(am__append_21)
 AM_CXXFLAGS = -Winline -Wall -Wshadow -Wno-long-long -g \
 	@FLAG_FNO_STACK_PROTECTOR@ $(am__append_11) @FLAG_M32@ \
 	$(FLAG_MMMX) $(FLAG_MSSE)
@@ -894,6 +931,7 @@ EXTRA_DIST = \
 	fxtract.stdout.exp fxtract.stderr.exp fxtract.vgtest \
 	fxtract.stdout.exp-older-glibc \
 	getseg.stdout.exp getseg.stderr.exp getseg.vgtest \
+	gnu_binutils_nop.stderr.exp gnu_binutils_nop.vgtest \
 	incdec_alt.stdout.exp incdec_alt.stderr.exp incdec_alt.vgtest \
 	int.stderr.exp int.stdout.exp int.disabled \
 	$(addsuffix .stderr.exp,$(INSN_TESTS)) \
@@ -916,6 +954,7 @@ EXTRA_DIST = \
 	smc1.stderr.exp smc1.stdout.exp smc1.vgtest \
 	ssse3_misaligned.stderr.exp ssse3_misaligned.stdout.exp \
 	ssse3_misaligned.vgtest ssse3_misaligned.c \
+	sse4-x86.stdout.exp sse4-x86.stderr.exp sse4-x86.vgtest \
 	x86locked.vgtest x86locked.stdout.exp x86locked.stderr.exp \
 	x87trigOOR.vgtest x87trigOOR.stdout.exp x87trigOOR.stderr.exp \
 	yield.stderr.exp yield.stdout.exp yield.disabled \
@@ -1069,6 +1108,10 @@ getseg$(EXEEXT): $(getseg_OBJECTS) $(getseg_DEPENDENCIES) $(EXTRA_getseg_DEPENDE
 	@rm -f getseg$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(getseg_OBJECTS) $(getseg_LDADD) $(LIBS)
 
+gnu_binutils_nop$(EXEEXT): $(gnu_binutils_nop_OBJECTS) $(gnu_binutils_nop_DEPENDENCIES) $(EXTRA_gnu_binutils_nop_DEPENDENCIES) 
+	@rm -f gnu_binutils_nop$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(gnu_binutils_nop_OBJECTS) $(gnu_binutils_nop_LDADD) $(LIBS)
+
 incdec_alt$(EXEEXT): $(incdec_alt_OBJECTS) $(incdec_alt_DEPENDENCIES) $(EXTRA_incdec_alt_DEPENDENCIES) 
 	@rm -f incdec_alt$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(incdec_alt_OBJECTS) $(incdec_alt_LDADD) $(LIBS)
@@ -1153,6 +1196,10 @@ smc1$(EXEEXT): $(smc1_OBJECTS) $(smc1_DEPENDENCIES) $(EXTRA_smc1_DEPENDENCIES)
 	@rm -f smc1$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(smc1_OBJECTS) $(smc1_LDADD) $(LIBS)
 
+sse4-x86$(EXEEXT): $(sse4_x86_OBJECTS) $(sse4_x86_DEPENDENCIES) $(EXTRA_sse4_x86_DEPENDENCIES) 
+	@rm -f sse4-x86$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(sse4_x86_OBJECTS) $(sse4_x86_LDADD) $(LIBS)
+
 ssse3_misaligned$(EXEEXT): $(ssse3_misaligned_OBJECTS) $(ssse3_misaligned_DEPENDENCIES) $(EXTRA_ssse3_misaligned_DEPENDENCIES) 
 	@rm -f ssse3_misaligned$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ssse3_misaligned_OBJECTS) $(ssse3_misaligned_LDADD) $(LIBS)
@@ -1201,6 +1248,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fpu_lazy_eflags-fpu_lazy_eflags.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fxtract-fxtract.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getseg.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gnu_binutils_nop.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/incdec_alt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_basic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_cmov.Po@am__quote@ # am--include-marker
@@ -1222,6 +1270,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sbbmisc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shift_ndep.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/smc1.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sse4-x86.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssse3_misaligned.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x86locked-x86locked.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x87trigOOR.Po@am__quote@ # am--include-marker
@@ -1470,6 +1519,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/fpu_lazy_eflags-fpu_lazy_eflags.Po
 	-rm -f ./$(DEPDIR)/fxtract-fxtract.Po
 	-rm -f ./$(DEPDIR)/getseg.Po
+	-rm -f ./$(DEPDIR)/gnu_binutils_nop.Po
 	-rm -f ./$(DEPDIR)/incdec_alt.Po
 	-rm -f ./$(DEPDIR)/insn_basic.Po
 	-rm -f ./$(DEPDIR)/insn_cmov.Po
@@ -1491,6 +1541,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/sbbmisc.Po
 	-rm -f ./$(DEPDIR)/shift_ndep.Po
 	-rm -f ./$(DEPDIR)/smc1.Po
+	-rm -f ./$(DEPDIR)/sse4-x86.Po
 	-rm -f ./$(DEPDIR)/ssse3_misaligned.Po
 	-rm -f ./$(DEPDIR)/x86locked-x86locked.Po
 	-rm -f ./$(DEPDIR)/x87trigOOR.Po
@@ -1563,6 +1614,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/fpu_lazy_eflags-fpu_lazy_eflags.Po
 	-rm -f ./$(DEPDIR)/fxtract-fxtract.Po
 	-rm -f ./$(DEPDIR)/getseg.Po
+	-rm -f ./$(DEPDIR)/gnu_binutils_nop.Po
 	-rm -f ./$(DEPDIR)/incdec_alt.Po
 	-rm -f ./$(DEPDIR)/insn_basic.Po
 	-rm -f ./$(DEPDIR)/insn_cmov.Po
@@ -1584,6 +1636,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/sbbmisc.Po
 	-rm -f ./$(DEPDIR)/shift_ndep.Po
 	-rm -f ./$(DEPDIR)/smc1.Po
+	-rm -f ./$(DEPDIR)/sse4-x86.Po
 	-rm -f ./$(DEPDIR)/ssse3_misaligned.Po
 	-rm -f ./$(DEPDIR)/x86locked-x86locked.Po
 	-rm -f ./$(DEPDIR)/x87trigOOR.Po

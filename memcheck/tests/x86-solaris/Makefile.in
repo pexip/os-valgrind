@@ -145,17 +145,25 @@ context_eflags_SOURCES = context_eflags.c
 context_eflags_OBJECTS = context_eflags.$(OBJEXT)
 context_eflags_LDADD = $(LDADD)
 context_eflags2_SOURCES = context_eflags2.c
-context_eflags2_OBJECTS = context_eflags2.$(OBJEXT)
+context_eflags2_OBJECTS = context_eflags2-context_eflags2.$(OBJEXT)
 context_eflags2_LDADD = $(LDADD)
+context_eflags2_LINK = $(CCLD) $(context_eflags2_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 context_fpu_SOURCES = context_fpu.c
-context_fpu_OBJECTS = context_fpu.$(OBJEXT)
+context_fpu_OBJECTS = context_fpu-context_fpu.$(OBJEXT)
 context_fpu_LDADD = $(LDADD)
+context_fpu_LINK = $(CCLD) $(context_fpu_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 context_gpr_SOURCES = context_gpr.c
-context_gpr_OBJECTS = context_gpr.$(OBJEXT)
+context_gpr_OBJECTS = context_gpr-context_gpr.$(OBJEXT)
 context_gpr_LDADD = $(LDADD)
+context_gpr_LINK = $(CCLD) $(context_gpr_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 context_sse_SOURCES = context_sse.c
-context_sse_OBJECTS = context_sse.$(OBJEXT)
+context_sse_OBJECTS = context_sse-context_sse.$(OBJEXT)
 context_sse_LDADD = $(LDADD)
+context_sse_LINK = $(CCLD) $(context_sse_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 ldsoexec_SOURCES = ldsoexec.c
 ldsoexec_OBJECTS = ldsoexec.$(OBJEXT)
 ldsoexec_LDADD = $(LDADD)
@@ -165,8 +173,10 @@ scalar_LDADD = $(LDADD)
 scalar_LINK = $(CCLD) $(scalar_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 scalar_obsolete_SOURCES = scalar_obsolete.c
-scalar_obsolete_OBJECTS = scalar_obsolete.$(OBJEXT)
+scalar_obsolete_OBJECTS = scalar_obsolete-scalar_obsolete.$(OBJEXT)
 scalar_obsolete_LDADD = $(LDADD)
+scalar_obsolete_LINK = $(CCLD) $(scalar_obsolete_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SCRIPTS = $(dist_noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -184,10 +194,12 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/context_eflags.Po \
-	./$(DEPDIR)/context_eflags2.Po ./$(DEPDIR)/context_fpu.Po \
-	./$(DEPDIR)/context_gpr.Po ./$(DEPDIR)/context_sse.Po \
-	./$(DEPDIR)/ldsoexec.Po ./$(DEPDIR)/scalar-scalar.Po \
-	./$(DEPDIR)/scalar_obsolete.Po
+	./$(DEPDIR)/context_eflags2-context_eflags2.Po \
+	./$(DEPDIR)/context_fpu-context_fpu.Po \
+	./$(DEPDIR)/context_gpr-context_gpr.Po \
+	./$(DEPDIR)/context_sse-context_sse.Po ./$(DEPDIR)/ldsoexec.Po \
+	./$(DEPDIR)/scalar-scalar.Po \
+	./$(DEPDIR)/scalar_obsolete-scalar_obsolete.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -272,6 +284,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -289,6 +302,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -303,16 +317,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -363,6 +396,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -373,10 +407,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -531,16 +567,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -551,6 +583,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -567,7 +602,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -627,6 +662,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -665,7 +701,12 @@ EXTRA_DIST = \
 	context_sse.stderr.exp context_sse.stdout.exp context_sse.vgtest \
 	ldsoexec.stderr.exp ldsoexec.vgtest
 
-scalar_CFLAGS = $(AM_CFLAGS) -I../solaris
+context_eflags2_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+context_fpu_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+context_gpr_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+context_sse_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+scalar_CFLAGS = $(AM_CFLAGS) -I../solaris @FLAG_W_NO_UNINITIALIZED@
+scalar_obsolete_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_UNINITIALIZED@
 all: all-am
 
 .SUFFIXES:
@@ -710,19 +751,19 @@ context_eflags$(EXEEXT): $(context_eflags_OBJECTS) $(context_eflags_DEPENDENCIES
 
 context_eflags2$(EXEEXT): $(context_eflags2_OBJECTS) $(context_eflags2_DEPENDENCIES) $(EXTRA_context_eflags2_DEPENDENCIES) 
 	@rm -f context_eflags2$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(context_eflags2_OBJECTS) $(context_eflags2_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(context_eflags2_LINK) $(context_eflags2_OBJECTS) $(context_eflags2_LDADD) $(LIBS)
 
 context_fpu$(EXEEXT): $(context_fpu_OBJECTS) $(context_fpu_DEPENDENCIES) $(EXTRA_context_fpu_DEPENDENCIES) 
 	@rm -f context_fpu$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(context_fpu_OBJECTS) $(context_fpu_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(context_fpu_LINK) $(context_fpu_OBJECTS) $(context_fpu_LDADD) $(LIBS)
 
 context_gpr$(EXEEXT): $(context_gpr_OBJECTS) $(context_gpr_DEPENDENCIES) $(EXTRA_context_gpr_DEPENDENCIES) 
 	@rm -f context_gpr$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(context_gpr_OBJECTS) $(context_gpr_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(context_gpr_LINK) $(context_gpr_OBJECTS) $(context_gpr_LDADD) $(LIBS)
 
 context_sse$(EXEEXT): $(context_sse_OBJECTS) $(context_sse_DEPENDENCIES) $(EXTRA_context_sse_DEPENDENCIES) 
 	@rm -f context_sse$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(context_sse_OBJECTS) $(context_sse_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(context_sse_LINK) $(context_sse_OBJECTS) $(context_sse_LDADD) $(LIBS)
 
 ldsoexec$(EXEEXT): $(ldsoexec_OBJECTS) $(ldsoexec_DEPENDENCIES) $(EXTRA_ldsoexec_DEPENDENCIES) 
 	@rm -f ldsoexec$(EXEEXT)
@@ -734,7 +775,7 @@ scalar$(EXEEXT): $(scalar_OBJECTS) $(scalar_DEPENDENCIES) $(EXTRA_scalar_DEPENDE
 
 scalar_obsolete$(EXEEXT): $(scalar_obsolete_OBJECTS) $(scalar_obsolete_DEPENDENCIES) $(EXTRA_scalar_obsolete_DEPENDENCIES) 
 	@rm -f scalar_obsolete$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(scalar_obsolete_OBJECTS) $(scalar_obsolete_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(scalar_obsolete_LINK) $(scalar_obsolete_OBJECTS) $(scalar_obsolete_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -743,13 +784,13 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_eflags.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_eflags2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_fpu.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_gpr.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_sse.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_eflags2-context_eflags2.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_fpu-context_fpu.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_gpr-context_gpr.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context_sse-context_sse.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldsoexec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar-scalar.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_obsolete.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scalar_obsolete-scalar_obsolete.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -773,6 +814,62 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
+context_eflags2-context_eflags2.o: context_eflags2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_eflags2_CFLAGS) $(CFLAGS) -MT context_eflags2-context_eflags2.o -MD -MP -MF $(DEPDIR)/context_eflags2-context_eflags2.Tpo -c -o context_eflags2-context_eflags2.o `test -f 'context_eflags2.c' || echo '$(srcdir)/'`context_eflags2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_eflags2-context_eflags2.Tpo $(DEPDIR)/context_eflags2-context_eflags2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_eflags2.c' object='context_eflags2-context_eflags2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_eflags2_CFLAGS) $(CFLAGS) -c -o context_eflags2-context_eflags2.o `test -f 'context_eflags2.c' || echo '$(srcdir)/'`context_eflags2.c
+
+context_eflags2-context_eflags2.obj: context_eflags2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_eflags2_CFLAGS) $(CFLAGS) -MT context_eflags2-context_eflags2.obj -MD -MP -MF $(DEPDIR)/context_eflags2-context_eflags2.Tpo -c -o context_eflags2-context_eflags2.obj `if test -f 'context_eflags2.c'; then $(CYGPATH_W) 'context_eflags2.c'; else $(CYGPATH_W) '$(srcdir)/context_eflags2.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_eflags2-context_eflags2.Tpo $(DEPDIR)/context_eflags2-context_eflags2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_eflags2.c' object='context_eflags2-context_eflags2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_eflags2_CFLAGS) $(CFLAGS) -c -o context_eflags2-context_eflags2.obj `if test -f 'context_eflags2.c'; then $(CYGPATH_W) 'context_eflags2.c'; else $(CYGPATH_W) '$(srcdir)/context_eflags2.c'; fi`
+
+context_fpu-context_fpu.o: context_fpu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_fpu_CFLAGS) $(CFLAGS) -MT context_fpu-context_fpu.o -MD -MP -MF $(DEPDIR)/context_fpu-context_fpu.Tpo -c -o context_fpu-context_fpu.o `test -f 'context_fpu.c' || echo '$(srcdir)/'`context_fpu.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_fpu-context_fpu.Tpo $(DEPDIR)/context_fpu-context_fpu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_fpu.c' object='context_fpu-context_fpu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_fpu_CFLAGS) $(CFLAGS) -c -o context_fpu-context_fpu.o `test -f 'context_fpu.c' || echo '$(srcdir)/'`context_fpu.c
+
+context_fpu-context_fpu.obj: context_fpu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_fpu_CFLAGS) $(CFLAGS) -MT context_fpu-context_fpu.obj -MD -MP -MF $(DEPDIR)/context_fpu-context_fpu.Tpo -c -o context_fpu-context_fpu.obj `if test -f 'context_fpu.c'; then $(CYGPATH_W) 'context_fpu.c'; else $(CYGPATH_W) '$(srcdir)/context_fpu.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_fpu-context_fpu.Tpo $(DEPDIR)/context_fpu-context_fpu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_fpu.c' object='context_fpu-context_fpu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_fpu_CFLAGS) $(CFLAGS) -c -o context_fpu-context_fpu.obj `if test -f 'context_fpu.c'; then $(CYGPATH_W) 'context_fpu.c'; else $(CYGPATH_W) '$(srcdir)/context_fpu.c'; fi`
+
+context_gpr-context_gpr.o: context_gpr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_gpr_CFLAGS) $(CFLAGS) -MT context_gpr-context_gpr.o -MD -MP -MF $(DEPDIR)/context_gpr-context_gpr.Tpo -c -o context_gpr-context_gpr.o `test -f 'context_gpr.c' || echo '$(srcdir)/'`context_gpr.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_gpr-context_gpr.Tpo $(DEPDIR)/context_gpr-context_gpr.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_gpr.c' object='context_gpr-context_gpr.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_gpr_CFLAGS) $(CFLAGS) -c -o context_gpr-context_gpr.o `test -f 'context_gpr.c' || echo '$(srcdir)/'`context_gpr.c
+
+context_gpr-context_gpr.obj: context_gpr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_gpr_CFLAGS) $(CFLAGS) -MT context_gpr-context_gpr.obj -MD -MP -MF $(DEPDIR)/context_gpr-context_gpr.Tpo -c -o context_gpr-context_gpr.obj `if test -f 'context_gpr.c'; then $(CYGPATH_W) 'context_gpr.c'; else $(CYGPATH_W) '$(srcdir)/context_gpr.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_gpr-context_gpr.Tpo $(DEPDIR)/context_gpr-context_gpr.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_gpr.c' object='context_gpr-context_gpr.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_gpr_CFLAGS) $(CFLAGS) -c -o context_gpr-context_gpr.obj `if test -f 'context_gpr.c'; then $(CYGPATH_W) 'context_gpr.c'; else $(CYGPATH_W) '$(srcdir)/context_gpr.c'; fi`
+
+context_sse-context_sse.o: context_sse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_sse_CFLAGS) $(CFLAGS) -MT context_sse-context_sse.o -MD -MP -MF $(DEPDIR)/context_sse-context_sse.Tpo -c -o context_sse-context_sse.o `test -f 'context_sse.c' || echo '$(srcdir)/'`context_sse.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_sse-context_sse.Tpo $(DEPDIR)/context_sse-context_sse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_sse.c' object='context_sse-context_sse.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_sse_CFLAGS) $(CFLAGS) -c -o context_sse-context_sse.o `test -f 'context_sse.c' || echo '$(srcdir)/'`context_sse.c
+
+context_sse-context_sse.obj: context_sse.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_sse_CFLAGS) $(CFLAGS) -MT context_sse-context_sse.obj -MD -MP -MF $(DEPDIR)/context_sse-context_sse.Tpo -c -o context_sse-context_sse.obj `if test -f 'context_sse.c'; then $(CYGPATH_W) 'context_sse.c'; else $(CYGPATH_W) '$(srcdir)/context_sse.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/context_sse-context_sse.Tpo $(DEPDIR)/context_sse-context_sse.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='context_sse.c' object='context_sse-context_sse.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(context_sse_CFLAGS) $(CFLAGS) -c -o context_sse-context_sse.obj `if test -f 'context_sse.c'; then $(CYGPATH_W) 'context_sse.c'; else $(CYGPATH_W) '$(srcdir)/context_sse.c'; fi`
+
 scalar-scalar.o: scalar.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -MT scalar-scalar.o -MD -MP -MF $(DEPDIR)/scalar-scalar.Tpo -c -o scalar-scalar.o `test -f 'scalar.c' || echo '$(srcdir)/'`scalar.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar-scalar.Tpo $(DEPDIR)/scalar-scalar.Po
@@ -786,6 +883,20 @@ scalar-scalar.obj: scalar.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar.c' object='scalar-scalar.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_CFLAGS) $(CFLAGS) -c -o scalar-scalar.obj `if test -f 'scalar.c'; then $(CYGPATH_W) 'scalar.c'; else $(CYGPATH_W) '$(srcdir)/scalar.c'; fi`
+
+scalar_obsolete-scalar_obsolete.o: scalar_obsolete.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_obsolete_CFLAGS) $(CFLAGS) -MT scalar_obsolete-scalar_obsolete.o -MD -MP -MF $(DEPDIR)/scalar_obsolete-scalar_obsolete.Tpo -c -o scalar_obsolete-scalar_obsolete.o `test -f 'scalar_obsolete.c' || echo '$(srcdir)/'`scalar_obsolete.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_obsolete-scalar_obsolete.Tpo $(DEPDIR)/scalar_obsolete-scalar_obsolete.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_obsolete.c' object='scalar_obsolete-scalar_obsolete.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_obsolete_CFLAGS) $(CFLAGS) -c -o scalar_obsolete-scalar_obsolete.o `test -f 'scalar_obsolete.c' || echo '$(srcdir)/'`scalar_obsolete.c
+
+scalar_obsolete-scalar_obsolete.obj: scalar_obsolete.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_obsolete_CFLAGS) $(CFLAGS) -MT scalar_obsolete-scalar_obsolete.obj -MD -MP -MF $(DEPDIR)/scalar_obsolete-scalar_obsolete.Tpo -c -o scalar_obsolete-scalar_obsolete.obj `if test -f 'scalar_obsolete.c'; then $(CYGPATH_W) 'scalar_obsolete.c'; else $(CYGPATH_W) '$(srcdir)/scalar_obsolete.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/scalar_obsolete-scalar_obsolete.Tpo $(DEPDIR)/scalar_obsolete-scalar_obsolete.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='scalar_obsolete.c' object='scalar_obsolete-scalar_obsolete.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(scalar_obsolete_CFLAGS) $(CFLAGS) -c -o scalar_obsolete-scalar_obsolete.obj `if test -f 'scalar_obsolete.c'; then $(CYGPATH_W) 'scalar_obsolete.c'; else $(CYGPATH_W) '$(srcdir)/scalar_obsolete.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -913,13 +1024,13 @@ clean-am: clean-checkPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/context_eflags.Po
-	-rm -f ./$(DEPDIR)/context_eflags2.Po
-	-rm -f ./$(DEPDIR)/context_fpu.Po
-	-rm -f ./$(DEPDIR)/context_gpr.Po
-	-rm -f ./$(DEPDIR)/context_sse.Po
+	-rm -f ./$(DEPDIR)/context_eflags2-context_eflags2.Po
+	-rm -f ./$(DEPDIR)/context_fpu-context_fpu.Po
+	-rm -f ./$(DEPDIR)/context_gpr-context_gpr.Po
+	-rm -f ./$(DEPDIR)/context_sse-context_sse.Po
 	-rm -f ./$(DEPDIR)/ldsoexec.Po
 	-rm -f ./$(DEPDIR)/scalar-scalar.Po
-	-rm -f ./$(DEPDIR)/scalar_obsolete.Po
+	-rm -f ./$(DEPDIR)/scalar_obsolete-scalar_obsolete.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -966,13 +1077,13 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/context_eflags.Po
-	-rm -f ./$(DEPDIR)/context_eflags2.Po
-	-rm -f ./$(DEPDIR)/context_fpu.Po
-	-rm -f ./$(DEPDIR)/context_gpr.Po
-	-rm -f ./$(DEPDIR)/context_sse.Po
+	-rm -f ./$(DEPDIR)/context_eflags2-context_eflags2.Po
+	-rm -f ./$(DEPDIR)/context_fpu-context_fpu.Po
+	-rm -f ./$(DEPDIR)/context_gpr-context_gpr.Po
+	-rm -f ./$(DEPDIR)/context_sse-context_sse.Po
 	-rm -f ./$(DEPDIR)/ldsoexec.Po
 	-rm -f ./$(DEPDIR)/scalar-scalar.Po
-	-rm -f ./$(DEPDIR)/scalar_obsolete.Po
+	-rm -f ./$(DEPDIR)/scalar_obsolete-scalar_obsolete.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -131,7 +131,7 @@ check_PROGRAMS = block_all_signals$(EXEEXT) blockfault$(EXEEXT) \
 	mmap_noreserve$(EXEEXT) proc_aout$(EXEEXT) proc_auxv$(EXEEXT) \
 	proc_auxv_multiple$(EXEEXT) proc_psinfo$(EXEEXT) \
 	posix_spawn$(EXEEXT) pthread-stack$(EXEEXT) resolv$(EXEEXT) \
-	sigresend$(EXEEXT) stack-overflow$(EXEEXT) stack_prot$(EXEEXT) \
+	sigresend$(EXEEXT) stack_overflow$(EXEEXT) stack_prot$(EXEEXT) \
 	threads_exitall$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
 @SOLARIS_RESERVE_SYSSTAT_ADDR_TRUE@am__append_12 = reserve_sysstat_addr
 @SOLARIS_RESERVE_SYSSTAT_ZONE_ADDR_TRUE@am__append_13 = reserve_sysstat_zone_addr
@@ -210,9 +210,11 @@ resolv_DEPENDENCIES =
 sigresend_SOURCES = sigresend.c
 sigresend_OBJECTS = sigresend.$(OBJEXT)
 sigresend_LDADD = $(LDADD)
-stack_overflow_SOURCES = stack-overflow.c
-stack_overflow_OBJECTS = stack-overflow.$(OBJEXT)
+stack_overflow_SOURCES = stack_overflow.c
+stack_overflow_OBJECTS = stack_overflow-stack_overflow.$(OBJEXT)
 stack_overflow_LDADD = $(LDADD)
+stack_overflow_LINK = $(CCLD) $(stack_overflow_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 stack_prot_SOURCES = stack_prot.c
 stack_prot_OBJECTS = stack_prot.$(OBJEXT)
 stack_prot_LDADD = $(LDADD)
@@ -249,9 +251,14 @@ am__depfiles_remade = ./$(DEPDIR)/block_all_signals.Po \
 	./$(DEPDIR)/pthread-stack.Po \
 	./$(DEPDIR)/reserve_sysstat_addr.Po \
 	./$(DEPDIR)/reserve_sysstat_zone_addr.Po ./$(DEPDIR)/resolv.Po \
-	./$(DEPDIR)/sigresend.Po ./$(DEPDIR)/stack-overflow.Po \
+	./$(DEPDIR)/sigresend.Po \
+	./$(DEPDIR)/stack_overflow-stack_overflow.Po \
 	./$(DEPDIR)/stack_prot.Po ./$(DEPDIR)/threads_exitall.Po
 am__mv = mv -f
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
@@ -270,14 +277,14 @@ SOURCES = block_all_signals.c blockfault.c context_link.c \
 	mmap_noreserve.c posix_spawn.c proc_aout.c proc_auxv.c \
 	proc_auxv_multiple.c proc_psinfo.c pthread-stack.c \
 	reserve_sysstat_addr.c reserve_sysstat_zone_addr.c resolv.c \
-	sigresend.c stack-overflow.c stack_prot.c threads_exitall.c
+	sigresend.c stack_overflow.c stack_prot.c threads_exitall.c
 DIST_SOURCES = block_all_signals.c blockfault.c context_link.c \
 	context_link2.c context_null.c context_stack.c \
 	coredump_many_segments.c coredump_many_threads.c \
 	mmap_noreserve.c posix_spawn.c proc_aout.c proc_auxv.c \
 	proc_auxv_multiple.c proc_psinfo.c pthread-stack.c \
 	reserve_sysstat_addr.c reserve_sysstat_zone_addr.c resolv.c \
-	sigresend.c stack-overflow.c stack_prot.c threads_exitall.c
+	sigresend.c stack_overflow.c stack_prot.c threads_exitall.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -339,6 +346,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -356,6 +364,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -370,16 +379,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -430,6 +458,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -440,10 +469,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -598,16 +629,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -618,6 +645,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -634,7 +664,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -694,6 +724,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -748,12 +779,13 @@ EXTRA_DIST = \
 	reserve_sysstat_zone_addr.map reserve_sysstat_zone_addr.stderr.exp reserve_sysstat_zone_addr.vgtest \
 	resolv.stdout.exp resolv.stderr.exp resolv.vgtest \
 	sigresend.stderr.exp sigresend.stdout.exp sigresend.vgtest \
-	stack-overflow.stderr.exp stack-overflow.vgtest \
+	stack_overflow.stderr.exp stack_overflow.vgtest \
 	stack_prot.stderr.exp stack_prot.stdout.exp stack_prot.vgtest \
 	threads_exitall.stderr.exp threads_exitall.stdout.exp threads_exitall.vgtest
 
 pthread_stack_LDADD = -lpthread
 resolv_LDADD = -lresolv
+stack_overflow_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_INFINITE_RECURSION@
 stack_prot_LDFLAGS = -Wl,-M,/usr/lib/ld/map.noexstk
 threads_exitall_LDADD = -lpthread
 @SOLARIS_RESERVE_SYSSTAT_ADDR_TRUE@reserve_sysstat_addr_LDFLAGS = -Wl,-M,reserve_sysstat_addr.map
@@ -872,9 +904,9 @@ sigresend$(EXEEXT): $(sigresend_OBJECTS) $(sigresend_DEPENDENCIES) $(EXTRA_sigre
 	@rm -f sigresend$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(sigresend_OBJECTS) $(sigresend_LDADD) $(LIBS)
 
-stack-overflow$(EXEEXT): $(stack_overflow_OBJECTS) $(stack_overflow_DEPENDENCIES) $(EXTRA_stack_overflow_DEPENDENCIES) 
-	@rm -f stack-overflow$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(stack_overflow_OBJECTS) $(stack_overflow_LDADD) $(LIBS)
+stack_overflow$(EXEEXT): $(stack_overflow_OBJECTS) $(stack_overflow_DEPENDENCIES) $(EXTRA_stack_overflow_DEPENDENCIES) 
+	@rm -f stack_overflow$(EXEEXT)
+	$(AM_V_CCLD)$(stack_overflow_LINK) $(stack_overflow_OBJECTS) $(stack_overflow_LDADD) $(LIBS)
 
 stack_prot$(EXEEXT): $(stack_prot_OBJECTS) $(stack_prot_DEPENDENCIES) $(EXTRA_stack_prot_DEPENDENCIES) 
 	@rm -f stack_prot$(EXEEXT)
@@ -909,7 +941,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reserve_sysstat_zone_addr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resolv.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigresend.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack-overflow.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack_overflow-stack_overflow.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stack_prot.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threads_exitall.Po@am__quote@ # am--include-marker
 
@@ -934,6 +966,20 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+stack_overflow-stack_overflow.o: stack_overflow.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(stack_overflow_CFLAGS) $(CFLAGS) -MT stack_overflow-stack_overflow.o -MD -MP -MF $(DEPDIR)/stack_overflow-stack_overflow.Tpo -c -o stack_overflow-stack_overflow.o `test -f 'stack_overflow.c' || echo '$(srcdir)/'`stack_overflow.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/stack_overflow-stack_overflow.Tpo $(DEPDIR)/stack_overflow-stack_overflow.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stack_overflow.c' object='stack_overflow-stack_overflow.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(stack_overflow_CFLAGS) $(CFLAGS) -c -o stack_overflow-stack_overflow.o `test -f 'stack_overflow.c' || echo '$(srcdir)/'`stack_overflow.c
+
+stack_overflow-stack_overflow.obj: stack_overflow.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(stack_overflow_CFLAGS) $(CFLAGS) -MT stack_overflow-stack_overflow.obj -MD -MP -MF $(DEPDIR)/stack_overflow-stack_overflow.Tpo -c -o stack_overflow-stack_overflow.obj `if test -f 'stack_overflow.c'; then $(CYGPATH_W) 'stack_overflow.c'; else $(CYGPATH_W) '$(srcdir)/stack_overflow.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/stack_overflow-stack_overflow.Tpo $(DEPDIR)/stack_overflow-stack_overflow.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stack_overflow.c' object='stack_overflow-stack_overflow.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(stack_overflow_CFLAGS) $(CFLAGS) -c -o stack_overflow-stack_overflow.obj `if test -f 'stack_overflow.c'; then $(CYGPATH_W) 'stack_overflow.c'; else $(CYGPATH_W) '$(srcdir)/stack_overflow.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -1079,7 +1125,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/reserve_sysstat_zone_addr.Po
 	-rm -f ./$(DEPDIR)/resolv.Po
 	-rm -f ./$(DEPDIR)/sigresend.Po
-	-rm -f ./$(DEPDIR)/stack-overflow.Po
+	-rm -f ./$(DEPDIR)/stack_overflow-stack_overflow.Po
 	-rm -f ./$(DEPDIR)/stack_prot.Po
 	-rm -f ./$(DEPDIR)/threads_exitall.Po
 	-rm -f Makefile
@@ -1146,7 +1192,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/reserve_sysstat_zone_addr.Po
 	-rm -f ./$(DEPDIR)/resolv.Po
 	-rm -f ./$(DEPDIR)/sigresend.Po
-	-rm -f ./$(DEPDIR)/stack-overflow.Po
+	-rm -f ./$(DEPDIR)/stack_overflow-stack_overflow.Po
 	-rm -f ./$(DEPDIR)/stack_prot.Po
 	-rm -f ./$(DEPDIR)/threads_exitall.Po
 	-rm -f Makefile

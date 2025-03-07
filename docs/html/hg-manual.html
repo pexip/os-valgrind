@@ -593,9 +593,9 @@ the point it was detected.</p>
 "<code class="computeroutput">This conflicts with a previous
 write</code>".  This shows a previous access which also
 accessed the stated address, and which is believed to be racing
-against the access in the first call stack. Note that this second
-call stack is limited to a maximum of 8 entries to limit the
-memory usage.</p>
+against the access in the first call stack. Note that this second call
+stack is limited to a maximum of <code class="varname">--history-backtrace-size</code>
+entries with a default value of 8 to limit the memory usage.</p>
 <p>Finally, Helgrind may attempt to give a description of the
 raced-on address in source level terms.  In this example, it
 identifies it as a local variable, shows its name, declaration point,
@@ -976,13 +976,13 @@ unlock(mx)                             unlock(mx)
     </span>
 </dt>
 <dd>
-<p><code class="option">--history-level=full</code> (the default) causes
-        Helgrind collects enough information about "old" accesses that
-        it can produce two stack traces in a race report -- both the
-        stack trace for the current access, and the trace for the
-        older, conflicting access. To limit memory usage, "old" accesses
-        stack traces are limited to a maximum of 8 entries, even if
-        <code class="option">--num-callers</code> value is bigger.</p>
+<p><code class="option">--history-level=full</code> (the default) causes Helgrind
+        collects enough information about "old" accesses that it can produce two
+        stack traces in a race report -- both the stack trace for the current
+        access, and the trace for the older, conflicting access. To limit memory
+        usage, "old" accesses stack traces are limited to a maximum
+        of <code class="varname">--history-backtrace-size</code> entries (default 8) or
+        to <code class="option">--num-callers</code> value if this value is smaller.</p>
 <p>Collecting such information is expensive in both speed and
         memory, particularly for programs that do many inter-thread
         synchronisation events (locks, unlocks, etc).  Without such
@@ -1007,6 +1007,15 @@ unlock(mx)                             unlock(mx)
         better than nothing, and it is almost as fast as
         <code class="option">--history-level=none</code>.</p>
 </dd>
+<dt>
+<a name="opt.history-backtrace-size"></a><span class="term">
+      <code class="option">--history-backtrace-size=&lt;number&gt;
+      [default: 8] </code>
+    </span>
+</dt>
+<dd><p>When <code class="varname">--history-level=full</code> is selected,
+        <code class="varname">--history-backtrace-size=number</code> indicates how many
+        entries to record in "old" accesses stack traces.</p></dd>
 <dt>
 <a name="opt.delta-stacktrace"></a><span class="term">
       <code class="option">--delta-stacktrace=no|yes
@@ -1147,9 +1156,19 @@ unlock(mx)                             unlock(mx)
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
 <a name="hg-manual.monitor-commands"></a>7.7. Helgrind Monitor Commands</h2></div></div></div>
-<p>The Helgrind tool provides monitor commands handled by Valgrind's
-built-in gdbserver (see <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-commandhandling" title="3.2.5. Monitor command handling by the Valgrind gdbserver">Monitor command handling by the Valgrind gdbserver</a>).
-</p>
+<p>The Helgrind tool provides monitor commands handled by Valgrind's built-in
+  gdbserver (see <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-commandhandling" title="3.2.5. Monitor command handling by the Valgrind gdbserver">Monitor command handling by the Valgrind gdbserver</a>).
+  Valgrind python code provides GDB front end commands giving an easier usage of
+  the helgrind monitor commands (see
+  <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver-gdbmonitorfrontend" title="3.2.6. GDB front end commands for Valgrind gdbserver monitor commands">GDB front end commands for Valgrind gdbserver monitor commands</a>).  To launch an
+  helgrind monitor command via its GDB front end command, instead of prefixing
+  the command with "monitor", you must use the GDB <code class="varname">helgrind</code>
+  command (or the shorter aliases <code class="varname">hg</code>).  Using the helgrind
+  GDB front end command provide a more flexible usage, such as evaluation of
+  address and length arguments by GDB.  In GDB, you can use <code class="varname">help
+  helgrind</code> to get help about the helgrind front end monitor commands
+  and you can use <code class="varname">apropos helgrind</code> to get all the commands
+  mentionning the word "helgrind" in their name or on-line help. </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
 <p><code class="varname">info locks [lock_addr]</code> shows the list of locks
@@ -1191,6 +1210,10 @@ Lock ga 0x8049a20 {
  { R1:thread #3 tid 3 }
 }
 </pre>
+<p>The GDB equivalent helgrind front end command <code class="varname">helgrind info locks
+      [ADDR]</code> accept any address expression for its first ADDR
+      argument.
+    </p>
 </li>
 <li class="listitem">
 <p><code class="varname">accesshistory  &lt;addr&gt; [&lt;len&gt;]</code>
@@ -1226,6 +1249,22 @@ write of size 4 at 0x8049D88 by thread #9 tid 2
 ==6319==    by 0x39B924: start_thread (pthread_create.c:297)
 ==6319==    by 0x2F107D: clone (clone.S:130)
 
+</pre>
+<p>The GDB equivalent helgrind front end command <code class="varname">helgrind
+      accesshistory ADDR [LEN]</code> accept any address expression for its
+      first ADDR argument. The second optional argument is any integer
+      expression. Note that these 2 arguments must be separated by a space,
+      like in the following example:
+    </p>
+<pre class="programlisting">
+(gdb) hg accesshistory &amp;mx sizeof(mx)
+read of size 4 at 0x1130A8 by thread #2 tid (exited)
+==302== Locks held: none
+==302==    at 0x1094AC: child8 (tc19_shadowmem.c:37)
+==302==    by 0x10A0DF: steer (tc19_shadowmem.c:288)
+==302==    by 0x48448A3: mythread_wrapper (hg_intercepts.c:406)
+==302==    by 0x4879EA6: start_thread (pthread_create.c:477)
+==302==    by 0x4990A2E: clone (clone.S:95)
 </pre>
 </li>
 <li class="listitem"><p><code class="varname">xtmemory [&lt;filename&gt; default xtmemory.kcg.%p.%n]</code>

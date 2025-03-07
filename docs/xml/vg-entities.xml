@@ -2,12 +2,12 @@
 <!ENTITY vg-jemail     "julian@valgrind.org">
 <!ENTITY vg-vemail     "valgrind@valgrind.org">
 <!ENTITY cl-email      "Josef.Weidendorfer@gmx.de">
-<!ENTITY vg-lifespan   "2000-2022">
+<!ENTITY vg-lifespan   "2000-2024">
 
 <!-- valgrind release + version stuff -->
 <!ENTITY rel-type    "Release">
-<!ENTITY rel-version "3.20.0">
-<!ENTITY rel-date    "24 Oct 2022">
+<!ENTITY rel-version "3.24.0">
+<!ENTITY rel-date    "31 Oct 2024">
 
 <!-- where the docs are installed -->
 <!ENTITY vg-docs-path  "$INSTALL/share/doc/valgrind/html/index.html">

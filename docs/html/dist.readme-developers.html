@@ -26,6 +26,10 @@
 To build/install from the GIT repository or from a distribution<br>
 tarball, refer to the section with the same name in README.<br>
 <br>
+Building Valgrind requires autoconf, GNU make and a suitable C<br>
+compiler.<br>
+<br>
+<br>
 Building and not installing it<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
 To run Valgrind without having to install it, run coregrind/valgrind<br>
@@ -64,6 +68,10 @@ can be found in docs/README.<br>
 <br>
 Running the regression tests<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
+<br>
+Running the regression tests requires GNU sed, python 3.9 or later, gdb,<br>
+and a suitable C++ compiler<br>
+<br>
 To build and run all the regression tests, run "make [--quiet] regtest".<br>
 <br>
 To run a subset of the regression tests, execute:<br>
@@ -77,6 +85,12 @@ file.  Eg:<br>
   perl tests/vg_regtest memcheck<br>
   perl tests/vg_regtest memcheck/tests/badfree.vgtest<br>
   perl tests/vg_regtest memcheck/tests/badfree<br>
+<br>
+The details of each vgtest run are logged to individual "vgtest.log"<br>
+files.  These are listed, and non-passing tests detailed, in the<br>
+test-suite-overall.log file.  (Token *.trs and test-suite.log files<br>
+are also created, for emulating automake-style testsuites, as expected<br>
+by tools such as bunsen.)<br>
 <br>
 <br>
 Running the performance tests<br>
@@ -102,6 +116,101 @@ compare them on all the performance tests:<br>
 <br>
   perl perf/vg_perf --vg=../trunk1 --vg=../trunk2 perf/<br>
 <br>
+Writing regression tests<br>
+~~~~~~~~~~~~~~~~~~~~~~~~<br>
+<br>
+Each tool has a tests directory containing regression tests. There is also<br>
+the gdbserver_tests directory at the top level. Test directories may have<br>
+architecture, OS and and architecture-OS sub-directories for tests that are<br>
+specific to one architecture, OS or both.<br>
+<br>
+Once you have written a C or C++ executable that performs the required<br>
+tests you will have to modify and create several files. The new files that<br>
+will need adding are<br>
+(a) a .vgtest file, which controls the test<br>
+(b) a .stderr.exp file, which is the golden reference for any Valgrind output<br>
+    Note that even if Valgrind doesn't produce any output you will need to<br>
+    create an empty .stderr.exp file.<br>
+(c) [optional] a .stdout.exp file, the golden reference for any output from the<br>
+    test executable<br>
+(d) [optional] filter files (see the test directories for examples).<br>
+<br>
+Quite often the output will depend on the platform the test is run on.<br>
+Getting the tests to be 'portable' can require filtering or adding multiple<br>
+.stderr.exp reference files.<br>
+<br>
+If the test only runs under certain conditions like the availability of functions<br>
+in libc or C++ standard versions you will need to modify configure.ac in the<br>
+top level directory. See AC_CHECK_FUNCS and the various blocks starting with<br>
+AC_MSG_CHECKING.<br>
+<br>
+In the test directory, modify Makefile.am. Add to EXTRA_DIST the .vgtest,<br>
+.stderr.exp and .stderr.out files. Add any filters to dist_noinst_SCRIPTS.<br>
+Add the test executable name to check_PROGRAMS. Try to respect the<br>
+formatting and alphabetical ordering of the Makefile.am. For simple C files that is<br>
+sufficient. If you needed to add a feature test to configure.ac then you should<br>
+use the same condition to add the executable name to check_PROGRAMS. If the<br>
+executable uses C++ you need to add exename_SOURCES. If the executable needs<br>
+special compilation or link options, use exename_CFLAGS, exename_CXXFLAGS,<br>
+exename_LDFLAGS or exename_LDADD. Finally in Makefile.am it's nice not to<br>
+have any warnings, even if they were done on purpose. See configure.ac<br>
+and various Makefile.am files for examples of using FLAG_W_*.<br>
+<br>
+The vgtest file contains the instructions for running the test. Typically<br>
+it will contain (with examples in quotes)<br>
+(a) the name of the test executable:      "prog: exename"<br>
+(b) arguments for the test executable:    "args: hello world"<br>
+(c) arguments for the Valgrind tool:      "vgopts: -q"<br>
+(d) [optional] a check for prerequisites: "prereq: ! ../../tests/os_test darwin"<br>
+(e) [optional] a filter:                  "stderr_filter: filter_fdleak"<br>
+<br>
+See tests/vg_regtest for a full description of all possible vgtest directives.<br>
+<br>
+The easiest way to generate the expected files is to run the test. Create empty<br>
+files with touch (otherwise the test won't run) then run the test from the<br>
+top directory using perl and vg_regtest script (as in the "Running the<br>
+regression tests" section. Then copy "tool/tests/newtest.stderr.out" to<br>
+"tool/tests/newtest.stderr.exp". It is better to generate the .stdout.exp<br>
+file directly from the testcase. You can do that by redirecting stdout to<br>
+the expected file, for instance (in the test directory)<br>
+    ./newtest arg1 arg2 &gt; newtest.stdout.exp<br>
+This is not always possible - sometimes there are tests that depend on the use<br>
+of client requests or have imperfect emulation of opcodes.<br>
+Make sure that the test runs and passes.<br>
+<br>
+The last file to change is .gitignore in the top directory. Add a new entry,<br>
+for example "/tool/tests/newtest".<br>
+<br>
+Check for mistakes in Makefile.am. In the top directory run<br>
+    make post-regtest-checks<br>
+<br>
+You should only see<br>
+    ...checking makefile consistency<br>
+    ...checking header files and include directives<br>
+and no messages related to EXTRA_DIST.<br>
+<br>
+Commit access and try branches<br>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
+To get commit access to the valgrind git repository on sourceware<br>
+you will have to ask an existing developer and fill in the following<br>
+form: https://sourceware.org/cgi-bin/pdw/ps_form.cgi<br>
+<br>
+Every developer with commit access can use try branches. If you want to try a<br>
+branch before pushing you can push to a special named try branch as follows: <br>
+<br>
+  git push origin $BRANCH:users/$USERNAME/try-$BRANCH<br>
+<br>
+Where $BRANCH is the branch name and $USERNAME is your user name.<br>
+<br>
+You can see the status of the builders here:<br>
+https://builder.sourceware.org/buildbot/#/builders?tags=valgrind-try<br>
+<br>
+The buildbot will also sent the patch author multiple success/failure emails.<br>
+<br>
+Afterwards you can delete the branch again:<br>
+<br>
+    git push origin :users/$USERNAME/try-$BRANCH<br>
+<br>
 <br>
 Debugging Valgrind with GDB<br>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
@@ -119,6 +228,11 @@ without too much problem by following these steps:<br>
     or for an uninstalled version in a source directory $DIR:<br>
 <br>
       export VALGRIND_LAUNCHER=$DIR/coregrind/valgrind<br>
+      export VALGRIND_LIB=$DIR/.in_place<br>
+<br>
+    VALGRIND_LIB is where the default.supp and vgpreload_ libraries<br>
+    are found (which is under /usr/libexec/valgrind for an installed<br>
+    version).<br>
 <br>
 (2) Run gdb on the tool executable.  Eg:<br>
 <br>
@@ -139,9 +253,13 @@ without too much problem by following these steps:<br>
 <br>
 (4) Set any breakpoints you want and proceed as normal for gdb. The<br>
     macro VG_(FUNC) is expanded to vgPlain_FUNC, so If you want to set<br>
-    a breakpoint VG_(do_exec), you could do like this in GDB:<br>
+    a breakpoint VG_(do_exec_inner), you could do like this in GDB:<br>
 <br>
-    (gdb) b vgPlain_do_exec<br>
+    (gdb) b vgPlain_do_exec_inner<br>
+<br>
+    Note: This is just an example, for various reasons internal<br>
+          function names might be renamed or optimized out<br>
+          (for example when building with --enable-lto).<br>
 <br>
 (5) Run the tool with required options (the --tool option is required<br>
     for correct setup), e.g.<br>
@@ -159,17 +277,24 @@ A different and possibly easier way is as follows:<br>
 <br>
 (2) In a different shell, do "gdb /proc/&lt;pid&gt;/exe &lt;pid&gt;", where<br>
     &lt;pid&gt; you read from the output printed by (1).  This attaches<br>
-    GDB to the tool executable, which should be in the abovementioned<br>
+    GDB to the tool executable, which should be in the above mentioned<br>
     wait loop.<br>
 <br>
 (3) Do "cont" to continue.  After the loop finishes spinning, startup<br>
     will continue as normal.  Note that comment (3) above re passing<br>
     signals applies here too.<br>
 <br>
+The default build of Valgrind uses "-g -O2". This is OK most of the<br>
+time, but with sophisticated optimization it can be difficult to<br>
+see the contents of variables. A quick way to get to see function<br>
+variables is to temporarily add "__attribute__((optnone))" before<br>
+the function definition and rebuild. Alternatively modify<br>
+Makefile.all.am and remove -O2 from AM_CFLAGS_BASE. That will<br>
+require you to reconfigure and rebuild Valgrind.<br>
 <br>
 Self-hosting<br>
 ~~~~~~~~~~~~<br>
-This section explains :<br>
+This section explains:<br>
   (A) How to configure Valgrind to run under Valgrind.<br>
       Such a setup is called self hosting, or outer/inner setup.<br>
   (B) How to run Valgrind regression tests in a 'self-hosting' mode,<br>
@@ -263,7 +388,7 @@ it contains the detected race conditions.<br>
 The file tests/outer_inner.supp contains suppressions for <br>
 the irrelevant or benign errors found in the inner.<br>
 <br>
-An regression test running in the inner (e.g. memcheck/tests/badrw) will<br>
+A regression test running in the inner (e.g. memcheck/tests/badrw) will<br>
 cause the inner to report an error, which is expected and checked<br>
 as usual when running the regtests in an outer/inner setup.<br>
 However, the outer will often also observe an error, e.g. a jump<br>
@@ -361,6 +486,24 @@ translated, and that includes the address.<br>
 Then re-run with 999999 changed to the highest bb number shown.<br>
 This will print the one line per block, and also will print a<br>
 disassembly of the block in which the fault occurred.<br>
+<br>
+<br>
+Formatting the code with clang-format<br>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~<br>
+clang-format is a tool to format C/C++/... code.  The root directory of the<br>
+Valgrind tree contains file .clang-format which is a configuration for this tool<br>
+and specifies a style for Valgrind.  This gives you an option to use<br>
+clang-format to easily format Valgrind code which you are modifying.<br>
+<br>
+The Valgrind codebase is not globally formatted with clang-format.  It means<br>
+that you should not use the tool to format a complete file after making changes<br>
+in it because that would lead to creating unrelated modifications.<br>
+<br>
+The right approach is to format only updated or new code.  By using an<br>
+integration with a text editor, it is possible to reformat arbitrary blocks<br>
+of code with a single keystroke.  Refer to the upstream documentation which<br>
+describes integration with various editors and IDEs:<br>
+https://clang.llvm.org/docs/ClangFormat.html.<br>
 <br>
     </p></div>
 </div>

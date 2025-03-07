@@ -131,8 +131,8 @@ host_triplet = @host@
 check_PROGRAMS = allexec$(EXEEXT) amd64locked$(EXEEXT) \
 	bt_flags$(EXEEXT) bug127521-64$(EXEEXT) \
 	bug132813-amd64$(EXEEXT) bug132918$(EXEEXT) \
-	bug137714-amd64$(EXEEXT) cet_nops$(EXEEXT) clc$(EXEEXT) \
-	cmpxchg$(EXEEXT) getseg$(EXEEXT) $(am__EXEEXT_4) \
+	bug137714-amd64$(EXEEXT) bug487439$(EXEEXT) cet_nops$(EXEEXT) \
+	clc$(EXEEXT) cmpxchg$(EXEEXT) getseg$(EXEEXT) $(am__EXEEXT_4) \
 	nan80and64$(EXEEXT) rcl-amd64$(EXEEXT) redundantRexW$(EXEEXT) \
 	smc1$(EXEEXT) sbbmisc$(EXEEXT) nibz_bennee_mmap$(EXEEXT) \
 	x87trigOOR$(EXEEXT) xadd$(EXEEXT) $(am__EXEEXT_5) \
@@ -145,7 +145,8 @@ check_PROGRAMS = allexec$(EXEEXT) amd64locked$(EXEEXT) \
 @BUILD_ADDR32_TESTS_TRUE@am__append_15 = asorep
 @BUILD_ADX_TESTS_TRUE@am__append_16 = fb_test_amd64
 @BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@am__append_17 = avx-1 \
-@BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@		    avx_estimate_insn
+@BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@		    avx_estimate_insn \
+@BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@		    avx-vmovq
 
 @BUILD_AVX_TESTS_TRUE@@BUILD_FMA4_TESTS_TRUE@am__append_18 = fma4
 @BUILD_AVX2_TESTS_TRUE@@COMPILER_IS_ICC_FALSE@am__append_19 = avx2-1
@@ -158,7 +159,7 @@ check_PROGRAMS = allexec$(EXEEXT) amd64locked$(EXEEXT) \
 
 @BUILD_TSX_TESTS_TRUE@am__append_24 = tm1 xacq_xrel
 @BUILD_BMI_TESTS_TRUE@am__append_25 = bmi
-@BUILD_FMA_TESTS_TRUE@am__append_26 = fma
+@BUILD_FMA_TESTS_TRUE@am__append_26 = fma bug485148
 @BUILD_MPX_TESTS_TRUE@am__append_27 = mpx
 @BUILD_F16C_TESTS_TRUE@am__append_28 = f16c
 @BUILD_RDRAND_TESTS_TRUE@am__append_29 = rdrand
@@ -197,7 +198,8 @@ am__EXEEXT_4 = insn_basic$(EXEEXT) insn_mmx$(EXEEXT) insn_sse$(EXEEXT) \
 @BUILD_ADDR32_TESTS_TRUE@am__EXEEXT_5 = asorep$(EXEEXT)
 @BUILD_ADX_TESTS_TRUE@am__EXEEXT_6 = fb_test_amd64$(EXEEXT)
 @BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@am__EXEEXT_7 = avx-1$(EXEEXT) \
-@BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@	avx_estimate_insn$(EXEEXT)
+@BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@	avx_estimate_insn$(EXEEXT) \
+@BUILD_AVX_TESTS_TRUE@@BUILD_VPCLMULQDQ_TESTS_TRUE@	avx-vmovq$(EXEEXT)
 @BUILD_AVX_TESTS_TRUE@@BUILD_FMA4_TESTS_TRUE@am__EXEEXT_8 =  \
 @BUILD_AVX_TESTS_TRUE@@BUILD_FMA4_TESTS_TRUE@	fma4$(EXEEXT)
 @BUILD_AVX2_TESTS_TRUE@@COMPILER_IS_ICC_FALSE@am__EXEEXT_9 =  \
@@ -212,7 +214,7 @@ am__EXEEXT_4 = insn_basic$(EXEEXT) insn_mmx$(EXEEXT) insn_sse$(EXEEXT) \
 @BUILD_SSE42_TESTS_TRUE@	pcmpxstrx64w$(EXEEXT)
 @BUILD_TSX_TESTS_TRUE@am__EXEEXT_14 = tm1$(EXEEXT) xacq_xrel$(EXEEXT)
 @BUILD_BMI_TESTS_TRUE@am__EXEEXT_15 = bmi$(EXEEXT)
-@BUILD_FMA_TESTS_TRUE@am__EXEEXT_16 = fma$(EXEEXT)
+@BUILD_FMA_TESTS_TRUE@am__EXEEXT_16 = fma$(EXEEXT) bug485148$(EXEEXT)
 @BUILD_MPX_TESTS_TRUE@am__EXEEXT_17 = mpx$(EXEEXT)
 @BUILD_F16C_TESTS_TRUE@am__EXEEXT_18 = f16c$(EXEEXT)
 @BUILD_RDRAND_TESTS_TRUE@am__EXEEXT_19 = rdrand$(EXEEXT)
@@ -242,6 +244,9 @@ asorep_LDADD = $(LDADD)
 avx_1_SOURCES = avx-1.c
 avx_1_OBJECTS = avx-1.$(OBJEXT)
 avx_1_LDADD = $(LDADD)
+avx_vmovq_SOURCES = avx-vmovq.c
+avx_vmovq_OBJECTS = avx-vmovq.$(OBJEXT)
+avx_vmovq_LDADD = $(LDADD)
 avx2_1_SOURCES = avx2-1.c
 avx2_1_OBJECTS = avx2-1.$(OBJEXT)
 avx2_1_LDADD = $(LDADD)
@@ -269,6 +274,14 @@ bug137714_amd64_LDADD = $(LDADD)
 bug156404_amd64_SOURCES = bug156404-amd64.c
 bug156404_amd64_OBJECTS = bug156404-amd64.$(OBJEXT)
 bug156404_amd64_LDADD = $(LDADD)
+am_bug485148_OBJECTS = bug485148-bug485148.$(OBJEXT)
+bug485148_OBJECTS = $(am_bug485148_OBJECTS)
+bug485148_LDADD = $(LDADD)
+bug485148_LINK = $(CXXLD) $(bug485148_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_bug487439_OBJECTS = bug487439.$(OBJEXT)
+bug487439_OBJECTS = $(am_bug487439_OBJECTS)
+bug487439_LDADD = $(LDADD)
 cet_nops_SOURCES = cet_nops.c
 cet_nops_OBJECTS = cet_nops.$(OBJEXT)
 cet_nops_LDADD = $(LDADD)
@@ -444,11 +457,13 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/aes.Po \
 	./$(DEPDIR)/allexec-allexec.Po \
 	./$(DEPDIR)/amd64locked-amd64locked.Po ./$(DEPDIR)/asorep.Po \
-	./$(DEPDIR)/avx-1.Po ./$(DEPDIR)/avx2-1.Po \
-	./$(DEPDIR)/avx_estimate_insn.Po ./$(DEPDIR)/bmi.Po \
-	./$(DEPDIR)/bt_flags.Po ./$(DEPDIR)/bug127521-64.Po \
-	./$(DEPDIR)/bug132813-amd64.Po ./$(DEPDIR)/bug132918.Po \
-	./$(DEPDIR)/bug137714-amd64.Po ./$(DEPDIR)/bug156404-amd64.Po \
+	./$(DEPDIR)/avx-1.Po ./$(DEPDIR)/avx-vmovq.Po \
+	./$(DEPDIR)/avx2-1.Po ./$(DEPDIR)/avx_estimate_insn.Po \
+	./$(DEPDIR)/bmi.Po ./$(DEPDIR)/bt_flags.Po \
+	./$(DEPDIR)/bug127521-64.Po ./$(DEPDIR)/bug132813-amd64.Po \
+	./$(DEPDIR)/bug132918.Po ./$(DEPDIR)/bug137714-amd64.Po \
+	./$(DEPDIR)/bug156404-amd64.Po \
+	./$(DEPDIR)/bug485148-bug485148.Po ./$(DEPDIR)/bug487439.Po \
 	./$(DEPDIR)/cet_nops.Po ./$(DEPDIR)/clc.Po \
 	./$(DEPDIR)/cmpxchg-cmpxchg.Po ./$(DEPDIR)/crc32.Po \
 	./$(DEPDIR)/f16c.Po ./$(DEPDIR)/faultstatus.Po \
@@ -489,28 +504,43 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = aes.c allexec.c amd64locked.c asorep.c avx-1.c avx2-1.c \
-	avx_estimate_insn.c bmi.c bt_flags.c bug127521-64.c \
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
+SOURCES = aes.c allexec.c amd64locked.c asorep.c avx-1.c avx-vmovq.c \
+	avx2-1.c avx_estimate_insn.c bmi.c bt_flags.c bug127521-64.c \
 	bug132813-amd64.c bug132918.c bug137714-amd64.c \
-	bug156404-amd64.c cet_nops.c clc.c cmpxchg.c crc32.c f16c.c \
-	faultstatus.c fb_test_amd64.c fcmovnu.c fma.c fma4.c fxtract.c \
-	getseg.c $(insn_basic_SOURCES) $(insn_fpu_SOURCES) \
-	$(insn_mmx_SOURCES) $(insn_pclmulqdq_SOURCES) \
-	$(insn_sse_SOURCES) $(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
+	bug156404-amd64.c $(bug485148_SOURCES) $(bug487439_SOURCES) \
+	cet_nops.c clc.c cmpxchg.c crc32.c f16c.c faultstatus.c \
+	fb_test_amd64.c fcmovnu.c fma.c fma4.c fxtract.c getseg.c \
+	$(insn_basic_SOURCES) $(insn_fpu_SOURCES) $(insn_mmx_SOURCES) \
+	$(insn_pclmulqdq_SOURCES) $(insn_sse_SOURCES) \
+	$(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
 	$(insn_ssse3_SOURCES) jrcxz.c looper.c loopnel.c lzcnt64.c \
 	movbe.c mpx.c nan80and64.c nibz_bennee_mmap.c pcmpstr64.c \
 	pcmpstr64w.c pcmpxstrx64.c pcmpxstrx64w.c rcl-amd64.c rdrand.c \
 	rdseed.c redundantRexW.c sbbmisc.c shrld.c slahf-amd64.c \
 	smc1.c sse4-64.c ssse3_misaligned.c tm1.c x87trigOOR.c \
 	xacq_xrel.c xadd.c
-DIST_SOURCES = aes.c allexec.c amd64locked.c asorep.c avx-1.c avx2-1.c \
-	avx_estimate_insn.c bmi.c bt_flags.c bug127521-64.c \
-	bug132813-amd64.c bug132918.c bug137714-amd64.c \
-	bug156404-amd64.c cet_nops.c clc.c cmpxchg.c crc32.c f16c.c \
-	faultstatus.c fb_test_amd64.c fcmovnu.c fma.c fma4.c fxtract.c \
-	getseg.c $(insn_basic_SOURCES) $(insn_fpu_SOURCES) \
-	$(insn_mmx_SOURCES) $(insn_pclmulqdq_SOURCES) \
-	$(insn_sse_SOURCES) $(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
+DIST_SOURCES = aes.c allexec.c amd64locked.c asorep.c avx-1.c \
+	avx-vmovq.c avx2-1.c avx_estimate_insn.c bmi.c bt_flags.c \
+	bug127521-64.c bug132813-amd64.c bug132918.c bug137714-amd64.c \
+	bug156404-amd64.c $(bug485148_SOURCES) $(bug487439_SOURCES) \
+	cet_nops.c clc.c cmpxchg.c crc32.c f16c.c faultstatus.c \
+	fb_test_amd64.c fcmovnu.c fma.c fma4.c fxtract.c getseg.c \
+	$(insn_basic_SOURCES) $(insn_fpu_SOURCES) $(insn_mmx_SOURCES) \
+	$(insn_pclmulqdq_SOURCES) $(insn_sse_SOURCES) \
+	$(insn_sse2_SOURCES) $(insn_sse3_SOURCES) \
 	$(insn_ssse3_SOURCES) jrcxz.c looper.c loopnel.c lzcnt64.c \
 	movbe.c mpx.c nan80and64.c nibz_bennee_mmap.c pcmpstr64.c \
 	pcmpstr64w.c pcmpxstrx64.c pcmpxstrx64w.c rcl-amd64.c rdrand.c \
@@ -579,6 +609,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+FLAG_32ON64_GXX = @FLAG_32ON64_GXX@
 FLAG_FALIGNED_NEW = @FLAG_FALIGNED_NEW@
 FLAG_FINLINE_FUNCTIONS = @FLAG_FINLINE_FUNCTIONS@
 FLAG_FNO_IPA_ICF = @FLAG_FNO_IPA_ICF@
@@ -596,6 +627,7 @@ FLAG_NO_PIE = @FLAG_NO_PIE@
 FLAG_OCTEON = @FLAG_OCTEON@
 FLAG_OCTEON2 = @FLAG_OCTEON2@
 FLAG_PIE = @FLAG_PIE@
+FLAG_S390_PGSTE = @FLAG_S390_PGSTE@
 FLAG_T_TEXT = @FLAG_T_TEXT@
 FLAG_UNLIMITED_INLINE_UNIT_GROWTH = @FLAG_UNLIMITED_INLINE_UNIT_GROWTH@
 FLAG_W_CAST_ALIGN = @FLAG_W_CAST_ALIGN@
@@ -610,16 +642,35 @@ FLAG_W_IGNORED_QUALIFIERS = @FLAG_W_IGNORED_QUALIFIERS@
 FLAG_W_IMPLICIT_FALLTHROUGH = @FLAG_W_IMPLICIT_FALLTHROUGH@
 FLAG_W_LOGICAL_OP = @FLAG_W_LOGICAL_OP@
 FLAG_W_MISSING_PARAMETER_TYPE = @FLAG_W_MISSING_PARAMETER_TYPE@
+FLAG_W_NO_ALLOC_SIZE_LARGER_THAN = @FLAG_W_NO_ALLOC_SIZE_LARGER_THAN@
+FLAG_W_NO_ATTRIBUTES = @FLAG_W_NO_ATTRIBUTES@
+FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE = @FLAG_W_NO_BUILTIN_MEMCPY_CHK_SIZE@
+FLAG_W_NO_DEPRECATED = @FLAG_W_NO_DEPRECATED@
 FLAG_W_NO_EXPANSION_TO_DEFINED = @FLAG_W_NO_EXPANSION_TO_DEFINED@
+FLAG_W_NO_FORMAT_OVERFLOW = @FLAG_W_NO_FORMAT_OVERFLOW@
+FLAG_W_NO_FORTIFY_SOURCE = @FLAG_W_NO_FORTIFY_SOURCE@
+FLAG_W_NO_FREE_NONHEAP_OBJECT = @FLAG_W_NO_FREE_NONHEAP_OBJECT@
+FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS = @FLAG_W_NO_INCOMPATIBLE_POINTER_TYPES_DISCARDS_QUALIFIERS@
 FLAG_W_NO_INFINITE_RECURSION = @FLAG_W_NO_INFINITE_RECURSION@
+FLAG_W_NO_MAYBE_UNINITIALIZED = @FLAG_W_NO_MAYBE_UNINITIALIZED@
 FLAG_W_NO_MEMSET_TRANSPOSED_ARGS = @FLAG_W_NO_MEMSET_TRANSPOSED_ARGS@
 FLAG_W_NO_MISMATCHED_NEW_DELETE = @FLAG_W_NO_MISMATCHED_NEW_DELETE@
 FLAG_W_NO_NONNULL = @FLAG_W_NO_NONNULL@
+FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT = @FLAG_W_NO_NON_POWER_OF_TWO_ALIGNMENT@
 FLAG_W_NO_OVERFLOW = @FLAG_W_NO_OVERFLOW@
 FLAG_W_NO_POINTER_SIGN = @FLAG_W_NO_POINTER_SIGN@
+FLAG_W_NO_SIGN_COMPARE = @FLAG_W_NO_SIGN_COMPARE@
 FLAG_W_NO_STATIC_LOCAL_IN_INLINE = @FLAG_W_NO_STATIC_LOCAL_IN_INLINE@
+FLAG_W_NO_STRINGOP_OVERFLOW = @FLAG_W_NO_STRINGOP_OVERFLOW@
+FLAG_W_NO_STRINGOP_OVERREAD = @FLAG_W_NO_STRINGOP_OVERREAD@
+FLAG_W_NO_STRINGOP_TRUNCATION = @FLAG_W_NO_STRINGOP_TRUNCATION@
+FLAG_W_NO_SUSPICIOUS_BZERO = @FLAG_W_NO_SUSPICIOUS_BZERO@
 FLAG_W_NO_UNINITIALIZED = @FLAG_W_NO_UNINITIALIZED@
+FLAG_W_NO_UNUSED_BUT_SET_VARIABLE = @FLAG_W_NO_UNUSED_BUT_SET_VARIABLE@
 FLAG_W_NO_UNUSED_FUNCTION = @FLAG_W_NO_UNUSED_FUNCTION@
+FLAG_W_NO_UNUSED_RESULT = @FLAG_W_NO_UNUSED_RESULT@
+FLAG_W_NO_UNUSED_VARIABLE = @FLAG_W_NO_UNUSED_VARIABLE@
+FLAG_W_NO_USE_AFTER_FREE = @FLAG_W_NO_USE_AFTER_FREE@
 FLAG_W_OLD_STYLE_DECLARATION = @FLAG_W_OLD_STYLE_DECLARATION@
 FLAG_W_WRITE_STRINGS = @FLAG_W_WRITE_STRINGS@
 GDB = @GDB@
@@ -670,6 +721,7 @@ PREFERRED_STACK_BOUNDARY_2 = @PREFERRED_STACK_BOUNDARY_2@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
+SHA256SUM = @SHA256SUM@
 SHELL = @SHELL@
 SOLARIS_UNDEF_LARGESOURCE = @SOLARIS_UNDEF_LARGESOURCE@
 STRIP = @STRIP@
@@ -680,10 +732,12 @@ VGCONF_ABI = @VGCONF_ABI@
 VGCONF_ARCH_PRI = @VGCONF_ARCH_PRI@
 VGCONF_ARCH_SEC = @VGCONF_ARCH_SEC@
 VGCONF_OS = @VGCONF_OS@
+VGCONF_PLATFORM_ARM_ARCH = @VGCONF_PLATFORM_ARM_ARCH@
 VGCONF_PLATFORM_PRI_CAPS = @VGCONF_PLATFORM_PRI_CAPS@
 VGCONF_PLATFORM_SEC_CAPS = @VGCONF_PLATFORM_SEC_CAPS@
 VGCONF_PLATVARIANT = @VGCONF_PLATVARIANT@
 VG_DATE = @VG_DATE@
+VG_GDBSCRIPTS_DIR = @VG_GDBSCRIPTS_DIR@
 VG_TMPDIR = @VG_TMPDIR@
 VG_VER_MAJOR = @VG_VER_MAJOR@
 VG_VER_MINOR = @VG_VER_MINOR@
@@ -838,16 +892,12 @@ AM_CFLAGS_X86_FREEBSD = @FLAG_M32@ @PREFERRED_STACK_BOUNDARY_2@ \
 
 AM_CFLAGS_PSO_X86_FREEBSD = @FLAG_M32@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_X86_FREEBSD = @FLAG_M32@ -g
-AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@
-AM_CFLAGS_ARM_LINUX = @FLAG_M32@ \
-			 	$(AM_CFLAGS_BASE) -marm -mcpu=cortex-a8
-
+AM_FLAG_M3264_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
+AM_CFLAGS_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 AM_CFLAGS_PSO_ARM_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
-				-marm -mcpu=cortex-a8 $(AM_CFLAGS_PSO_BASE)
+				$(AM_CFLAGS_PSO_BASE) @VGCONF_PLATFORM_ARM_ARCH@
 
-AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ \
-				-marm -mcpu=cortex-a8 -g
-
+AM_CCASFLAGS_ARM_LINUX = @FLAG_M32@ @VGCONF_PLATFORM_ARM_ARCH@
 AM_FLAG_M3264_ARM64_LINUX = @FLAG_M64@
 AM_CFLAGS_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_ARM64_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
@@ -858,6 +908,9 @@ AM_CFLAGS_AMD64_FREEBSD = @FLAG_M64@ \
 
 AM_CFLAGS_PSO_AMD64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
 AM_CCASFLAGS_AMD64_FREEBSD = @FLAG_M64@ -g
+AM_CFLAGS_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE)
+AM_CFLAGS_PSO_ARM64_FREEBSD = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
+AM_CCASFLAGS_ARM64_FREEBSD = @FLAG_M64@ -g
 AM_FLAG_M3264_X86_DARWIN = -arch i386
 AM_CFLAGS_X86_DARWIN = $(WERROR) -arch i386 $(AM_CFLAGS_BASE) \
 				-mmacosx-version-min=10.6 \
@@ -874,7 +927,7 @@ AM_CCASFLAGS_AMD64_DARWIN = -arch x86_64 -g
 AM_FLAG_M3264_S390X_LINUX = @FLAG_M64@
 AM_CFLAGS_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) -fomit-frame-pointer
 AM_CFLAGS_PSO_S390X_LINUX = @FLAG_M64@ $(AM_CFLAGS_BASE) $(AM_CFLAGS_PSO_BASE)
-AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g -mzarch -march=z900
+AM_CCASFLAGS_S390X_LINUX = @FLAG_M64@ -g
 AM_FLAG_M3264_MIPS32_LINUX = @FLAG_M32@
 AM_CFLAGS_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE)
 AM_CFLAGS_PSO_MIPS32_LINUX = @FLAG_M32@ $(AM_CFLAGS_BASE) \
@@ -934,6 +987,7 @@ PRELOAD_LDFLAGS_ARM_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M32@
 PRELOAD_LDFLAGS_ARM64_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M32@
 PRELOAD_LDFLAGS_AMD64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
+PRELOAD_LDFLAGS_ARM64_FREEBSD = $(PRELOAD_LDFLAGS_COMMON_FREEBSD) @FLAG_M64@
 PRELOAD_LDFLAGS_X86_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch i386
 PRELOAD_LDFLAGS_AMD64_DARWIN = $(PRELOAD_LDFLAGS_COMMON_DARWIN) -arch x86_64
 PRELOAD_LDFLAGS_S390X_LINUX = $(PRELOAD_LDFLAGS_COMMON_LINUX) @FLAG_M64@
@@ -963,7 +1017,7 @@ AM_CCASFLAGS = $(AM_CPPFLAGS) @FLAG_M64@
 @VGCONF_OS_IS_DARWIN_TRUE@noinst_DSYMS = $(check_PROGRAMS)
 dist_noinst_SCRIPTS = filter_cpuid filter_inf_nan filter_stderr gen_insn_test.pl
 
-# Used by avx-1.c and avx_estimate_insn.c
+# Used by avx-1.c, avx-vmovq and avx_estimate_insn.c
 noinst_HEADERS = avx_tests.h
 CLEANFILES = $(addsuffix .c,$(INSN_TESTS))
 INSN_TESTS = insn_basic insn_mmx insn_sse insn_sse2 insn_fpu \
@@ -978,6 +1032,7 @@ EXTRA_DIST = \
 	avx-1.vgtest avx-1.stdout.exp avx-1.stderr.exp \
 	avx_estimate_insn.vgtest avx_estimate_insn.stderr.exp \
 	avx_estimate_insn.stdout.exp avx_estimate_insn.stdout.exp-amd \
+	avx-vmovq.vgtest avx-vmovq.stdout.exp avx-vmovq.stderr.exp \
 	avx2-1.vgtest avx2-1.stdout.exp avx2-1.stderr.exp \
 	asorep.stderr.exp asorep.stdout.exp asorep.vgtest \
 	bmi.stderr.exp bmi.stdout.exp bmi.vgtest \
@@ -992,6 +1047,8 @@ EXTRA_DIST = \
 	bug132918.stdout.exp-older-glibc \
 	bug156404-amd64.vgtest bug156404-amd64.stdout.exp \
 	bug156404-amd64.stderr.exp \
+	bug485148.vgtest bug485148.stdout.exp bug485148.stderr.exp \
+	bug487439.vgtest bug487439.stdout.exp bug487439.stderr.exp \
 	cet_nops.vgtest cet_nops.stdout.exp cet_nops.stderr.exp \
 	clc.vgtest clc.stdout.exp clc.stderr.exp \
 	crc32.vgtest crc32.stdout.exp crc32.stderr.exp \
@@ -1055,6 +1112,9 @@ allexec_CFLAGS = $(AM_CFLAGS) @FLAG_W_NO_NONNULL@
 # generic C ones
 amd64locked_CFLAGS = $(AM_CFLAGS) -O
 bug132918_LDADD = -lm
+bug485148_CXXFLAGS = ${AM_CXXFLAGS} -mfma
+bug485148_SOURCES = bug485148.cpp
+bug487439_SOURCES = bug487439.cpp
 cmpxchg_CFLAGS = $(AM_CFLAGS) @FLAG_NO_PIE@
 fb_test_amd64_CFLAGS = $(AM_CFLAGS) -O -fno-strict-aliasing
 fb_test_amd64_LDADD = -lm
@@ -1085,7 +1145,7 @@ shrld_CFLAGS = $(AM_CFLAGS) @FLAG_NO_PIE@
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .def .o .obj
+.SUFFIXES: .c .cpp .def .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.tool-tests.am $(top_srcdir)/Makefile.all.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -1140,6 +1200,10 @@ avx-1$(EXEEXT): $(avx_1_OBJECTS) $(avx_1_DEPENDENCIES) $(EXTRA_avx_1_DEPENDENCIE
 	@rm -f avx-1$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(avx_1_OBJECTS) $(avx_1_LDADD) $(LIBS)
 
+avx-vmovq$(EXEEXT): $(avx_vmovq_OBJECTS) $(avx_vmovq_DEPENDENCIES) $(EXTRA_avx_vmovq_DEPENDENCIES) 
+	@rm -f avx-vmovq$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(avx_vmovq_OBJECTS) $(avx_vmovq_LDADD) $(LIBS)
+
 avx2-1$(EXEEXT): $(avx2_1_OBJECTS) $(avx2_1_DEPENDENCIES) $(EXTRA_avx2_1_DEPENDENCIES) 
 	@rm -f avx2-1$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(avx2_1_OBJECTS) $(avx2_1_LDADD) $(LIBS)
@@ -1175,6 +1239,14 @@ bug137714-amd64$(EXEEXT): $(bug137714_amd64_OBJECTS) $(bug137714_amd64_DEPENDENC
 bug156404-amd64$(EXEEXT): $(bug156404_amd64_OBJECTS) $(bug156404_amd64_DEPENDENCIES) $(EXTRA_bug156404_amd64_DEPENDENCIES) 
 	@rm -f bug156404-amd64$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bug156404_amd64_OBJECTS) $(bug156404_amd64_LDADD) $(LIBS)
+
+bug485148$(EXEEXT): $(bug485148_OBJECTS) $(bug485148_DEPENDENCIES) $(EXTRA_bug485148_DEPENDENCIES) 
+	@rm -f bug485148$(EXEEXT)
+	$(AM_V_CXXLD)$(bug485148_LINK) $(bug485148_OBJECTS) $(bug485148_LDADD) $(LIBS)
+
+bug487439$(EXEEXT): $(bug487439_OBJECTS) $(bug487439_DEPENDENCIES) $(EXTRA_bug487439_DEPENDENCIES) 
+	@rm -f bug487439$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(bug487439_OBJECTS) $(bug487439_LDADD) $(LIBS)
 
 cet_nops$(EXEEXT): $(cet_nops_OBJECTS) $(cet_nops_DEPENDENCIES) $(EXTRA_cet_nops_DEPENDENCIES) 
 	@rm -f cet_nops$(EXEEXT)
@@ -1371,6 +1443,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amd64locked-amd64locked.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asorep.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/avx-1.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/avx-vmovq.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/avx2-1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/avx_estimate_insn.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bmi.Po@am__quote@ # am--include-marker
@@ -1380,6 +1453,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug132918.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug137714-amd64.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug156404-amd64.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug485148-bug485148.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bug487439.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cet_nops.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmpxchg-cmpxchg.Po@am__quote@ # am--include-marker
@@ -1603,6 +1678,36 @@ shrld-shrld.obj: shrld.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(shrld_CFLAGS) $(CFLAGS) -c -o shrld-shrld.obj `if test -f 'shrld.c'; then $(CYGPATH_W) 'shrld.c'; else $(CYGPATH_W) '$(srcdir)/shrld.c'; fi`
 
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+bug485148-bug485148.o: bug485148.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug485148_CXXFLAGS) $(CXXFLAGS) -MT bug485148-bug485148.o -MD -MP -MF $(DEPDIR)/bug485148-bug485148.Tpo -c -o bug485148-bug485148.o `test -f 'bug485148.cpp' || echo '$(srcdir)/'`bug485148.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug485148-bug485148.Tpo $(DEPDIR)/bug485148-bug485148.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug485148.cpp' object='bug485148-bug485148.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug485148_CXXFLAGS) $(CXXFLAGS) -c -o bug485148-bug485148.o `test -f 'bug485148.cpp' || echo '$(srcdir)/'`bug485148.cpp
+
+bug485148-bug485148.obj: bug485148.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug485148_CXXFLAGS) $(CXXFLAGS) -MT bug485148-bug485148.obj -MD -MP -MF $(DEPDIR)/bug485148-bug485148.Tpo -c -o bug485148-bug485148.obj `if test -f 'bug485148.cpp'; then $(CYGPATH_W) 'bug485148.cpp'; else $(CYGPATH_W) '$(srcdir)/bug485148.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bug485148-bug485148.Tpo $(DEPDIR)/bug485148-bug485148.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bug485148.cpp' object='bug485148-bug485148.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bug485148_CXXFLAGS) $(CXXFLAGS) -c -o bug485148-bug485148.obj `if test -f 'bug485148.cpp'; then $(CYGPATH_W) 'bug485148.cpp'; else $(CYGPATH_W) '$(srcdir)/bug485148.cpp'; fi`
+
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
 tags: tags-am
@@ -1734,6 +1839,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/amd64locked-amd64locked.Po
 	-rm -f ./$(DEPDIR)/asorep.Po
 	-rm -f ./$(DEPDIR)/avx-1.Po
+	-rm -f ./$(DEPDIR)/avx-vmovq.Po
 	-rm -f ./$(DEPDIR)/avx2-1.Po
 	-rm -f ./$(DEPDIR)/avx_estimate_insn.Po
 	-rm -f ./$(DEPDIR)/bmi.Po
@@ -1743,6 +1849,8 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/bug132918.Po
 	-rm -f ./$(DEPDIR)/bug137714-amd64.Po
 	-rm -f ./$(DEPDIR)/bug156404-amd64.Po
+	-rm -f ./$(DEPDIR)/bug485148-bug485148.Po
+	-rm -f ./$(DEPDIR)/bug487439.Po
 	-rm -f ./$(DEPDIR)/cet_nops.Po
 	-rm -f ./$(DEPDIR)/clc.Po
 	-rm -f ./$(DEPDIR)/cmpxchg-cmpxchg.Po
@@ -1839,6 +1947,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/amd64locked-amd64locked.Po
 	-rm -f ./$(DEPDIR)/asorep.Po
 	-rm -f ./$(DEPDIR)/avx-1.Po
+	-rm -f ./$(DEPDIR)/avx-vmovq.Po
 	-rm -f ./$(DEPDIR)/avx2-1.Po
 	-rm -f ./$(DEPDIR)/avx_estimate_insn.Po
 	-rm -f ./$(DEPDIR)/bmi.Po
@@ -1848,6 +1957,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/bug132918.Po
 	-rm -f ./$(DEPDIR)/bug137714-amd64.Po
 	-rm -f ./$(DEPDIR)/bug156404-amd64.Po
+	-rm -f ./$(DEPDIR)/bug485148-bug485148.Po
+	-rm -f ./$(DEPDIR)/bug487439.Po
 	-rm -f ./$(DEPDIR)/cet_nops.Po
 	-rm -f ./$(DEPDIR)/clc.Po
 	-rm -f ./$(DEPDIR)/cmpxchg-cmpxchg.Po
