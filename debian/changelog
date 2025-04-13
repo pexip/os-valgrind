@@ -1,3 +1,10 @@
+valgrind (1:3.24.0-3) unstable; urgency=medium
+
+  * Remove Recommends: valgrind-dbg in favor of not stripping vgpreload*.so.
+    Closes: #1057621. (Thanks Chris Hofstaedtler for the suggestion.)
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Sun, 13 Apr 2025 11:53:29 +0200
+
 valgrind (1:3.24.0-2) unstable; urgency=medium
 
   * Remove Emanuele Rocca from Uploaders per request from Emanuele.
